@@ -22,7 +22,26 @@
 <!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
     <ul>
-        <li><b>PERSONAS</b></li>
+        <!-- ITEM CON SUBMENÚ -->
+        <li class="submenu">
+            <div class="submenu-btn" onclick="toggleSubmenu(this)">
+                <span><b>PERSONAS</b></span>
+                <span class="arrow">▼</span>
+            </div>
+
+            <ul class="submenu-content">
+                 <li>
+        <img src="nueva_persona.png" class="icon-submenu">
+        Registrar Persona
+         </li>
+
+        <li>
+        <img src="icono_lista.png" class="icon-submenu">
+        Lista de Personas
+        </li>
+            </ul>
+        </li>
+
         <li><b>BENEFICIARIOS</b></li>
     </ul>
 </div>
@@ -65,6 +84,11 @@
 function toggleMenu() {
     document.getElementById("sidebar").classList.toggle("active");
     document.getElementById("menuBtn").classList.toggle("active");
+}
+
+// SUBMENU
+function toggleSubmenu(element) {
+    element.parentElement.classList.toggle("active");
 }
 </script>
 

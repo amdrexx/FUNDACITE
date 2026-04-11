@@ -119,11 +119,9 @@ body::before {
     left: 0;
     width: 100%;
     height: 100%;
-
     background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(2px);   opacity: 0;
+    backdrop-filter: blur(1px);   opacity: 0;
     visibility: hidden;
-
     transition: all 0.3s ease;
     z-index: 998;
 }
@@ -143,6 +141,57 @@ body::before {
 
 .sidebar.active ~ .main {
     margin-left: 260px;
+}
+/* SUBMENU */
+.submenu-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 1px;
+}
+
+/* Flecha */
+.arrow {
+    transition: transform 0.3s ease;
+}
+
+/* Rotación de flecha */
+.submenu.active .arrow {
+    transform: rotate(180deg);
+}
+
+/* Contenido oculto */
+.submenu-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    padding-left: 15px;
+}
+
+/* Mostrar submenu */
+.submenu.active .submenu-content {
+    max-height: 200px; /* ajusta si necesitas más */
+}
+
+/* ITEM CON ICONO */
+.submenu-content li {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* espacio entre imagen y texto */
+    padding: 8px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* IMAGEN */
+.icon-submenu {
+    width: 44px;
+    height: 40px;
+}
+
+.submenu-content li:hover {
+    background: rgba(255,255,255,0.1);
 }
 
 /* GLASS MÁS PROFESIONAL */
