@@ -149,7 +149,7 @@ body::before {
 .glass {
     width: 80%;
     max-width: 900px;
-    padding: 30px;
+    padding: 20px;
 
     background: rgba(255, 255, 255, 0.12);
     border-radius: 20px;
