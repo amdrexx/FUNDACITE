@@ -1,0 +1,84 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif; /* [cite: 3] */
+}
+
+body {
+    background-image: url('fondo.png'); /* Imagen inicial [cite: 4] */
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    transition: background-image 0.6s ease; /* Transición suave de fondo */
+}
+
+.contenedor {
+    padding: 40px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.1); /* Efecto transparente [cite: 6] */
+    backdrop-filter: blur(10px); /* Desenfoque de fondo [cite: 5] */
+    box-shadow: 0 0 30px rgba(0,0,0,0.2);
+}
+
+.login-box {
+    background: rgba(255, 255, 255, 0.85); /* Fondo sólido interno [cite: 7] */
+    padding: 30px;
+    border-radius: 15px;
+    width: 320px;
+    text-align: center;
+}
+
+.login-box h2 {
+    margin-bottom: 20px; /* [cite: 8] */
+}
+
+.input-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.input-group label {
+    font-size: 14px;
+    display: block;
+    margin-bottom: 5px; /* [cite: 9] */
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px; /* [cite: 10] */
+    border: 1px solid #ccc;
+}
+
+.btn {
+    width: 100%;
+    padding: 10px;
+    background: #007BFF;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s; /* [cite: 11] */
+}
+
+.btn:hover {
+    background: #0056b3;
+}
+
+.cambio-form {
+    margin-top: 15px;
+    font-size: 13px;
+}
+
+.cambio-form span {
+    color: #007BFF;
+    cursor: pointer;
+    font-weight: bold;
+    text-decoration: underline;
+}

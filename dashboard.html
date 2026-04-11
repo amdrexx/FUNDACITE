@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard Glass</title>
+<link rel="stylesheet" href="style_dashboard.css">
+
+</head>
+
+<body>
+
+<div class="topbar">
+    <img src="tu-imagen.png" alt="Logo">
+</div>
+    <!-- BOTÓN -->
+<button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
+    <div></div>
+    <div></div>
+    <div></div>
+</button>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+    <ul>
+        <li>APUESTAS DEPORTIVAS</li>
+        <li>HIPISMO</li>
+        <li>CASINO EN VIVO</li>
+    </ul>
+</div>
+<div class="overlay"></div>
+
+<!-- MAIN -->
+<div class="main">
+
+    <div class="glass">
+
+        <div class="cards">
+
+            <!-- ACTIVO -->
+            <div class="card">
+                <div class="icon">👤</div>
+                <h3>PERSONAL ACTIVO</h3>
+                <div class="status green"></div>
+                <div class="number">120</div>
+            </div>
+
+            <!-- JUBILADO -->
+            <div class="card">
+                <div class="icon">👤</div>
+                <h3>PERSONAL JUBILADO</h3>
+                <div class="status gray"></div>
+                <div class="number">45</div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+function toggleMenu() {
+    document.getElementById("sidebar").classList.toggle("active");
+    document.getElementById("menuBtn").classList.toggle("active");
+}
+</script>
+
+</body>
+</html>

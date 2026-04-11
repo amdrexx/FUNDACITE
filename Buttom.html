@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Menú desplegable</title>
+<link rel="stylesheet" href="butom.css">
+</head>
+<body>
+
+<button class="menu-btn" onclick="toggleMenu()">☰</button>
+
+<div class="sidebar" id="sidebar">
+
+    <div class="menu-item">PERSONAS</div>
+    <div class="menu-item">CONSTANCIAS</div>
+    <div class="menu-item">BENEFICIARIOS</div>
+</div>
+
+<script>
+function toggleMenu() {
+    document.getElementById("sidebar").classList.toggle("active");
+}
+</script>
+
+</body>
+</html>
