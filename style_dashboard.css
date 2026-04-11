@@ -183,14 +183,34 @@ body::before {
     font-size: 14px;
     cursor: pointer;
 }
-
-/* IMAGEN */
-.icon-submenu {
-    width: 44px;
-    height: 40px;
+.submenu-content li:hover {
+    background: rgba(255,255,255,0.1);
+}
+.submenu-link {
+    display: flex;
+    align-items: center; 
+    gap: 10px;
+    width: 100%;
+    padding: 10px;
+    color: white;
+    text-decoration: none;
+    box-sizing: border-box; 
 }
 
-.submenu-content li:hover {
+/* ICONO */
+.icon-submenu {
+    width: 25px;
+    height: 25px;
+    flex-shrink: 0; 
+}
+
+/* TEXTO */
+.submenu-link span {
+    display: inline-block;
+}
+
+/* HOVER ESTABLE */
+.submenu-link:hover {
     background: rgba(255,255,255,0.1);
 }
 
