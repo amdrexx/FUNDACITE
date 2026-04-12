@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Lista de Personas</title>
+<link rel="stylesheet" href="style_dashboard.css">
+</head>
+
+<body>
+
+<!-- BOTÓN -->
+<button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
+    <div></div>
+    <div></div>
+    <div></div>
+</button>
+
+<!-- TOPBAR -->
+<div class="topbar">
+    <img src="tu-logo.png" alt="Logo">
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+    <ul>
+        <!-- ITEM CON SUBMENÚ -->
+        <li class="submenu">
+            <div class="submenu-btn" onclick="toggleSubmenu(this)">
+                <span><b>PERSONAS</b></span>
+                <span class="arrow">▼</span>
+            </div>
+        <ul class="submenu-content">
+        <li>
+            <a href="Personas.php" class="submenu-link">
+            <img src="nueva_persona.png" class="icon-submenu">
+            Registrar Persona
+        </a>
+    </li>
+
+        <li>
+        <img src="icono_lista.png" class="icon-submenu">
+        Lista de Personas
+        </li>
+            </ul>
+
+        <li><b>BENEFICIARIOS</b></li>
+    </ul>
+
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" onclick="toggleMenu()"></div>
+
+<!-- CONTENIDO -->
+<div class="main">
+    <div class="glass">
+
+        <h2 style="text-align:center; color:white;">Lista de Personas</h2>
+
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Tipo Doc</th>
+                    <th>Cédula Titular</th>
+                    <th>Tipo</th>
+                    <th>Cédula</th>
+                    <th>Nombres</th>
+                    <th>Apellidos</th>
+                    <th>Parentesco</th>
+                    <th>Fecha de Nacimiento</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr>
+                    <td><select><option>V</option><option>E</option></select></td>
+                    <td><input type="text"></td>
+                    <td><select><option>V</option><option>E</option></select></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td>
+                        <select>
+                            <option>Titular</option>
+                            <option>Cónyuge</option>
+                            <option>Hijo</option>
+                        </select>
+                    </td>
+                    <td><input type="date"></td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+</div>
+
+<script>
+function toggleMenu() {
+    document.getElementById("sidebar").classList.toggle("active");
+    document.getElementById("menuBtn").classList.toggle("active");
+}
+
+function toggleSubmenu(el) {
+    el.parentElement.classList.toggle("active");
+}
+</script>
+
+</body>
+</html>

@@ -288,3 +288,37 @@ h3 {
     font-size: 15px;
     font-weight: 500;
 }
+/* TABLA MODERNA */
+.tabla {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    color: white;
+}
+
+.tabla th {
+    background: rgba(255,255,255,0.2);
+    padding: 10px;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+.tabla td {
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* INPUTS */
+.tabla input,
+.tabla select {
+    width: 100%;
+    padding: 6px;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: white;
+    text-align: center;
+}
+
+/* FECHA ICONO BLANCO */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
