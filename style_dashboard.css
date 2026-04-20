@@ -297,7 +297,7 @@ h3 {
 }
 
 .tabla th {
-    background: rgba(255,255,255,0.2);
+    background: rgba(183, 179, 179, 0.2);
     padding: 10px;
     border: 1px solid rgba(255,255,255,0.3);
 }
@@ -321,4 +321,88 @@ h3 {
 /* FECHA ICONO BLANCO */
 input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(1);
+    margin: autos;
+}
+/* CONTENEDOR DEL FORMULARIO */
+.form-card {
+    width: 350px;
+    background: rgba(60, 60, 60, 0.55); /* más transparente */
+    padding: 20px;
+    border-radius: 12px;
+
+    backdrop-filter: blur(8px); /* 🔥 EFECTO GLASS */
+    -webkit-backdrop-filter: blur(8px);
+
+    border: 1px solid rgba(255,255,255,0.2);
+
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    color: #fff;
+}
+/* TÍTULO */
+.form-card h2 {
+    text-align: center;
+    font-size: 18px;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+/* AGRUPACIÓN DE CAMPOS */
+.field {
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    
+}
+
+/* LABELS */
+.field label {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 3px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.field input,
+.field select {
+    width: 95%;
+    height: 30px;
+    padding: 5px 8px;
+    font-size: 13px;
+    background: rgba(189, 187, 187, 0.9); /* un poco transparente */
+    color: #333;
+    margin: 0 auto;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+    outline: none;
+    transition: all 0.25s ease;
+  
+    
+}
+/* EFECTO AL HACER CLICK */
+.field input:focus,
+.field select:focus {
+    border-color: #3282B8;
+    box-shadow: 0 0 0 3px rgba(50,130,184,0.25);
+    background: #FFFFFF;
+}
+
+/* BOTÓN */
+.btn-guardar {
+    width: 100%;
+    height: 32px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 6px;
+    background: #9ecbff;
+    color: #1a1a1a;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+/* HOVER DEL BOTÓN */
+.btn-guardar:hover {
+    background: #7fb7ff;
 }
