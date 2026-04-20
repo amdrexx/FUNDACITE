@@ -2,77 +2,93 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard</title>
+<title>Dashboard - Sistema</title>
 <link rel="stylesheet" href="style_dashboard.css">
-
 </head>
 
 <body>
 
+<!-- ================= TOPBAR ================= -->
 <div class="topbar">
-    <img src="tu-imagen.png" alt="Logo">
+    <img src="logo.png" alt="Logo">
 </div>
-    <!-- BOTÓN -->
+
+<!-- ================= BOTÓN MENÚ ================= -->
 <button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
     <div></div>
     <div></div>
     <div></div>
 </button>
 
-<!-- SIDEBAR -->
+<!-- ================= SIDEBAR ================= -->
 <div class="sidebar" id="sidebar">
     <ul>
-        <!-- ITEM CON SUBMENÚ -->
+
         <li class="submenu">
             <div class="submenu-btn" onclick="toggleSubmenu(this)">
                 <span><b>PERSONAS</b></span>
                 <span class="arrow">▼</span>
             </div>
-        <ul class="submenu-content">
-        <li>
-            <a href="registro_personas.html" class="submenu-link">
-            <img src="nueva_persona.png" class="icon-submenu">
-            Registrar Persona
-        </a>
-    </li>
 
-        <li>
-        <a href="lista_personas.html" class="submenu-link"></a>
-        <img src="icono_lista.png" class="icon-submenu">
-        Lista de Personas
-        </li>
+            <ul class="submenu-content">
+                <li>
+                    <a href="registro_personas.html" class="submenu-link">
+                        <img src="nueva_persona.png" class="icon-submenu">
+                        Registrar Persona
+                    </a>
+                </li>
+
+                <li>
+                    <a href="lista_personas.html" class="submenu-link">
+                        <img src="icono_lista.png" class="icon-submenu">
+                        Lista de Personas
+                    </a>
+                </li>
             </ul>
+        </li>
 
-        <li><b>BENEFICIARIOS</b></li>
+        <li><b>TRABAJADORES</b></li>
+
     </ul>
 </div>
+
 <div class="overlay"></div>
 
-<!-- MAIN -->
+<!-- ================= MAIN DASHBOARD ================= -->
 <div class="main">
 
-    <div class="glass">
+    <div class="dashboard-container">
 
+        <!-- ===== KPI CARDS ===== -->
         <div class="cards">
 
-            <!-- ACTIVO -->
             <div class="card">
                 <div class="icon">
                     <img src="persona_activa.png" alt="icono">
                 </div>
-                <h3><b>PERSONAL ACTIVO</b></h3>
+                <h3>PERSONAL ACTIVO</h3>
                 <div class="status green"></div>
                 <div class="number">120</div>
             </div>
 
-            <!-- JUBILADO -->
             <div class="card">
                 <div class="icon">
                     <img src="persona_inactiva.png" alt="icono">
                 </div>
-                <h3><b>PERSONAL JUBILADO</b></h3>
+                <h3>PERSONAL JUBILADO</h3>
                 <div class="status gray"></div>
                 <div class="number">45</div>
+            </div>
+
+        </div>
+
+        <!-- ===== SECCIÓN GRÁFICO ===== -->
+        <div class="chart-section">
+
+            <h2>Distribución del Personal</h2>
+
+            <div class="chart-container">
+                <canvas id="personalChart"></canvas>
             </div>
 
         </div>
@@ -81,8 +97,36 @@
 
 </div>
 
-<script src="boton_desplegable.js"></script>
+<!-- ================= CHART.JS ================= -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<script>
+const ctx = document.getElementById('personalChart');
+
+new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Activo', 'Jubilado'],
+        datasets: [{
+            data: [120, 45],
+            backgroundColor: ['#4CAF50', '#b4b4b4'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        },
+        cutout: '65%'
+    }
+});
+</script>
+
+<!-- JS -->
+<script src="boton_desplegable.js"></script>
 
 </body>
 </html>
