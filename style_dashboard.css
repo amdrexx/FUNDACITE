@@ -284,6 +284,8 @@ body::before {
     border-collapse: collapse;
     margin-top: 20px;
     color: white;
+    font-style: oblique;
+    font-weight: bold;
 }
 
 .tabla th,
@@ -293,7 +295,10 @@ body::before {
 }
 
 .tabla th {
-    background: rgba(183, 179, 179, 0.2);
+    background: rgba(183, 179, 179, 0.609);
+}
+.tabla td {
+    background: rgba(183, 179, 179, 0.208);
 }
 
 /* INPUTS */
