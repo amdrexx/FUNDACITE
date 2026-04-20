@@ -32,7 +32,7 @@ body::before {
 }
 
 .topbar img {
-    height: 60px;
+    height: 300px;
 }
 
 /* BOTÓN MENÚ */
@@ -197,82 +197,82 @@ body::before {
     height: 30px;
 }
 
-/* GLASS */
-.glass {
-    width: 80%;
-    max-width: 900px;
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.12);
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+/* ========================= */
+/* 🔥 DASHBOARD PROFESIONAL */
+/* ========================= */
+
+.dashboard-container {
+    width: 95%;
+    max-width: 1200px;
+    margin: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
 }
 
-/* CARDS */
+/* CARDS (KPI) */
 .cards {
-    display: flex;
-    justify-content: center;
-    gap: 40px;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 25px;
 }
 
 .card {
-    width: 220px;
-    padding: 25px;
+    padding: 20px;
     border-radius: 16px;
     text-align: center;
-    background: rgba(255,255,255,0.18);
-    backdrop-filter: blur(8px);
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
     color: white;
     box-shadow: 0 8px 25px rgba(0,0,0,0.25);
     transition: 0.3s;
 }
 
 .card:hover {
-    transform: translateY(-8px) scale(1.02);
+    transform: translateY(-6px);
 }
 
 .icon img {
-    width: 120px;
-    height: 70px;
+    width: 100px;
+    height: 60px;
     object-fit: contain;
 }
 
 .number {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: bold;
 }
 
 .status {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    margin: 8px auto;
+    margin: 6px auto;
 }
 
-.green { background: #4CAF50; border: 2px solid #101010; }
-.gray { background: #b4b4b4; border: 2px solid #101010; }
+.green { background: #4CAF50; }
+.gray { background: #b4b4b4; }
 
-/* ===================== */
-/* 📊 GRÁFICO DASHBOARD */
-/* ===================== */
+/* SECCIÓN DEL GRÁFICO */
+.chart-section {
+    text-align: center;
+    color: white;
+}
 
+.chart-section h2 {
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+/* CONTENEDOR DEL GRÁFICO */
 .chart-container {
-    width: 400px;
-    margin: 30px auto;
+    width: 350px;
+    margin: auto;
     padding: 20px;
+    border-radius: 15px;
     background: rgba(255,255,255,0.12);
-    border-radius: 18px;
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.2);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-    animation: fadeIn 0.6s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
 
 /* ===================== */
