@@ -193,13 +193,11 @@ body::before {
 }
 
 .icon-submenu {
-    width: 30px;
-    height: 30px;
+    width: 60px;
+    height: 60px;
 }
 
-/* ========================= */
-/* 🔥 DASHBOARD PROFESIONAL */
-/* ========================= */
+/*  DASHBOARD  */
 
 .dashboard-container {
     width: 95%;
