@@ -56,19 +56,30 @@ body {
 }
 
 .btn {
-    width: 100%;
-    padding: 10px;
-    background: #007BFF;
-    border: none;
-    border-radius: 10px;
+    display: block;
+    width: 95%;
+    max-width: 320px;
+    margin: 0 auto;
+    padding: 12px;
+
+    background: linear-gradient(135deg, #007BFF, #0056b3);
     color: white;
-    font-size: 16px;
+
+    border-radius: 10px;
+    text-align: center;
+    text-decoration: none;
+
+    font-weight: bold;
+    letter-spacing: 0.5px;
+
     cursor: pointer;
-    transition: 0.3s; /* [cite: 11] */
+    transition: all 0.3s ease;
 }
 
+/* HOVER MÁS MODERNO */
 .btn:hover {
-    background: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 .cambio-form {
