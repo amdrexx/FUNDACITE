@@ -18,37 +18,62 @@
     <div></div>
 </button>
 
-<!-- SIDEBAR -->
+<!-- ================= SIDEBAR ================= -->
 <div class="sidebar" id="sidebar">
     <ul>
-        <!-- ITEM CON SUBMENÚ -->
+        <li><b>INICIO</b></li>
+
         <li class="submenu">
             <div class="submenu-btn" onclick="toggleSubmenu(this)">
                 <span><b>PERSONAS</b></span>
                 <span class="arrow">▼</span>
             </div>
-        <ul class="submenu-content">
-        <li>
-            <a href="registro_personas.html" class="submenu-link">
-            <img src="nueva_persona.png" class="icon-submenu">
-            Registrar Persona
-        </a>
-    </li>
 
-        <li>
-        <a href="lista_personas.html" class="submenu-link">
-        <img src="icono_lista.png" class="icon-submenu">
-        Lista de Personas
-        </a>
-        </li>
+            <ul class="submenu-content">
+                <li>
+                    <a href="registro_personas.html" class="submenu-link">
+                        <img src="nueva_persona.png" class="icon-submenu">
+                        Registrar Persona
+                    </a>
+                </li>
+
+                <li>
+                    <a href="lista_personas.html" class="submenu-link">
+                        <img src="icono_lista.png" class="icon-submenu">
+                        Lista de Personas
+                    </a>
+                </li>
             </ul>
+        </li>
 
-        <li><b>BENEFICIARIOS</b></li>
+        <li class="submenu">
+       <div class="submenu-btn" onclick="toggleSubmenu(this)">
+                <span><b>TRABAJADORES</b></span>
+                <span class="arrow">▼</span>
+            </div>
+
+            <ul class="submenu-content">
+                <li>
+                    <a href="registro_personas.html" class="submenu-link">
+                        <img src="nueva_persona.png" class="icon-submenu">
+                        Registrar Trabajador
+                    </a>
+                </li>
+
+                <li>
+                    <a href="lista_personas.html" class="submenu-link">
+                        <img src="icono_lista.png" class="icon-submenu">
+                        Lista de Trabajadores
+                    </a>
+                </li>
+            </ul>
+        </li>
+        </li>
+
     </ul>
 </div>
 
-    <!-- OVERLAY -->
-    <div class="overlay"></div>
+<div class="overlay"></div>
 
     <!-- CONTENIDO -->
     <div class="main">
