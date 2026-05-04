@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Registro de Trabajador</title>
+
+<!-- TU CSS -->
+<link rel="stylesheet" href="style_dashboard.css">
+
+<!-- SELECT2 CSS (CORRECTO) -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+
+</head>
+
+<body>
+
+   <div class="topbar">
+    <img src="logo.png" alt="Logo">
+</div>
+    <!-- BOTÓN -->
+<button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
+    <div></div>
+    <div></div>
+    <div></div>
+</button>
+
+<!-- ================= SIDEBAR ================= -->
+<div class="sidebar" id="sidebar">
+    <ul>
+        <li><a href="dashboard.html" class="submenu-link"><b>INICIO</b></a></li>
+
+        <li class="submenu">
+            <div class="submenu-btn" onclick="toggleSubmenu(this)">
+                <span><b>PERSONAS</b></span>
+                <span class="arrow">▼</span>
+            </div>
+
+            <ul class="submenu-content">
+                <li>
+                    <a href="registro_personas.html" class="submenu-link">
+                        <img src="nueva_persona.png" class="icon-submenu">
+                        Registrar Persona
+                    </a>
+                </li>
+
+                <li>
+                    <a href="lista_personas.html" class="submenu-link">
+                        <img src="icono_lista.png" class="icon-submenu">
+                        Lista de Personas
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <li class="submenu">
+       <div class="submenu-btn" onclick="toggleSubmenu(this)">
+                <span><b>TRABAJADORES</b></span>
+                <span class="arrow">▼</span>
+            </div>
+
+            <ul class="submenu-content">
+                <li>
+                    <a href="registro_trabajadores.html" class="submenu-link">
+                        <img src="nueva_persona.png" class="icon-submenu">
+                        Registrar Trabajador
+                    </a>
+                </li>
+
+                <li>
+                    <a href="lista_trabajadores.html" class="submenu-link">
+                        <img src="icono_lista.png" class="icon-submenu">
+                        Lista de Trabajadores
+                    </a>
+                </li>
+            </ul>
+        </li>
+        </li>
+
+    </ul>
+</div>
+
+<div class="overlay"></div>
+
+<div class="main">
+
+    <div class="form-card">
+
+        <center><h2>Registro Trabajador</h2></center>
+
+        <!-- PERSONA (BUSCADOR POR CÉDULA) -->
+        <div class="field">
+            <label>Buscar Persona (Cédula)</label>
+
+            <select id="persona_id" name="persona_id" style="width:100%" required>
+                <option value="">Seleccione una persona</option>
+
+                <!-- EJEMPLOS (luego viene de BD) -->
+                <option value="1">12345678 - Juan Pérez</option>
+                <option value="2">87654321 - María Gómez</option>
+                <option value="3">11223344 - Carlos López</option>
+            </select>
+        </div>
+
+        <!-- CARGO -->
+        <div class="field">
+            <label>Cargo</label>
+            <select name="cargo_id" required>
+                <option value="">Seleccione un cargo</option>
+                <option>Administrador</option>
+                <option>Analista</option>
+                <option>Técnico</option>
+            </select>
+        </div>
+
+        <!-- FECHA INGRESO -->
+        <div class="field">
+            <label>Fecha de Ingreso</label>
+            <input type="date" name="fecha_ingreso" required>
+        </div>
+
+        <!-- TIPO CONTRATO -->
+        <div class="field">
+            <label>Tipo de Contratación</label>
+            <select name="tipo_contrato" required>
+                <option value="">Seleccione</option>
+                <option>Fijo</option>
+                <option>Contratado</option>
+                <option>Por Honorarios</option>
+            </select>
+        </div>
+
+        <!-- ESTATUS LABORAL -->
+        <div class="field">
+            <label>Estatus Laboral</label>
+            <select name="estatus_laboral" required>
+                <option value="">Seleccione</option>
+                <option>Activo</option>
+                <option>Jubilado</option>
+                <option>Suspendido</option>
+                <option>Retirado</option>
+            </select>
+        </div>
+
+        <!-- BOTÓN -->
+        <button class="btn-guardar">Registrar Trabajador</button>
+
+    </div>
+
+</div>
+
+<!-- ================= JS ================= -->
+
+<!-- JQUERY (OBLIGATORIO) -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+
+<!-- SELECT2 JS (CORRECTO) -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <script src="boton_desplegable.js"></script>
+
+<!-- ACTIVAR SELECT2 -->
+<script>
+$(document).ready(function() {
+    $('#persona_id').select2({
+        placeholder: "Escriba la cédula o nombre...",
+        allowClear: true,
+        width: '100%'
+    });
+});
+</script>
+
+</body>
+</html>

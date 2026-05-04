@@ -1,17 +1,78 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Registro de Personas</title>
-    <link rel="stylesheet" href="style_dashboard.css">
+<meta charset="UTF-8">
+<title>Registro de Personas</title>
+<link rel="stylesheet" href="style_dashboard.css">
+
+<style>
+/* ================= ALERTA PERSONALIZADA ================= */
+.custom-alert {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.alert-box {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 320px;
+    text-align: center;
+    box-shadow: 0px 10px 30px rgba(0,0,0,0.3);
+    animation: pop 0.2s ease-in-out;
+}
+
+.alert-box p {
+    white-space: pre-line;
+    font-size: 15px;
+    margin-bottom: 15px;
+}
+
+.alert-box button {
+    background: #1e88e5;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
+}
+
+@keyframes pop {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+</style>
+
 </head>
 
 <body>
 
-   <div class="topbar">
+<!-- ================= ALERTA ================= -->
+<div id="customAlert" class="custom-alert hidden">
+    <div class="alert-box">
+        <p id="alertMessage"></p>
+        <button onclick="closeAlert()">Aceptar</button>
+    </div>
+</div>
+
+<!-- ================= TOPBAR ================= -->
+<div class="topbar">
     <img src="logo.png" alt="Logo">
 </div>
-    <!-- BOTÓN -->
+
+<!-- ================= BOTÓN MENÚ ================= -->
 <button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
     <div></div>
     <div></div>
@@ -21,7 +82,8 @@
 <!-- ================= SIDEBAR ================= -->
 <div class="sidebar" id="sidebar">
     <ul>
-        <li><a href="dashboard.html" class="submenu-link"><b>INICIO</b></a></li>
+       <li><a href="dashboard.html" class="submenu-link"><b>INICIO</b></a></li>
+
 
         <li class="submenu">
             <div class="submenu-btn" onclick="toggleSubmenu(this)">
@@ -75,61 +137,111 @@
 
 <div class="overlay"></div>
 
-    <!-- CONTENIDO -->
-    <div class="main">
+<!-- ================= CONTENIDO ================= -->
+<div class="main">
 
-        <!-- FORMULARIO -->
-        <form class="form-card">
+<form class="form-card" id="formPersonas">
 
-            <center><h2>Registro de Personas</h2></center>
+    <center><h2>Registro de Personas</h2></center>
 
-            <div class="field">
-                <label>Tipo de Documento</label>
-                <select>
-                    <option value="">Seleccione...</option>
-                    <option>V</option>
-                    <option>E</option>
-                    <option>J</option>
-                </select>
-            </div>
-
-            <div class="field">
-                <label>Cédula</label>
-                <input type="text" placeholder="Ingrese cédula">
-            </div>
-
-            <div class="field">
-                <label>Nombres</label>
-                <input type="text" placeholder="Ingrese nombres">
-            </div>
-
-            <div class="field">
-                <label>Apellidos</label>
-                <input type="text" placeholder="Ingrese apellidos">
-            </div>
-
-            <div class="field">
-                <label>Parentesco</label>
-                <select>
-                    <option value="">Seleccione...</option>
-                    <option>Titular</option>
-                    <option>Hijo/a</option>
-                    <option>Esposo/a</option>
-                    <option>Otro</option>
-                </select>
-            </div>
-
-            <div class="field">
-                <label>Fecha de Nacimiento</label>
-                <input type="date">
-            </div>
-
-            <button type="submit" class="btn-guardar">Guardar</button>
-
-        </form>
-
+    <div class="field">
+        <label>Tipo de Documento</label>
+        <select id="tipoDoc">
+            <option value="">Seleccione...</option>
+            <option>V</option>
+            <option>E</option>
+        </select>
     </div>
-    <script src="boton_desplegable.js"></script>
+
+    <div class="field">
+        <label>Cédula</label>
+        <input type="text" id="cedula" placeholder="Ingrese cédula">
+    </div>
+
+    <div class="field">
+        <label>Nombres</label>
+        <input type="text" id="nombres" placeholder="Ingrese nombres">
+    </div>
+
+    <div class="field">
+        <label>Apellidos</label>
+        <input type="text" id="apellidos" placeholder="Ingrese apellidos">
+    </div>
+
+    <div class="field">
+        <label>Parentesco</label>
+        <select id="parentesco">
+            <option value="">Seleccione...</option>
+            <option>Titular</option>
+            <option>Hijo/a</option>
+            <option>Esposo/a</option>
+            <option>Otro</option>
+        </select>
+    </div>
+
+    <div class="field">
+        <label>Fecha de Nacimiento</label>
+        <input type="date" id="fecha">
+    </div>
+
+    <button type="submit" class="btn-guardar">Guardar</button>
+
+</form>
+
+</div>
+
+<!-- ================= JS ================= -->
+<script>
+document.getElementById("formPersonas").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    let tipoDoc = document.getElementById("tipoDoc").value;
+    let cedula = document.getElementById("cedula").value.trim();
+    let nombres = document.getElementById("nombres").value.trim();
+    let apellidos = document.getElementById("apellidos").value.trim();
+    let parentesco = document.getElementById("parentesco").value;
+    let fecha = document.getElementById("fecha").value;
+
+    let errores = [];
+
+    if (!tipoDoc) errores.push("Tipo de Documento");
+    if (!cedula) errores.push("Cédula");
+    if (!nombres) errores.push("Nombres");
+    if (!apellidos) errores.push("Apellidos");
+    if (!parentesco) errores.push("Parentesco");
+    if (!fecha) errores.push("Fecha de Nacimiento");
+
+    // ❌ SI HAY ERRORES
+    if (errores.length > 0) {
+        showAlert(
+            "Debes completar los siguientes campos:\n\n• " + errores.join("\n• "),
+            false
+        );
+        return;
+    }
+
+    // ✅ ÉXITO DIRECTO
+    showAlert("Registro guardado correctamente ✅", true);
+
+    // 🔥 REDIRECCIÓN AL DASHBOARD
+    setTimeout(() => {
+        window.location.href = "dashboard.html";
+    }, 1500);
+});
+
+function showAlert(message, success = false) {
+    document.getElementById("customAlert").classList.remove("hidden");
+    document.getElementById("alertMessage").innerText = message;
+
+    let btn = document.querySelector(".alert-box button");
+    btn.style.background = success ? "#2e7d32" : "#c62828";
+}
+
+function closeAlert() {
+    document.getElementById("customAlert").classList.add("hidden");
+}
+</script>
+<script src="boton_desplegable.js"></script>
 
 </body>
 </html>
