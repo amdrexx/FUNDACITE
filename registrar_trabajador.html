@@ -168,6 +168,61 @@ $(document).ready(function() {
     });
 });
 </script>
+<script
+<script>
+// Esperar a que todo cargue (incluye jQuery y Select2)
+document.addEventListener("DOMContentLoaded", function() {
 
+    // Capturamos el botón (NO necesitas form)
+    const btn = document.querySelector(".btn-guardar");
+
+    btn.addEventListener("click", function(e) {
+        e.preventDefault();
+
+        let persona = document.getElementById("persona_id").value;
+        let cargo = document.querySelector("select[name='cargo_id']").value;
+        let fecha = document.querySelector("input[name='fecha_ingreso']").value;
+        let contrato = document.querySelector("select[name='tipo_contrato']").value;
+        let estatus = document.querySelector("select[name='estatus_laboral']").value;
+
+        let errores = [];
+
+        if (!persona) errores.push("Persona (Cédula)");
+        if (!cargo) errores.push("Cargo");
+        if (!fecha) errores.push("Fecha de Ingreso");
+        if (!contrato) errores.push("Tipo de Contratación");
+        if (!estatus) errores.push("Estatus Laboral");
+
+        if (errores.length > 0) {
+            showAlert(
+                "Debes completar los siguientes campos:\n\n• " + errores.join("\n• "),
+                false
+            );
+            return;
+        }
+
+        // ✅ ÉXITO
+        showAlert("Trabajador registrado correctamente", true);
+
+        setTimeout(() => {
+            window.location.href = "dashboard.html";
+        }, 1500);
+    });
+
+});
+
+// ALERTA (si ya la tienes, no dupliques)
+function showAlert(message, success = false) {
+    document.getElementById("customAlert").classList.remove("hidden");
+    document.getElementById("alertMessage").innerText = message;
+
+    let btn = document.querySelector(".alert-box button");
+    btn.style.background = success ? "#2e7d32" : "#c62828";
+}
+
+function closeAlert() {
+    document.getElementById("customAlert").classList.add("hidden");
+}
+</script>
 </body>
 </html>
