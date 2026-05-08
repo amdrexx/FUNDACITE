@@ -250,6 +250,7 @@ body::before {
 
 .green { background: #4CAF50; }
 .gray { background: #b4b4b4; }
+.red { background: #ff4f4f; }
 
 /* SECCIÓN DEL GRÁFICO */
 .chart-section {
@@ -368,4 +369,53 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .btn-guardar:hover {
     background: #7fb7ff;
+}
+/* ================= BUSCADOR ================= */
+
+.buscador-container{
+    width:100%;
+    display:flex;
+    gap:15px;
+    margin:20px 0;
+    align-items:center;
+    justify-content:center;
+    flex-wrap:wrap;
+}
+
+.input-busqueda{
+    width:350px;
+    padding:12px 15px;
+    border:none;
+    outline:none;
+    border-radius:10px;
+    background:rgba(255,255,255,0.15);
+    color:white;
+    font-size:15px;
+    backdrop-filter:blur(5px);
+    transition:0.3s;
+}
+
+.input-busqueda::placeholder{
+    color:rgba(255,255,255,0.7);
+}
+
+.input-busqueda:focus{
+    background:rgba(255,255,255,0.25);
+    box-shadow:0 0 10px rgba(0,170,255,0.5);
+}
+
+.btn-buscar{
+    padding:12px 25px;
+    border:none;
+    border-radius:10px;
+    background:#4da3ff;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.btn-buscar:hover{
+    background:#1f8bff;
+    transform:translateY(-2px);
 }

@@ -23,16 +23,23 @@
 <!-- ================= SIDEBAR ================= -->
 <div class="sidebar" id="sidebar">
     <ul>
-        <li><a href="dashboard.html" class="submenu-link"><b>INICIO</b></a></li>
 
+        <li>
+            <a href="dashboard.html" class="submenu-link">
+                <b>INICIO</b>
+            </a>
+        </li>
 
+        <!-- PERSONAS -->
         <li class="submenu">
+
             <div class="submenu-btn" onclick="toggleSubmenu(this)">
                 <span><b>PERSONAS</b></span>
                 <span class="arrow">▼</span>
             </div>
 
             <ul class="submenu-content">
+
                 <li>
                     <a href="registro_personas.html" class="submenu-link">
                         <img src="nueva_persona.png" class="icon-submenu">
@@ -46,16 +53,21 @@
                         Lista de Personas
                     </a>
                 </li>
+
             </ul>
+
         </li>
 
+        <!-- TRABAJADORES -->
         <li class="submenu">
-       <div class="submenu-btn" onclick="toggleSubmenu(this)">
+
+            <div class="submenu-btn" onclick="toggleSubmenu(this)">
                 <span><b>TRABAJADORES</b></span>
                 <span class="arrow">▼</span>
             </div>
 
             <ul class="submenu-content">
+
                 <li>
                     <a href="registro_trabajadores.html" class="submenu-link">
                         <img src="nueva_persona.png" class="icon-submenu">
@@ -69,54 +81,82 @@
                         Lista de Trabajadores
                     </a>
                 </li>
+
             </ul>
-        </li>
+
         </li>
 
     </ul>
 </div>
 
-<div class="overlay"></div><!-- CONTENIDO -->
+<div class="overlay"></div>
+
+
+    <!-- ================= CONTENIDO ================= -->
 <div class="main">
-    <div class="glass">
 
-        <h2 style="text-align:center; color:white;">Lista de Personas</h2>
+    <div class="glass tabla-container">
 
+       
+<h2 style="text-align:center; color:white;">Lista de Personas</h2>
+
+        <!-- ================= BARRA DE BÚSQUEDA ================= -->
+        <div class="buscador-container">
+
+            <input 
+                type="text" 
+                class="input-busqueda"
+                placeholder="Buscar por cédula, nombre o apellido..."
+            >
+
+            <button class="btn-buscar">
+                Buscar
+            </button>
+
+        </div>
+
+        <!-- ================= TABLA ================= -->
         <table class="tabla">
+
             <thead>
                 <tr>
+
                     <th>Tipo Doc</th>
-                    <th>Cédula Titular</th>
-                    <th>Tipo</th>
                     <th>Cédula</th>
+                    <th>Teléfono</th>
                     <th>Nombres</th>
                     <th>Apellidos</th>
-                    <th>Parentesco</th>
+                    <th>Género</th>
+                    <th>Estado Civil</th>
+                    <th>Correo Electrónico</th>
                     <th>Fecha de Nacimiento</th>
+
                 </tr>
             </thead>
 
             <tbody>
+
+                <!-- DATOS DE PERSONAS -->
                 <tr>
-                    <td><select><option>V</option><option>E</option></select></td>
-                    <td><input type="text"></td>
-                    <td><select><option>V</option><option>E</option></select></td>
-                    <td><input type="text"></td>
-                    <td><input type="text"></td>
-                    <td><input type="text"></td>
-                    <td>
-                        <select>
-                            <option>Titular</option>
-                            <option>Cónyuge</option>
-                            <option>Hijo</option>
-                        </select>
-                    </td>
-                    <td><input type="date"></td>
+
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+
                 </tr>
+
             </tbody>
+
         </table>
 
     </div>
+
 </div>
 
 <script src="boton_desplegable.js"></script>

@@ -109,7 +109,7 @@
                     <img src="persona_inactiva.png" alt="icono">
                 </div>
                 <h3>PERSONAL INACTIVO</h3>
-                <div class="status gray"></div>
+                <div class="status red"></div>
                 <div class="number">5</div>
             </div>
         </div>
@@ -130,7 +130,7 @@
 </div>
 
 <!-- ================= CHART.JS ================= -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="chart.js"></script>
 
 <script>
 const ctx = document.getElementById('personalChart');
@@ -138,25 +138,27 @@ const ctx = document.getElementById('personalChart');
 new Chart(ctx, {
     type: 'doughnut',
     data: {
-        labels: ['Activo', 'Jubilado'],
+        labels: ['Activo', 'Jubilado', 'Inactivo'],
         datasets: [{
-            data: [120, 45],
-            backgroundColor: ['#4CAF50', '#b4b4b4'],
-            borderWidth: 0
+            data: [120, 45, 5],
+            backgroundColor: ['#4CAF50', '#b4b4b4', '#ff6b6b'],
+            borderWidth: 0,
         }]
     },
     options: {
         responsive: true,
         plugins: {
             legend: {
-                position: 'bottom'
+                position: 'bottom',
+                 labels: {
+                color: '#000000' // Cambia este valor por el color que desees
+            }
             }
         },
         cutout: '65%'
     }
 });
-</script>
-
+</script>   
 <!-- JS -->
 <script src="boton_desplegable.js"></script>
 
