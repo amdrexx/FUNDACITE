@@ -1,4 +1,4 @@
- // --- Cálculo automático de la edad según la fecha de nacimiento ---
+
     document.getElementById("fecha").addEventListener("change", function() {
         const fechaNacimiento = this.value;
         const campoEdad = document.getElementById("edad");
@@ -21,7 +21,6 @@
         campoEdad.value = edad >= 0 ? edad : "";
     });
 
-    // --- Restricción: solo números en Cédula y Teléfono ---
     document.getElementById("cedula").addEventListener("input", function() {
         this.value = this.value.replace(/\D/g, '');
     });
@@ -30,11 +29,10 @@
         this.value = this.value.replace(/\D/g, '');
     });
 
-    // --- Validación del formulario ---
     document.getElementById("formPersonas").addEventListener("submit", function(e) {
         e.preventDefault();
 
-        // Obtener valores
+        
         let tipoDoc          = document.getElementById("tipoDoc").value;
         let cedula           = document.getElementById("cedula").value.trim();
         let numeroTelefono   = document.getElementById("numeroTelefono").value.trim();
@@ -59,7 +57,6 @@
         if (!fecha) errores.push("Fecha de Nacimiento");
         if (!edad) errores.push("Edad");
 
-        // 1. Si hay campos vacíos → alerta de campos faltantes
         if (errores.length > 0) {
             showAlert(
                 "Debes completar los siguientes campos:\n\n• " + errores.join("\n• "),
@@ -68,7 +65,6 @@
             return;
         }
 
-        // 2. Si todo está lleno, verificar que la persona sea mayor de edad
         const edadNumerica = parseInt(edad, 10);
         if (isNaN(edadNumerica) || edadNumerica < 18) {
             showAlert("La persona debe tener 18 años o más.", false);
@@ -78,7 +74,6 @@
         // 3. Éxito
         showAlert("Registro guardado correctamente", true);
 
-        // ✅ Redirección a la lista de personas (catálogo)
         setTimeout(() => {
             window.location.href = "lista_personas.html";
         }, 1500);

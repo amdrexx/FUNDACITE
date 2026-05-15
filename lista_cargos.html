@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Lista de Personas</title>
+    <title>Lista de Cargos</title>
     <link rel="stylesheet" href="style_dashboard.css">
 </head>
 <body>
@@ -13,13 +13,11 @@
         <div></div>
     </button>
 
-
     <div class="topbar">
         <img src="logo.png" alt="Logo">
     </div>
 
-  
-
+   
 <div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: 100vh;">
     
    
@@ -64,57 +62,45 @@
 
     <div class="overlay"></div>
 
-  
     <div class="main">
         <div class="glass tabla-container">
-            <h2 style="text-align:center; color:white;">Lista de Personas</h2>
+            <h2 style="text-align:center; color:white;">Lista de Cargos</h2>
 
-           
+       
             <div class="buscador-container">
                 <input 
                     type="text" 
                     class="input-busqueda"
-                    placeholder="Buscar por cédula, nombre o apellido..."
+                    placeholder="Buscar cargo..."
                 >
                 <button class="btn-buscar">Buscar</button>
-                <a href="registro_personas.html" class="btn-persona" style="text-decoration:none;">
-                    + Agregar Persona
+                <a href="registrar_cargo.html" class="btn-persona" style="text-decoration:none;">
+                    + Agregar Cargo
                 </a>
             </div>
 
-      
+         
             <table class="tabla">
                 <thead>
                     <tr>
-                        <th>Tipo Doc</th>
-                        <th>Cédula</th>
-                        <th>Teléfono</th>
-                        <th>Nombres</th>
-                        <th>Apellidos</th>
-                        <th>Género</th>
-                        <th>Estado Civil</th>
-                        <th>Correo Electrónico</th>
-                        <th>Fecha de Nacimiento</th>
-                        <th>Edad</th>
-                        <th>Acciones</th>
+                        <th>Nombre del Cargo</th>
+                        <th style="text-align: center;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                   
+                 
                     <tr>
-                        <td>V</td>
-                        <td>12345678</td>
-                        <td>04121234567</td>
-                        <td>Juan Carlos</td>
-                        <td>Pérez López</td>
-                        <td>Masculino</td>
-                        <td>Soltero(a)</td>
-                        <td>juan@email.com</td>
-                        <td>1995-04-23</td>
-                        <td>31</td>
+                        <td>Analista de Sistemas</td>
                         <td class="acciones">
-                            <button class="btn-editar" onclick="editarPersona('12345678')">Editar</button>
-                            <button class="btn-eliminar" onclick="eliminarPersona('12345678')">Eliminar</button>
+                            <button class="btn-editar" onclick="editarCargo('Analista de Sistemas')">Editar</button>
+                            <button class="btn-eliminar" onclick="eliminarCargo('Analista de Sistemas')">Eliminar</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Director de Operaciones</td>
+                        <td class="acciones">
+                            <button class="btn-editar" onclick="editarCargo('Director de Operaciones')">Editar</button>
+                            <button class="btn-eliminar" onclick="eliminarCargo('Director de Operaciones')">Eliminar</button>
                         </td>
                     </tr>
                 </tbody>
@@ -123,9 +109,6 @@
     </div>
 
     <script src="boton_desplegable.js"></script>
-    <script src="valid_personas.js"></script>
-  
-   
-
+    <script src="valid_cargo.js"></script>
 </body>
 </html>

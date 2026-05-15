@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Lista de Personas</title>
+    <title>Lista de Trabajadores</title>
     <link rel="stylesheet" href="style_dashboard.css">
 </head>
 <body>
@@ -13,13 +13,11 @@
         <div></div>
     </button>
 
-
     <div class="topbar">
         <img src="logo.png" alt="Logo">
     </div>
 
-  
-
+   
 <div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: 100vh;">
     
    
@@ -64,12 +62,12 @@
 
     <div class="overlay"></div>
 
-  
+    <!-- ================= CONTENIDO ================= -->
     <div class="main">
         <div class="glass tabla-container">
-            <h2 style="text-align:center; color:white;">Lista de Personas</h2>
+            <h2 style="text-align:center; color:white;">Lista de Trabajadores</h2>
 
-           
+            <!-- Barra de búsqueda (puedes adaptarla si es necesario) -->
             <div class="buscador-container">
                 <input 
                     type="text" 
@@ -77,55 +75,44 @@
                     placeholder="Buscar por cédula, nombre o apellido..."
                 >
                 <button class="btn-buscar">Buscar</button>
-                <a href="registro_personas.html" class="btn-persona" style="text-decoration:none;">
-                    + Agregar Persona
+                <a href="registrar_trabajador.html" class="btn-persona" style="text-decoration:none;">
+                    + Agregar Trabajador
                 </a>
             </div>
 
-      
+            <!-- ================= TABLA CON NUEVAS CABECERAS ================= -->
             <table class="tabla">
                 <thead>
                     <tr>
-                        <th>Tipo Doc</th>
-                        <th>Cédula</th>
-                        <th>Teléfono</th>
-                        <th>Nombres</th>
-                        <th>Apellidos</th>
-                        <th>Género</th>
-                        <th>Estado Civil</th>
-                        <th>Correo Electrónico</th>
-                        <th>Fecha de Nacimiento</th>
-                        <th>Edad</th>
+                        <!-- Aquí se reemplazaron los TH por los labels de los campos -->
+                        <th>Persona (Cédula)</th>
+                        <th>Cargo</th>
+                        <th>Fecha de Ingreso</th>
+                        <th>Tipo de Contratación</th>
+                        <th>Estatus Laboral</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                   
+                    <!-- Fila de ejemplo con datos -->
                     <tr>
-                        <td>V</td>
-                        <td>12345678</td>
-                        <td>04121234567</td>
-                        <td>Juan Carlos</td>
-                        <td>Pérez López</td>
-                        <td>Masculino</td>
-                        <td>Soltero(a)</td>
-                        <td>juan@email.com</td>
-                        <td>1995-04-23</td>
-                        <td>31</td>
+                        <td>12345678 - Juan Pérez</td>
+                        <td>Administrador</td>
+                        <td>2024-01-15</td>
+                        <td>Fijo</td>
+                        <td>Activo</td>
                         <td class="acciones">
-                            <button class="btn-editar" onclick="editarPersona('12345678')">Editar</button>
+                           <button class="btn-editar" onclick="editarPersona('12345678')">Editar</button>
                             <button class="btn-eliminar" onclick="eliminarPersona('12345678')">Eliminar</button>
                         </td>
                     </tr>
+                    <!-- Agrega más filas según los registros -->
                 </tbody>
             </table>
         </div>
     </div>
 
     <script src="boton_desplegable.js"></script>
-    <script src="valid_personas.js"></script>
-  
-   
-
+    <script src="valid_trabajadores.js"></script>
 </body>
 </html>

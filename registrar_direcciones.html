@@ -2,18 +2,12 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Registro de Trabajador</title>
-
+    <title>Registro de Dirección</title>
     <link rel="stylesheet" href="style_dashboard.css">
-
-
-    <link href="select2.min.css" rel="stylesheet" />
-
- 
 </head>
 <body>
 
-    
+
     <div id="customAlert" class="custom-alert hidden">
         <div class="alert-box">
             <p id="alertMessage"></p>
@@ -21,19 +15,18 @@
         </div>
     </div>
 
-   
+
     <div class="topbar">
         <img src="logo.png" alt="Logo">
     </div>
 
-  
     <button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
         <div></div>
         <div></div>
         <div></div>
     </button>
 
- 
+   
 <div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: 100vh;">
     
    
@@ -78,75 +71,42 @@
 
     <div class="overlay"></div>
 
-    
+    <!-- ================= CONTENIDO ================= -->
     <div class="main">
         <div class="form-card">
-            <center><h2>Registro Trabajador</h2></center>
+            <center><h2>Registro de Dirección</h2></center>
 
-           
+            <!-- Estado -->
             <div class="field">
-                <label>Buscar Persona (Cédula)</label>
-                <select id="persona_id" name="persona_id" style="width:100%" required>
-                    <option value="">Seleccione una persona</option>
-                    <option value="1">12345678 - Juan Pérez</option>
-                    <option value="2">87654321 - María Gómez</option>
-                    <option value="3">11223344 - Carlos López</option>
-                </select>
+                <label>Estado</label>
+                <input type="text" id="estado" placeholder="Ingrese el estado">
             </div>
 
-           
+            <!-- Municipio -->
             <div class="field">
-                <label>Cargo</label>
-                <select name="cargo_id" required>
-                    <option value="">Seleccione un cargo</option>
-                    <option>Administrador</option>
-                    <option>Analista</option>
-                    <option>Técnico</option>
-                </select>
+                <label>Municipio</label>
+                <input type="text" id="municipio" placeholder="Ingrese el municipio">
             </div>
 
-       
+            <!-- Parroquia -->
             <div class="field">
-                <label>Fecha de Ingreso</label>
-                <input type="date" name="fecha_ingreso" id="fecha_ingreso" required>
+                <label>Parroquia</label>
+                <input type="text" id="parroquia" placeholder="Ingrese la parroquia">
             </div>
 
-          
+            <!-- Sector -->
             <div class="field">
-                <label>Tipo de Contratación</label>
-                <select name="tipo_contrato" required>
-                    <option value="">Seleccione</option>
-                    <option>Fijo</option>
-                    <option>Contratado</option>
-                    <option>Por Honorarios</option>
-                </select>
+                <label>Sector</label>
+                <input type="text" id="sector" placeholder="Ingrese el sector">
             </div>
 
-           
-            <div class="field">
-                <label>Estatus Laboral</label>
-                <select name="estatus_laboral" required>
-                    <option value="">Seleccione</option>
-                    <option>Activo</option>
-                    <option>Jubilado</option>
-                    <option>Suspendido</option>
-                    <option>Retirado</option>
-                </select>
-            </div>
-
-       
-            <button class="btn-guardar" id="btnRegistrar">Registrar Trabajador</button>
+            <!-- Botón Guardar -->
+            <button type="button" class="btn-guardar" id="btnGuardar">Guardar Dirección</button>
         </div>
     </div>
 
-    <script src="jquery.min.js"></script>
-
-    <script src="select2.min.js"></script>
-
-
+    <!-- ================= JS ================= -->
     <script src="boton_desplegable.js"></script>
-    <script src="valid_trabajadores.js"></script>
-
-    
+    <script src="valid_direcciones.js"></script>
 </body>
 </html>

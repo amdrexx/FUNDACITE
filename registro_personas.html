@@ -4,59 +4,9 @@
     <meta charset="UTF-8">
     <title>Registro de Personas</title>
     <link rel="stylesheet" href="style_dashboard.css">
-    <style>
-        /* ================= ALERTA PERSONALIZADA ================= */
-        .custom-alert {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.6);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-
-        .alert-box {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            width: 320px;
-            text-align: center;
-            box-shadow: 0px 10px 30px rgba(0,0,0,0.3);
-            animation: pop 0.2s ease-in-out;
-        }
-
-        .alert-box p {
-            white-space: pre-line;
-            font-size: 15px;
-            margin-bottom: 15px;
-        }
-
-        .alert-box button {
-            background: #1e88e5;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        @keyframes pop {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-    </style>
 </head>
 <body>
 
-<!-- ================= ALERTA ================= -->
 <div id="customAlert" class="custom-alert hidden">
     <div class="alert-box">
         <p id="alertMessage"></p>
@@ -64,22 +14,23 @@
     </div>
 </div>
 
-<!-- ================= TOPBAR ================= -->
+
 <div class="topbar">
     <img src="logo.png" alt="Logo">
 </div>
 
-<!-- ================= BOTÓN MENÚ ================= -->
+
 <button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
     <div></div>
     <div></div>
     <div></div>
 </button>
 
-<!-- ================= SIDEBAR ================= -->
+
+
 <div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: 100vh;">
     
-    <!-- Parte superior del menú -->
+   
     <ul style="list-style: none; padding: 0; margin: 0;">
         <li>
             <a href="dashboard.html" class="submenu-link"><b>INICIO</b></a>
@@ -91,17 +42,29 @@
             <a href="lista_trabajadores.html" class="submenu-link"><b>TRABAJADORES</b></a>
         </li>
         <li>
-            <a href="cargos.html" class="submenu-link"><b>CARGO</b></a>
+            <a href="lista_cargos.html" class="submenu-link"><b>CARGO</b></a>
         </li>
+         <li>
+            <a href="lista_direcciones.html" class="submenu-link"><b>DIRECCION</b></a>
+        </li>
+        
+         <li>
+            <a href="lista_contratos.html" class="submenu-link"><b>CONTRATOS</b></a>
+        </li>
+        
         <li>
-            <a href="usuarios.html" class="submenu-link"><b>USUARIO</b></a>
+            <a href="lista_usuarios.html" class="submenu-link"><b>USUARIO</b></a>
+        </li>
+
+         <li>
+            <a href="lista_solicitudes.html" class="submenu-link"><b>SOLICITUDES DE DIAS DE DISFRUTE</b></a>
         </li>
     </ul>
 
-    <!-- Parte inferior del menú (Cerrar Sesión) -->
+
     <ul style="list-style: none; padding: 0; margin-bottom: 20px;">
         <li>
-            <a href="logout.php" class="submenu-link"><b>CERRAR SESIÓN</b></a>
+            <a href="" class="submenu-link"><b>CERRAR SESIÓN</b></a>
         </li>
     </ul>
 
@@ -109,7 +72,6 @@
 
 <div class="overlay"></div>
 
-<!-- ================= CONTENIDO ================= -->
 <div class="main">
     <form class="form-card" id="formPersonas">
         <center><h2>Registro de Personas</h2></center>

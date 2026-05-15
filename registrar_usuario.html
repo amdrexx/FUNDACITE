@@ -2,18 +2,12 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Registro de Trabajador</title>
-
+    <title>Registro de Usuarios</title>
     <link rel="stylesheet" href="style_dashboard.css">
-
-
-    <link href="select2.min.css" rel="stylesheet" />
-
- 
 </head>
 <body>
 
-    
+
     <div id="customAlert" class="custom-alert hidden">
         <div class="alert-box">
             <p id="alertMessage"></p>
@@ -21,12 +15,12 @@
         </div>
     </div>
 
-   
+  
     <div class="topbar">
         <img src="logo.png" alt="Logo">
     </div>
 
-  
+   
     <button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
         <div></div>
         <div></div>
@@ -78,75 +72,47 @@
 
     <div class="overlay"></div>
 
-    
+ 
     <div class="main">
-        <div class="form-card">
-            <center><h2>Registro Trabajador</h2></center>
-
-           
+        <form class="form-card" id="formUsuarios">
+            <center><h2>Registro de Usuarios</h2></center>
+             
             <div class="field">
-                <label>Buscar Persona (Cédula)</label>
-                <select id="persona_id" name="persona_id" style="width:100%" required>
-                    <option value="">Seleccione una persona</option>
+                <label>Trabajador Asociado</label>
+                <select id="trabajadorAsociado">
+                    <option value="">Seleccione...</option>
+                    <!-- Las opciones se llenarán desde la base de datos -->
                     <option value="1">12345678 - Juan Pérez</option>
                     <option value="2">87654321 - María Gómez</option>
-                    <option value="3">11223344 - Carlos López</option>
+                </select>
+            </div>
+            
+            <div class="field">
+                <label>Usuario</label>
+                <input type="text" id="usuario" placeholder="Ingrese nombre de usuario">
+            </div>
+
+            <div class="field">
+                <label>Contraseña</label>
+                <input type="password" id="contrasena" placeholder="Ingrese contraseña">
+            </div>
+
+            <div class="field">
+                <label>Tipo de Usuario</label>
+                <select id="tipoUsuario">
+                    <option value="">Seleccione...</option>
+                    <option value="Analista">Analista</option>
+                    <option value="Director">Director</option>
+                    <option value="Administrador">Administrador</option>
                 </select>
             </div>
 
-           
-            <div class="field">
-                <label>Cargo</label>
-                <select name="cargo_id" required>
-                    <option value="">Seleccione un cargo</option>
-                    <option>Administrador</option>
-                    <option>Analista</option>
-                    <option>Técnico</option>
-                </select>
-            </div>
-
-       
-            <div class="field">
-                <label>Fecha de Ingreso</label>
-                <input type="date" name="fecha_ingreso" id="fecha_ingreso" required>
-            </div>
-
-          
-            <div class="field">
-                <label>Tipo de Contratación</label>
-                <select name="tipo_contrato" required>
-                    <option value="">Seleccione</option>
-                    <option>Fijo</option>
-                    <option>Contratado</option>
-                    <option>Por Honorarios</option>
-                </select>
-            </div>
-
-           
-            <div class="field">
-                <label>Estatus Laboral</label>
-                <select name="estatus_laboral" required>
-                    <option value="">Seleccione</option>
-                    <option>Activo</option>
-                    <option>Jubilado</option>
-                    <option>Suspendido</option>
-                    <option>Retirado</option>
-                </select>
-            </div>
-
-       
-            <button class="btn-guardar" id="btnRegistrar">Registrar Trabajador</button>
-        </div>
+            <button type="submit" class="btn-guardar">Registrar</button>
+        </form>
     </div>
 
-    <script src="jquery.min.js"></script>
-
-    <script src="select2.min.js"></script>
-
-
+    <!-- ================= SCRIPTS ================= -->
     <script src="boton_desplegable.js"></script>
-    <script src="valid_trabajadores.js"></script>
-
-    
+    <script src="valid_usuarios.js"></script>
 </body>
 </html>

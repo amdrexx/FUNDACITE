@@ -13,17 +13,17 @@
     <img src="logo.png" alt="Logo">
 </div>
 
-<!-- ================= BOTÓN MENÚ ================= -->
+
 <button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
     <div></div>
     <div></div>
     <div></div>
 </button>
 
-<!-- ================= SIDEBAR ================= -->
+
 <div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: 100vh;">
     
-    <!-- Parte superior del menú -->
+   
     <ul style="list-style: none; padding: 0; margin: 0;">
         <li>
             <a href="dashboard.html" class="submenu-link"><b>INICIO</b></a>
@@ -35,14 +35,26 @@
             <a href="lista_trabajadores.html" class="submenu-link"><b>TRABAJADORES</b></a>
         </li>
         <li>
-            <a href="cargos.html" class="submenu-link"><b>CARGO</b></a>
+            <a href="lista_cargos.html" class="submenu-link"><b>CARGO</b></a>
         </li>
+         <li>
+            <a href="lista_direcciones.html" class="submenu-link"><b>DIRECCION</b></a>
+        </li>
+        
+         <li>
+            <a href="lista_contratos.html" class="submenu-link"><b>CONTRATOS</b></a>
+        </li>
+        
         <li>
-            <a href="usuarios.html" class="submenu-link"><b>USUARIO</b></a>
+            <a href="lista_usuarios.html" class="submenu-link"><b>USUARIO</b></a>
+        </li>
+
+         <li>
+            <a href="lista_solicitudes.html" class="submenu-link"><b>SOLICITUDES DE DIAS DE DISFRUTE</b></a>
         </li>
     </ul>
 
-    <!-- Parte inferior del menú (Cerrar Sesión) -->
+
     <ul style="list-style: none; padding: 0; margin-bottom: 20px;">
         <li>
             <a href="" class="submenu-link"><b>CERRAR SESIÓN</b></a>
@@ -53,7 +65,6 @@
 
 <div class="overlay"></div>
 
-<!-- ================= MAIN ================= -->
 <div class="main">
 
     <div class="dashboard-container">
@@ -89,7 +100,7 @@
             </div>
         </div>
 
-        <!-- ===== SECCIÓN GRÁFICO ===== -->
+      
         <div class="chart-section">
 
             <h2>Distribución del Personal</h2>
@@ -104,7 +115,7 @@
 
 </div>
 
-<!-- ================= CHART.JS ================= -->
+
 <script src="chart.js"></script>
 
 <script>
@@ -134,7 +145,7 @@ new Chart(ctx, {
     }
 });
 </script>   
-<!-- JS -->
+
 <script src="boton_desplegable.js"></script>
 
 </body>

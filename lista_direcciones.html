@@ -2,24 +2,25 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Lista de Personas</title>
+    <title>Lista de Direcciones</title>
     <link rel="stylesheet" href="style_dashboard.css">
 </head>
 <body>
 
+  
     <button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
         <div></div>
         <div></div>
         <div></div>
     </button>
 
-
+   
     <div class="topbar">
         <img src="logo.png" alt="Logo">
     </div>
 
-  
-
+   
+    
 <div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: 100vh;">
     
    
@@ -64,57 +65,67 @@
 
     <div class="overlay"></div>
 
-  
+   
     <div class="main">
         <div class="glass tabla-container">
-            <h2 style="text-align:center; color:white;">Lista de Personas</h2>
+            <h2 style="text-align:center; color:white;">Lista de Direcciones</h2>
 
-           
             <div class="buscador-container">
                 <input 
                     type="text" 
                     class="input-busqueda"
-                    placeholder="Buscar por cédula, nombre o apellido..."
+                    placeholder="Buscar por estado, municipio, parroquia o sector..."
                 >
                 <button class="btn-buscar">Buscar</button>
-                <a href="registro_personas.html" class="btn-persona" style="text-decoration:none;">
-                    + Agregar Persona
+                <a href="registrar_direcciones.html" class="btn-persona" style="text-decoration:none;">
+                    + Agregar Dirección
                 </a>
             </div>
 
-      
+
             <table class="tabla">
                 <thead>
                     <tr>
-                        <th>Tipo Doc</th>
-                        <th>Cédula</th>
-                        <th>Teléfono</th>
-                        <th>Nombres</th>
-                        <th>Apellidos</th>
-                        <th>Género</th>
-                        <th>Estado Civil</th>
-                        <th>Correo Electrónico</th>
-                        <th>Fecha de Nacimiento</th>
-                        <th>Edad</th>
+                        <th>Estado</th>
+                        <th>Municipio</th>
+                        <th>Parroquia</th>
+                        <th>Sector</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                   
+              
                     <tr>
-                        <td>V</td>
-                        <td>12345678</td>
-                        <td>04121234567</td>
-                        <td>Juan Carlos</td>
-                        <td>Pérez López</td>
-                        <td>Masculino</td>
-                        <td>Soltero(a)</td>
-                        <td>juan@email.com</td>
-                        <td>1995-04-23</td>
-                        <td>31</td>
+                        <td>Lara</td>
+                        <td>Iribarren</td>
+                        <td>Catedral</td>
+                        <td>El Centro</td>
                         <td class="acciones">
-                            <button class="btn-editar" onclick="editarPersona('12345678')">Editar</button>
-                            <button class="btn-eliminar" onclick="eliminarPersona('12345678')">Eliminar</button>
+                            <button class="btn-editar" 
+                            onclick="editarDireccion('Lara','Iribarren','Catedral','El Centro')">
+                            Editar
+                        </button>
+                        <button class="btn-eliminar" 
+                            onclick="eliminarDireccion('Lara','Iribarren','Catedral','El Centro')">
+                            Eliminar
+                        </button>
+                        </td>
+                    </tr>
+                
+                    <tr>
+                        <td>Zulia</td>
+                        <td>Maracaibo</td>
+                        <td>Coquivacoa</td>
+                        <td>La Lago</td>
+                        <td class="acciones">
+                            <button class="btn-editar" 
+                            onclick="editarDireccion('Zulia','Maracaibo','Coquivacoa','La Lago')">
+                            Editar
+                        </button>
+                        <button class="btn-eliminar" 
+                            onclick="eliminarDireccion('Zulia','Maracaibo','Coquivacoa','La Lago')">
+                            Eliminar
+                        </button>
                         </td>
                     </tr>
                 </tbody>
@@ -122,10 +133,8 @@
         </div>
     </div>
 
+    
     <script src="boton_desplegable.js"></script>
-    <script src="valid_personas.js"></script>
-  
-   
-
+    <script src="valid_direcciones.js"></script>
 </body>
 </html>
