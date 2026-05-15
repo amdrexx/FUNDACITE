@@ -25,58 +25,34 @@
 </button>
 
 <!-- ================= SIDEBAR ================= -->
-<div class="sidebar" id="sidebar">
-    <ul>
-        <li><a href="dashboard.html" class="submenu-link"><b>INICIO</b></a></li>
-
-        <li class="submenu">
-            <div class="submenu-btn" onclick="toggleSubmenu(this)">
-                <span><b>PERSONAS</b></span>
-                <span class="arrow">▼</span>
-            </div>
-
-            <ul class="submenu-content">
-                <li>
-                    <a href="registro_personas.html" class="submenu-link">
-                        <img src="nueva_persona.png" class="icon-submenu">
-                        Registrar Persona
-                    </a>
-                </li>
-
-                <li>
-                    <a href="lista_personas.html" class="submenu-link">
-                        <img src="icono_lista.png" class="icon-submenu">
-                        Lista de Personas
-                    </a>
-                </li>
-            </ul>
+<div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: 100vh;">
+    
+    <!-- Parte superior del menú -->
+    <ul style="list-style: none; padding: 0; margin: 0;">
+        <li>
+            <a href="dashboard.html" class="submenu-link"><b>INICIO</b></a>
         </li>
-
-        <li class="submenu">
-       <div class="submenu-btn" onclick="toggleSubmenu(this)">
-                <span><b>TRABAJADORES</b></span>
-                <span class="arrow">▼</span>
-            </div>
-
-            <ul class="submenu-content">
-                <li>
-                    <a href="registro_trabajadores.html" class="submenu-link">
-                        <img src="nueva_persona.png" class="icon-submenu">
-                        Registrar Trabajador
-                    </a>
-                </li>
-
-                <li>
-                    <a href="lista_trabajadores.html" class="submenu-link">
-                        <img src="icono_lista.png" class="icon-submenu">
-                        Lista de Trabajadores
-                    </a>
-                </li>
-            </ul>
+        <li>
+            <a href="lista_personas.html" class="submenu-link"><b>PERSONAS</b></a>
         </li>
+        <li>
+            <a href="lista_trabajadores.html" class="submenu-link"><b>TRABAJADORES</b></a>
         </li>
-
+        <li>
+            <a href="cargos.html" class="submenu-link"><b>CARGO</b></a>
+        </li>
+        <li>
+            <a href="usuarios.html" class="submenu-link"><b>USUARIO</b></a>
+        </li>
     </ul>
+
+    <!-- Parte inferior del menú (Cerrar Sesión) -->
+    <ul style="list-style: none; padding: 0; margin-bottom: 20px;">
+        <li>
+            <a href="logout.php" class="submenu-link"><b>CERRAR SESIÓN</b></a>
+        </li>
+    </ul>
+
 </div>
 
 <div class="overlay"></div>

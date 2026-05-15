@@ -1,62 +1,59 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Registro de Personas</title>
-<link rel="stylesheet" href="style_dashboard.css">
+    <meta charset="UTF-8">
+    <title>Registro de Personas</title>
+    <link rel="stylesheet" href="style_dashboard.css">
+    <style>
+        /* ================= ALERTA PERSONALIZADA ================= */
+        .custom-alert {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
 
-<style>
-/* ================= ALERTA PERSONALIZADA ================= */
-.custom-alert {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
+        .alert-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 320px;
+            text-align: center;
+            box-shadow: 0px 10px 30px rgba(0,0,0,0.3);
+            animation: pop 0.2s ease-in-out;
+        }
 
-.alert-box {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
-    width: 320px;
-    text-align: center;
-    box-shadow: 0px 10px 30px rgba(0,0,0,0.3);
-    animation: pop 0.2s ease-in-out;
-}
+        .alert-box p {
+            white-space: pre-line;
+            font-size: 15px;
+            margin-bottom: 15px;
+        }
 
-.alert-box p {
-    white-space: pre-line;
-    font-size: 15px;
-    margin-bottom: 15px;
-}
+        .alert-box button {
+            background: #1e88e5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
 
-.alert-box button {
-    background: #1e88e5;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-}
+        .hidden {
+            display: none;
+        }
 
-.hidden {
-    display: none;
-}
-
-@keyframes pop {
-    from { transform: scale(0.8); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-}
-</style>
-
+        @keyframes pop {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+    </style>
 </head>
-
 <body>
 
 <!-- ================= ALERTA ================= -->
@@ -80,187 +77,113 @@
 </button>
 
 <!-- ================= SIDEBAR ================= -->
-<div class="sidebar" id="sidebar">
-    <ul>
-       <li><a href="dashboard.html" class="submenu-link"><b>INICIO</b></a></li>
-
-
-        <li class="submenu">
-            <div class="submenu-btn" onclick="toggleSubmenu(this)">
-                <span><b>PERSONAS</b></span>
-                <span class="arrow">▼</span>
-            </div>
-
-            <ul class="submenu-content">
-                <li>
-                    <a href="registro_personas.html" class="submenu-link">
-                        <img src="nueva_persona.png" class="icon-submenu">
-                        Registrar Persona
-                    </a>
-                </li>
-
-                <li>
-                    <a href="lista_personas.html" class="submenu-link">
-                        <img src="icono_lista.png" class="icon-submenu">
-                        Lista de Personas
-                    </a>
-                </li>
-            </ul>
+<div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: 100vh;">
+    
+    <!-- Parte superior del menú -->
+    <ul style="list-style: none; padding: 0; margin: 0;">
+        <li>
+            <a href="dashboard.html" class="submenu-link"><b>INICIO</b></a>
         </li>
-
-        <li class="submenu">
-       <div class="submenu-btn" onclick="toggleSubmenu(this)">
-                <span><b>TRABAJADORES</b></span>
-                <span class="arrow">▼</span>
-            </div>
-
-            <ul class="submenu-content">
-                <li>
-                    <a href="registro_trabajadores.html" class="submenu-link">
-                        <img src="nueva_persona.png" class="icon-submenu">
-                        Registrar Trabajador
-                    </a>
-                </li>
-
-                <li>
-                    <a href="lista_trabajadores.html" class="submenu-link">
-                        <img src="icono_lista.png" class="icon-submenu">
-                        Lista de Trabajadores
-                    </a>
-                </li>
-            </ul>
+        <li>
+            <a href="lista_personas.html" class="submenu-link"><b>PERSONAS</b></a>
         </li>
+        <li>
+            <a href="lista_trabajadores.html" class="submenu-link"><b>TRABAJADORES</b></a>
         </li>
-
+        <li>
+            <a href="cargos.html" class="submenu-link"><b>CARGO</b></a>
+        </li>
+        <li>
+            <a href="usuarios.html" class="submenu-link"><b>USUARIO</b></a>
+        </li>
     </ul>
+
+    <!-- Parte inferior del menú (Cerrar Sesión) -->
+    <ul style="list-style: none; padding: 0; margin-bottom: 20px;">
+        <li>
+            <a href="logout.php" class="submenu-link"><b>CERRAR SESIÓN</b></a>
+        </li>
+    </ul>
+
 </div>
 
 <div class="overlay"></div>
 
 <!-- ================= CONTENIDO ================= -->
 <div class="main">
+    <form class="form-card" id="formPersonas">
+        <center><h2>Registro de Personas</h2></center>
 
-<form class="form-card" id="formPersonas">
+        <div class="field">
+            <label>Tipo de Documento</label>
+            <select id="tipoDoc">
+                <option value="">Seleccione...</option>
+                <option>V</option>
+                <option>E</option>
+            </select>
+        </div>
 
-    <center><h2>Registro de Personas</h2></center>
+        <div class="field">
+            <label>Cédula</label>
+            <input type="text" id="cedula" maxlength="8" placeholder="Ingrese cédula">
+        </div>
 
-    <div class="field">
-        <label>Tipo de Documento</label>
-        <select id="tipoDoc">
-            <option value="">Seleccione...</option>
-            <option>V</option>
-            <option>E</option>
-        </select>
-    </div>
+        <div class="field">
+            <label>Número de Teléfono</label>
+            <input type="text" id="numeroTelefono" maxlength="11" placeholder="Ingrese Número de Teléfono">
+        </div>
 
-    <div class="field">
-        <label>Cédula</label>
-        <input type="text" id="cedula" placeholder="Ingrese cédula">
-    </div>
+        <div class="field">
+            <label>Nombres</label>
+            <input type="text" id="nombres" placeholder="Ingrese nombres">
+        </div>
 
-    <div class="field">
-        <label>Numero de Telefono</label>
-        <input type="text" id="numeroTelefono" placeholder="Ingrese Numero de Telefono">
-    </div>
+        <div class="field">
+            <label>Apellidos</label>
+            <input type="text" id="apellidos" placeholder="Ingrese apellidos">
+        </div>
 
-    <div class="field">
-        <label>Nombres</label>
-        <input type="text" id="nombres" placeholder="Ingrese nombres">
-    </div>
+        <div class="field">
+            <label>Género</label>
+            <select id="genero">
+                <option value="">Seleccione...</option>
+                <option>Masculino</option>
+                <option>Femenino</option>
+            </select>
+        </div>
 
-    <div class="field">
-        <label>Apellidos</label>
-        <input type="text" id="apellidos" placeholder="Ingrese apellidos">
-    </div>
+        <div class="field">
+            <label>Estado Civil</label>
+            <select id="estadoCivil">
+                <option value="">Seleccione...</option>
+                <option>Soltero(a)</option>
+                <option>Casado(a)</option>
+                <option>Divorciado(a)</option>
+                <option>Viudo(a)</option>
+            </select>
+        </div>
 
-    <div class="field">
-        <label>Genero</label>
-        <select id="genero">
-            <option value="">Seleccione...</option>
-            <option>Masculino</option>
-            <option>Femenino</option>
-        </select>
-    </div>
+        <div class="field">
+            <label>Correo Electrónico</label>
+            <input type="text" id="correoElectronico" placeholder="Ingrese correo electrónico">
+        </div>
 
-    <div class="field">
-        <label>Estado Civil</label>
-        <select id="estadoCivil">
-            <option value="">Seleccione...</option>
-            <option>Soltero(a)</option>
-            <option>Casado(a)</option>
-            <option>Divorciado(a)</option>
-            <option>Viudo(a)</option>
-        </select>
-    </div>
+        <div class="field">
+            <label>Fecha de Nacimiento</label>
+            <input type="date" id="fecha">
+        </div>
 
-     <div class="field">
-        <label>Correo Electronico</label>
-        <input type="text" id="correoElectronico" placeholder="Ingrese correo electrónico">
-    </div>
+        <div class="field">
+            <label>Edad</label>
+            <input type="text" id="edad" placeholder="Se calculará automáticamente" readonly>
+        </div>
 
-    <div class="field">
-        <label>Fecha de Nacimiento</label>
-        <input type="date" id="fecha">
-    </div>
-
-    <button type="submit" class="btn-guardar">Guardar</button>
-
-</form>
-
+        <button type="submit" class="btn-guardar">Registrar</button>
+    </form>
 </div>
 
-<!-- ================= JS ================= -->
-<script>
-document.getElementById("formPersonas").addEventListener("submit", function(e) {
-    e.preventDefault();
-
-    let tipoDoc = document.getElementById("tipoDoc").value;
-    let cedula = document.getElementById("cedula").value.trim();
-    let nombres = document.getElementById("nombres").value.trim();
-    let apellidos = document.getElementById("apellidos").value.trim();
-    let parentesco = document.getElementById("parentesco").value;
-    let fecha = document.getElementById("fecha").value;
-
-    let errores = [];
-
-    if (!tipoDoc) errores.push("Tipo de Documento");
-    if (!cedula) errores.push("Cédula");
-    if (!nombres) errores.push("Nombres");
-    if (!apellidos) errores.push("Apellidos");
-    if (!parentesco) errores.push("Parentesco");
-    if (!fecha) errores.push("Fecha de Nacimiento");
-
-    // ❌ SI HAY ERRORES
-    if (errores.length > 0) {
-        showAlert(
-            "Debes completar los siguientes campos:\n\n• " + errores.join("\n• "),
-            false
-        );
-        return;
-    }
-
-    // ✅ ÉXITO DIRECTO
-    showAlert("Registro guardado correctamente ✅", true);
-
-    // 🔥 REDIRECCIÓN AL DASHBOARD
-    setTimeout(() => {
-        window.location.href = "dashboard.html";
-    }, 1500);
-});
-
-function showAlert(message, success = false) {
-    document.getElementById("customAlert").classList.remove("hidden");
-    document.getElementById("alertMessage").innerText = message;
-
-    let btn = document.querySelector(".alert-box button");
-    btn.style.background = success ? "#2e7d32" : "#c62828";
-}
-
-function closeAlert() {
-    document.getElementById("customAlert").classList.add("hidden");
-}
-</script>
 <script src="boton_desplegable.js"></script>
+<script src="valid_personas.js"></script>
 
 </body>
 </html>
