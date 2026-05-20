@@ -36,7 +36,7 @@
         }
         
         function editarCargo(nombre) {
-            alert("✏️ Editar cargo:\n\nNombre: " + nombre);
+            alert("Editar cargo:\n\nNombre: " + nombre);
             // Para redirigir a un formulario real:
             // window.location.href = "editar_cargo.html?nombre=" + encodeURIComponent(nombre);
         }
