@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Dashboard</title>
-<link rel="stylesheet" href="style_dashboard.css">
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="style_dashboard.css">
+  <link rel="stylesheet" href="bootstrap.min.css">
+  <link rel="stylesheet" href="bootstrap-icons.min.css">   <!-- 👈 NUEVA LÍNEA -->
+  <script src="bootstrap.min.js" defer></script>
 </head>
 
 <body>
@@ -14,56 +17,64 @@
 </div>
 
 
-<button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
-    <div></div>
-    <div></div>
-    <div></div>
-</button>
 
 
-<div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: 100vh;">
+<div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: calc(102vh - 70px);">
     
-   
     <ul style="list-style: none; padding: 0; margin: 0;">
         <li>
-            <a href="dashboard.html" class="submenu-link"><b>INICIO</b></a>
+            <a href="dashboard.html" class="submenu-link">
+                <i class="bi bi-house-door-fill"></i> <b>INICIO</b>
+            </a>
         </li>
         <li>
-            <a href="lista_personas.html" class="submenu-link"><b>PERSONAS</b></a>
+            <a href="lista_personas.html" class="submenu-link">
+                <i class="bi bi-people-fill"></i> <b>PERSONAS</b>
+            </a>
         </li>
         <li>
-            <a href="lista_trabajadores.html" class="submenu-link"><b>TRABAJADORES</b></a>
+            <a href="lista_trabajadores.html" class="submenu-link">
+                <i class="bi bi-person-workspace"></i> <b>TRABAJADORES</b>
+            </a>
         </li>
         <li>
-            <a href="lista_cargos.html" class="submenu-link"><b>CARGO</b></a>
+            <a href="lista_cargos.html" class="submenu-link">
+                <i class="bi bi-briefcase-fill"></i> <b>CARGO</b>
+            </a>
         </li>
-         <li>
-            <a href="lista_direcciones.html" class="submenu-link"><b>DIRECCION</b></a>
-        </li>
-        
-         <li>
-            <a href="lista_contratos.html" class="submenu-link"><b>CONTRATOS</b></a>
-        </li>
-        
         <li>
-            <a href="lista_usuarios.html" class="submenu-link"><b>USUARIO</b></a>
+            <a href="lista_direcciones.html" class="submenu-link">
+                <i class="bi bi-geo-alt-fill"></i> <b>DIRECCION</b>
+            </a>
         </li>
-
-         <li>
-            <a href="lista_solicitudes.html" class="submenu-link"><b>SOLICITUDES DE DIAS DE DISFRUTE</b></a>
+        <li>
+            <a href="lista_contratos.html" class="submenu-link">
+                <i class="bi bi-file-earmark-text-fill"></i> <b>CONTRATOS</b>
+            </a>
+        </li>
+        <li>
+            <a href="lista_usuarios.html" class="submenu-link">
+                <i class="bi bi-person-circle"></i> <b>USUARIO</b>
+            </a>
+        </li>
+        <li>
+            <a href="lista_solicitudes.html" class="submenu-link">
+                <i class="bi bi-calendar2-check-fill"></i> <b>SOLICITUDES DE DIAS DE DISFRUTE</b>
+            </a>
         </li>
     </ul>
 
-
     <ul style="list-style: none; padding: 0; margin-bottom: 20px;">
         <li>
-            <a href="" class="submenu-link"><b>CERRAR SESIÓN</b></a>
+            <a href="" class="submenu-link">
+                <i class="bi bi-box-arrow-right"></i> <b>CERRAR SESIÓN</b>
+            </a>
         </li>
     </ul>
 
 </div>
-
-<div class="overlay"></div>
+<!-- OVERLAY (puedes eliminarlo si no se usa) -->
+<!-- <div class="overlay"></div> -->
 
 <div class="main">
 
@@ -146,7 +157,8 @@ new Chart(ctx, {
 });
 </script>   
 
-<script src="boton_desplegable.js"></script>
+<!-- SCRIPT DE MENÚ ELIMINADO -->
+<!-- <script src="boton_desplegable.js"></script> -->
 
 </body>
 </html>

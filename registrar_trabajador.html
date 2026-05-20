@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Registro de Trabajador</title>
-
     <link rel="stylesheet" href="style_dashboard.css">
-
-
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <link rel="stylesheet" href="bootstrap-icons.min.css">   <!-- 👈 NUEVA LÍNEA -->
+    <script src="bootstrap.min.js" defer></script>
     <link href="select2.min.css" rel="stylesheet" />
 
- 
 </head>
 <body>
 
@@ -22,66 +21,77 @@
     </div>
 
    
-    <div class="topbar">
-        <img src="logo.png" alt="Logo">
-    </div>
 
-  
-    <button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
-        <div></div>
-        <div></div>
-        <div></div>
-    </button>
 
- 
-<div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: 100vh;">
+<!-- ================= TOPBAR ================= -->
+<div class="topbar">
+    <img src="logo.png" alt="Logo">
+</div>
+
+
+
+
+<div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: calc(102vh - 70px);">
     
-   
     <ul style="list-style: none; padding: 0; margin: 0;">
         <li>
-            <a href="dashboard.html" class="submenu-link"><b>INICIO</b></a>
+            <a href="dashboard.html" class="submenu-link">
+                <i class="bi bi-house-door-fill"></i> <b>INICIO</b>
+            </a>
         </li>
         <li>
-            <a href="lista_personas.html" class="submenu-link"><b>PERSONAS</b></a>
+            <a href="lista_personas.html" class="submenu-link">
+                <i class="bi bi-people-fill"></i> <b>PERSONAS</b>
+            </a>
         </li>
         <li>
-            <a href="lista_trabajadores.html" class="submenu-link"><b>TRABAJADORES</b></a>
+            <a href="lista_trabajadores.html" class="submenu-link">
+                <i class="bi bi-person-workspace"></i> <b>TRABAJADORES</b>
+            </a>
         </li>
         <li>
-            <a href="lista_cargos.html" class="submenu-link"><b>CARGO</b></a>
+            <a href="lista_cargos.html" class="submenu-link">
+                <i class="bi bi-briefcase-fill"></i> <b>CARGO</b>
+            </a>
         </li>
-         <li>
-            <a href="lista_direcciones.html" class="submenu-link"><b>DIRECCION</b></a>
-        </li>
-        
-         <li>
-            <a href="lista_contratos.html" class="submenu-link"><b>CONTRATOS</b></a>
-        </li>
-        
         <li>
-            <a href="lista_usuarios.html" class="submenu-link"><b>USUARIO</b></a>
+            <a href="lista_direcciones.html" class="submenu-link">
+                <i class="bi bi-geo-alt-fill"></i> <b>DIRECCION</b>
+            </a>
         </li>
-
-         <li>
-            <a href="lista_solicitudes.html" class="submenu-link"><b>SOLICITUDES DE DIAS DE DISFRUTE</b></a>
+        <li>
+            <a href="lista_contratos.html" class="submenu-link">
+                <i class="bi bi-file-earmark-text-fill"></i> <b>CONTRATOS</b>
+            </a>
+        </li>
+        <li>
+            <a href="lista_usuarios.html" class="submenu-link">
+                <i class="bi bi-person-circle"></i> <b>USUARIO</b>
+            </a>
+        </li>
+        <li>
+            <a href="lista_solicitudes.html" class="submenu-link">
+                <i class="bi bi-calendar2-check-fill"></i> <b>SOLICITUDES DE DIAS DE DISFRUTE</b>
+            </a>
         </li>
     </ul>
 
-
     <ul style="list-style: none; padding: 0; margin-bottom: 20px;">
         <li>
-            <a href="" class="submenu-link"><b>CERRAR SESIÓN</b></a>
+            <a href="" class="submenu-link">
+                <i class="bi bi-box-arrow-right"></i> <b>CERRAR SESIÓN</b>
+            </a>
         </li>
     </ul>
 
 </div>
 
-    <div class="overlay"></div>
 
     
     <div class="main">
-        <div class="form-card">
-            <center><h2>Registro Trabajador</h2></center>
+        <form class="form-card" id="formTrabajadores">
+            <div class="form-grid">
+            <h2 style="text-align: center; margin-bottom: 10px;">Registro de Trabajador</h2>
 
            
             <div class="field">
@@ -95,6 +105,11 @@
             </div>
 
            
+             <div class="field">
+                <label>Fecha de Ingreso</label>
+                <input type="date" name="fecha_ingreso" id="fecha_ingreso" required>
+            </div>
+
             <div class="field">
                 <label>Cargo</label>
                 <select name="cargo_id" required>
@@ -104,13 +119,6 @@
                     <option>Técnico</option>
                 </select>
             </div>
-
-       
-            <div class="field">
-                <label>Fecha de Ingreso</label>
-                <input type="date" name="fecha_ingreso" id="fecha_ingreso" required>
-            </div>
-
           
             <div class="field">
                 <label>Tipo de Contratación</label>
@@ -135,8 +143,9 @@
             </div>
 
        
-            <button class="btn-guardar" id="btnRegistrar">Registrar Trabajador</button>
-        </div>
+            <button type="submit" class="btn-guardar full-width">Registrar</button>
+            </div>
+        </form>
     </div>
 
     <script src="jquery.min.js"></script>

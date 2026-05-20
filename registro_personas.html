@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <title>Registro de Personas</title>
     <link rel="stylesheet" href="style_dashboard.css">
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <link rel="stylesheet" href="bootstrap-icons.min.css">
+    <script src="bootstrap.min.js" defer></script>
 </head>
 <body>
 
@@ -15,132 +18,144 @@
 </div>
 
 
+<!-- ================= TOPBAR ================= -->
 <div class="topbar">
     <img src="logo.png" alt="Logo">
 </div>
 
 
-<button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
-    <div></div>
-    <div></div>
-    <div></div>
-</button>
 
 
-
-<div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: 100vh;">
+<div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: calc(102vh - 70px);">
     
-   
     <ul style="list-style: none; padding: 0; margin: 0;">
         <li>
-            <a href="dashboard.html" class="submenu-link"><b>INICIO</b></a>
+            <a href="dashboard.html" class="submenu-link">
+                <i class="bi bi-house-door-fill"></i> <b>INICIO</b>
+            </a>
         </li>
         <li>
-            <a href="lista_personas.html" class="submenu-link"><b>PERSONAS</b></a>
+            <a href="lista_personas.html" class="submenu-link">
+                <i class="bi bi-people-fill"></i> <b>PERSONAS</b>
+            </a>
         </li>
         <li>
-            <a href="lista_trabajadores.html" class="submenu-link"><b>TRABAJADORES</b></a>
+            <a href="lista_trabajadores.html" class="submenu-link">
+                <i class="bi bi-person-workspace"></i> <b>TRABAJADORES</b>
+            </a>
         </li>
         <li>
-            <a href="lista_cargos.html" class="submenu-link"><b>CARGO</b></a>
+            <a href="lista_cargos.html" class="submenu-link">
+                <i class="bi bi-briefcase-fill"></i> <b>CARGO</b>
+            </a>
         </li>
-         <li>
-            <a href="lista_direcciones.html" class="submenu-link"><b>DIRECCION</b></a>
-        </li>
-        
-         <li>
-            <a href="lista_contratos.html" class="submenu-link"><b>CONTRATOS</b></a>
-        </li>
-        
         <li>
-            <a href="lista_usuarios.html" class="submenu-link"><b>USUARIO</b></a>
+            <a href="lista_direcciones.html" class="submenu-link">
+                <i class="bi bi-geo-alt-fill"></i> <b>DIRECCION</b>
+            </a>
         </li>
-
-         <li>
-            <a href="lista_solicitudes.html" class="submenu-link"><b>SOLICITUDES DE DIAS DE DISFRUTE</b></a>
+        <li>
+            <a href="lista_contratos.html" class="submenu-link">
+                <i class="bi bi-file-earmark-text-fill"></i> <b>CONTRATOS</b>
+            </a>
+        </li>
+        <li>
+            <a href="lista_usuarios.html" class="submenu-link">
+                <i class="bi bi-person-circle"></i> <b>USUARIO</b>
+            </a>
+        </li>
+        <li>
+            <a href="lista_solicitudes.html" class="submenu-link">
+                <i class="bi bi-calendar2-check-fill"></i> <b>SOLICITUDES DE DIAS DE DISFRUTE</b>
+            </a>
         </li>
     </ul>
 
-
     <ul style="list-style: none; padding: 0; margin-bottom: 20px;">
         <li>
-            <a href="" class="submenu-link"><b>CERRAR SESIÓN</b></a>
+            <a href="" class="submenu-link">
+                <i class="bi bi-box-arrow-right"></i> <b>CERRAR SESIÓN</b>
+            </a>
         </li>
     </ul>
 
 </div>
 
-<div class="overlay"></div>
-
 <div class="main">
     <form class="form-card" id="formPersonas">
-        <center><h2>Registro de Personas</h2></center>
+        <div class="form-grid">
+            <h2 style="text-align: center; margin-bottom: 10px;">Registro de Persona</h2>
 
-        <div class="field">
-            <label>Tipo de Documento</label>
-            <select id="tipoDoc">
-                <option value="">Seleccione...</option>
-                <option>V</option>
-                <option>E</option>
-            </select>
+            <div class="field">
+                <label>Tipo de Documento</label>
+                <select id="tipoDoc">
+                    <option value="">Seleccione...</option>
+                    <option>V</option>
+                    <option>E</option>
+                </select>
+            </div>
+            
+            <div class="field">
+                <label>Edad</label>
+                <input type="text" id="edad" placeholder="Se calculará automáticamente" readonly>
+            </div>
+            
+            
+            <div class="field">
+                <label>Cédula</label>
+                <input type="text" id="cedula" maxlength="8" placeholder="Ingrese cédula">
+            </div>
+
+             <div class="field">
+                <label>Estado Civil</label>
+                <select id="estadoCivil">
+                    <option value="">Seleccione...</option>
+                    <option>Soltero(a)</option>
+                    <option>Casado(a)</option>
+                    <option>Divorciado(a)</option>
+                    <option>Viudo(a)</option>
+                </select>
+            </div>
+
+              
+            <div class="field">
+                <label>Nombres</label>
+                <input type="text" id="nombres" maxlength="50" placeholder="Ingrese nombres">
+            </div>
+
+            <div class="field">
+                <label>Género</label>
+                <select id="genero">
+                    <option value="">Seleccione...</option>
+                    <option>Masculino</option>
+                    <option>Femenino</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Apellidos</label>
+                <input type="text" id="apellidos" maxlength="50" placeholder="Ingrese apellidos">
+            </div>
+
+            <div class="field">
+                <label>Correo Electrónico</label>
+                <input type="text" id="correoElectronico" maxlength="100" placeholder="Ingrese correo electrónico">
+            </div>
+
+            <div class="field">
+                <label>Fecha de Nacimiento</label>
+                <input type="date" id="fecha">
+            </div>
+            
+            <div class="field">
+                <label>Número de Teléfono</label>
+                <input type="text" id="numeroTelefono" maxlength="11" placeholder="Ingrese Número de Teléfono">
+            </div>
+
+            
+
+            <button type="submit" class="btn-guardar full-width">Registrar</button>
         </div>
-
-        <div class="field">
-            <label>Cédula</label>
-            <input type="text" id="cedula" maxlength="8" placeholder="Ingrese cédula">
-        </div>
-
-        <div class="field">
-            <label>Número de Teléfono</label>
-            <input type="text" id="numeroTelefono" maxlength="11" placeholder="Ingrese Número de Teléfono">
-        </div>
-
-        <div class="field">
-            <label>Nombres</label>
-            <input type="text" id="nombres" placeholder="Ingrese nombres">
-        </div>
-
-        <div class="field">
-            <label>Apellidos</label>
-            <input type="text" id="apellidos" placeholder="Ingrese apellidos">
-        </div>
-
-        <div class="field">
-            <label>Género</label>
-            <select id="genero">
-                <option value="">Seleccione...</option>
-                <option>Masculino</option>
-                <option>Femenino</option>
-            </select>
-        </div>
-
-        <div class="field">
-            <label>Estado Civil</label>
-            <select id="estadoCivil">
-                <option value="">Seleccione...</option>
-                <option>Soltero(a)</option>
-                <option>Casado(a)</option>
-                <option>Divorciado(a)</option>
-                <option>Viudo(a)</option>
-            </select>
-        </div>
-
-        <div class="field">
-            <label>Correo Electrónico</label>
-            <input type="text" id="correoElectronico" placeholder="Ingrese correo electrónico">
-        </div>
-
-        <div class="field">
-            <label>Fecha de Nacimiento</label>
-            <input type="date" id="fecha">
-        </div>
-
-        <div class="field">
-            <label>Edad</label>
-            <input type="text" id="edad" placeholder="Se calculará automáticamente" readonly>
-        </div>
-
-        <button type="submit" class="btn-guardar">Registrar</button>
     </form>
 </div>
 
