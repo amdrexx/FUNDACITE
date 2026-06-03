@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Parroquia</title>
+
+    <link rel="stylesheet" href="style_dashboard.css">
+
+
+    <link href="select2.min.css" rel="stylesheet" />
+
+ 
+</head>
+<body>
+
+    
+    <div id="customAlert" class="custom-alert hidden">
+        <div class="alert-box">
+            <p id="alertMessage"></p>
+            <button onclick="closeAlert()">Aceptar</button>
+        </div>
+    </div>
+
+   
+    <div class="topbar">
+        <img src="logo.png" alt="Logo">
+    </div>
+
+  
+    <button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
+        <div></div>
+        <div></div>
+        <div></div>
+    </button>
+
+ 
+<div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: 100vh;">
+    
+   
+    <ul style="list-style: none; padding: 0; margin: 0;">
+        <li>
+            <a href="dashboard.html" class="submenu-link"><b>INICIO</b></a>
+        </li>
+        <li>
+            <a href="lista_personas.html" class="submenu-link"><b>PERSONAS</b></a>
+        </li>
+        <li>
+            <a href="lista_trabajadores.html" class="submenu-link"><b>TRABAJADORES</b></a>
+        </li>
+        <li>
+            <a href="lista_cargos.html" class="submenu-link"><b>CARGO</b></a>
+        </li>
+         <li>
+            <a href="lista_direcciones.html" class="submenu-link"><b>DIRECCION</b></a>
+        </li>
+        
+         <li>
+            <a href="lista_contratos.html" class="submenu-link"><b>CONTRATOS</b></a>
+        </li>
+        
+        <li>
+            <a href="lista_usuarios.html" class="submenu-link"><b>USUARIO</b></a>
+        </li>
+
+         <li>
+            <a href="lista_solicitudes.html" class="submenu-link"><b>SOLICITUDES DE DIAS DE DISFRUTE</b></a>
+        </li>
+    </ul>
+
+
+    <ul style="list-style: none; padding: 0; margin-bottom: 20px;">
+        <li>
+            <a href="" class="submenu-link"><b>CERRAR SESIÓN</b></a>
+        </li>
+    </ul>
+
+</div>
+
+    <div class="overlay"></div>
+
+    
+<!-- ================= CONTENIDO ================= -->
+<div class="main">
+    <div class="form-card">
+        <center><h2>Registro de Parroquia</h2></center>
+
+        <!-- Select de Estados -->
+        <div class="field">
+            <label>Seleccione el Estado</label>
+            <select id="selectEstado">
+                <option value="">Seleccione un estado</option>
+            </select>
+        </div>
+
+        <!-- Select de Municipio -->
+        <div class="field">
+            <label>Seleccione el Municipio</label>
+            <select id="selectMunicipio">
+                <option value="">Seleccione un municipio</option>
+            </select>
+        </div>
+
+        <!-- CONTENEDOR DE PARROQUIAS -->
+        <div id="contenedorParroquias">
+
+            <!-- Parroquia -->
+            <div class="field">
+                <label>Nombre de la parroquia</label>
+                <input type="text" name="parroquia[]" placeholder="Ingrese la parroquia">
+            </div>
+
+        </div>
+
+        <!-- Botón Añadir parroquia -->
+        <button type="button" class="btn-accion" id="btnAgregar">
+            Añadir parroquia
+        </button>
+
+        <!-- Botón Guardar -->
+        <button type="button" class="btn-guardar">
+            Guardar
+        </button>
+    </div>
+</div>
+
+    <script src="añadir_campo.js"></script>
+    <script src="jquery.min.js"></script>
+
+    <script src="select2.min.js"></script>
+
+
+    <script src="boton_desplegable.js"></script>
+    <script src="valid_trabajadores.js"></script>
+
+    
+</body>
+</html>
