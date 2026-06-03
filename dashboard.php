@@ -1,16 +1,7 @@
 <?php
-// ============================================================
-// VERSIÓN SIN BASE DE DATOS - SOLO PHP
-// Los valores se definen manualmente (puedes cambiarlos aquí)
-// ============================================================
 $activo   = 56;   // Personal activo
 $jubilado = 5;    // Personal jubilado
 $inactivo = 16;   // Personal inactivo
-
-// Si en el futuro quieres generar datos aleatorios para pruebas, descomenta:
-// $activo   = rand(40, 80);
-// $jubilado = rand(2, 10);
-// $inactivo = rand(10, 30);
 ?>
 
 <!DOCTYPE html>
@@ -34,42 +25,42 @@ $inactivo = 16;   // Personal inactivo
 <div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: calc(102vh - 70px);">
     <ul style="list-style: none; padding: 0; margin: 0;">
         <li>
-            <a href="dashboard.html" class="submenu-link">
+            <a href="dashboard.php" class="submenu-link">
                 <i class="bi bi-house-door-fill"></i> <b>INICIO</b>
             </a>
         </li>
         <li>
-            <a href="lista_personas.html" class="submenu-link">
+            <a href="lista_personas.php" class="submenu-link">
                 <i class="bi bi-people-fill"></i> <b>PERSONAS</b>
             </a>
         </li>
         <li>
-            <a href="lista_trabajadores.html" class="submenu-link">
+            <a href="lista_trabajadores.php" class="submenu-link">
                 <i class="bi bi-person-workspace"></i> <b>TRABAJADORES</b>
             </a>
         </li>
         <li>
-            <a href="lista_cargos.html" class="submenu-link">
+            <a href="lista_cargos.php" class="submenu-link">
                 <i class="bi bi-briefcase-fill"></i> <b>CARGO</b>
             </a>
         </li>
         <li>
-            <a href="lista_direcciones.html" class="submenu-link">
+            <a href="lista_direcciones.php" class="submenu-link">
                 <i class="bi bi-geo-alt-fill"></i> <b>DIRECCION</b>
             </a>
         </li>
         <li>
-            <a href="lista_contratos.html" class="submenu-link">
+            <a href="lista_contratos.php" class="submenu-link">
                 <i class="bi bi-file-earmark-text-fill"></i> <b>CONTRATOS</b>
             </a>
         </li>
         <li>
-            <a href="lista_usuarios.html" class="submenu-link">
+            <a href="lista_usuarios.php" class="submenu-link">
                 <i class="bi bi-person-circle"></i> <b>USUARIO</b>
             </a>
         </li>
         <li>
-            <a href="lista_solicitudes.html" class="submenu-link">
+            <a href="lista_solicitudes.php" class="submenu-link">
                 <i class="bi bi-calendar2-check-fill"></i> <b>SOLICITUDES DE DIAS DE DISFRUTE</b>
             </a>
         </li>
