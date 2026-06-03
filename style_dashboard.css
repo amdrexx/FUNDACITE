@@ -373,6 +373,30 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     box-shadow: 0 0 0 3px rgba(50,130,184,0.25);
     background: #fff;
 }
+.radio-group {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    padding: 8px 0;
+    flex-wrap: wrap;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    user-select: none;
+}
+
+.radio-option input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #0d6efd;
+    cursor: pointer;
+    margin: 0;
+}
 
 /* BOTÓN */
 .btn-guardar {
@@ -454,7 +478,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     transform:translateY(-2px);
 }
  
-        .btn-editar,
+.btn-editar,
         .btn-eliminar {
             padding: 8px 16px;
             margin: 2px;
@@ -544,3 +568,38 @@ input[type="date"]::-webkit-calendar-picker-indicator {
             from { transform: scale(0.8); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
         }
+        /* Contenedor de botones */
+.contenedor-botones{
+    display: flex;
+    gap: 15px; /* separación */
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+/* Estilo general */
+.btn-accion{
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #0b4f8a;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+/* Hover */
+.btn-accion:hover{
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+/* Botón eliminar */
+.btn-eliminar{
+    background: #d62828;
+}
+
+.btn-eliminar:hover{
+    background: #b71c1c;
+}

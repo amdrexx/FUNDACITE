@@ -84,7 +84,7 @@
 <div class="main">
     <form class="form-card" id="formPersonas">
         <div class="form-grid">
-            <h2 style="text-align: center; margin-bottom: 10px;">Registro de Persona</h2>
+            <h2 style="text-align: center; margin-bottom: 10px;">Registro de Trabajador</h2>
 
             <div class="field">
                 <label>Tipo de Documento</label>
@@ -123,15 +123,20 @@
                 <input type="text" id="nombres" maxlength="50" placeholder="Ingrese nombres">
             </div>
 
-            <div class="field">
+           <div class="field">
                 <label>Género</label>
-                <select id="genero">
-                    <option value="">Seleccione...</option>
-                    <option>Masculino</option>
-                    <option>Femenino</option>
-                </select>
-            </div>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="genero" value="Masculino">
+                        <span>Masculino</span>
+                    </label>
 
+                    <label class="radio-option">
+                        <input type="radio" name="genero" value="Femenino">
+                        <span>Femenino</span>
+                    </label>
+                </div>
+            </div>
             <div class="field">
                 <label>Apellidos</label>
                 <input type="text" id="apellidos" maxlength="50" placeholder="Ingrese apellidos">
@@ -151,6 +156,42 @@
                 <label>Número de Teléfono</label>
                 <input type="text" id="numeroTelefono" maxlength="11" placeholder="Ingrese Número de Teléfono">
             </div>
+             <div class="field">
+                <label>Fecha de Ingreso</label>
+                <input type="date" name="fecha_ingreso" id="fecha_ingreso">
+            </div>
+
+            <div class="field">
+                <label>Cargo</label>
+                <select name="cargo_id" >
+                    <option value="">Seleccione un cargo</option>
+                    <option>Administrador</option>
+                    <option>Analista</option>
+                    <option>Técnico</option>
+                </select>
+            </div>
+          
+            <div class="field">
+                <label>Tipo de Contratación</label>
+                <select name="tipo_contrato">
+                    <option value="">Seleccione</option>
+                    <option>Fijo</option>
+                    <option>Contratado</option>
+                    <option>Por Honorarios</option>
+                </select>
+            </div>
+
+           
+            <div class="field">
+                <label>Estatus Laboral</label>
+                <select name="estatus_laboral">
+                    <option value="">Seleccione</option>
+                    <option>Activo</option>
+                    <option>Jubilado</option>
+                    <option>Suspendido</option>
+                    <option>Retirado</option>
+                </select>
+            </div>
 
             
 
@@ -161,6 +202,9 @@
 
 <script src="boton_desplegable.js"></script>
 <script src="valid_personas.js"></script>
+<script src="valid_trabajadores.js"></script>
+
+
 
 </body>
 </html>

@@ -1,3 +1,18 @@
+<?php
+// ============================================================
+// VERSIÓN SIN BASE DE DATOS - SOLO PHP
+// Los valores se definen manualmente (puedes cambiarlos aquí)
+// ============================================================
+$activo   = 56;   // Personal activo
+$jubilado = 5;    // Personal jubilado
+$inactivo = 16;   // Personal inactivo
+
+// Si en el futuro quieres generar datos aleatorios para pruebas, descomenta:
+// $activo   = rand(40, 80);
+// $jubilado = rand(2, 10);
+// $inactivo = rand(10, 30);
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -5,10 +20,9 @@
   <title>Dashboard</title>
   <link rel="stylesheet" href="style_dashboard.css">
   <link rel="stylesheet" href="bootstrap.min.css">
-  <link rel="stylesheet" href="bootstrap-icons.min.css">   <!-- 👈 NUEVA LÍNEA -->
-  <script src="bootstrap.min.js" defer></script>
+  <link rel="stylesheet" href="bootstrap-icons.min.css">
+  <script src="bootstrap.min.js"></script>
 </head>
-
 <body>
 
 <!-- ================= TOPBAR ================= -->
@@ -16,11 +30,8 @@
     <img src="logo.png" alt="Logo">
 </div>
 
-
-
-
+<!-- ================= SIDEBAR ================= -->
 <div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: calc(102vh - 70px);">
-    
     <ul style="list-style: none; padding: 0; margin: 0;">
         <li>
             <a href="dashboard.html" class="submenu-link">
@@ -71,25 +82,20 @@
             </a>
         </li>
     </ul>
-
 </div>
-<!-- OVERLAY (puedes eliminarlo si no se usa) -->
-<!-- <div class="overlay"></div> -->
 
+<!-- ================= MAIN CONTENT ================= -->
 <div class="main">
-
     <div class="dashboard-container">
-
-
+        <!-- TARJETAS (CARDS) CON CANTIDADES DINÁMICAS (AHORA DESDE PHP SIN BD) -->
         <div class="cards">
-
             <div class="card">
                 <div class="icon">
                     <img src="persona_activa.png" alt="icono">
                 </div>
                 <h3>PERSONAL ACTIVO</h3>
                 <div class="status green"></div>
-                <div class="number">56</div>
+                <div class="number"><?php echo $activo; ?></div>
             </div>
 
             <div class="card">
@@ -98,7 +104,7 @@
                 </div>
                 <h3>PERSONAL JUBILADO</h3>
                 <div class="status gray"></div>
-                <div class="number">5</div>
+                <div class="number"><?php echo $jubilado; ?></div>
             </div>
 
             <div class="card">
@@ -107,25 +113,19 @@
                 </div>
                 <h3>PERSONAL INACTIVO</h3>
                 <div class="status red"></div>
-                <div class="number">16</div>
+                <div class="number"><?php echo $inactivo; ?></div>
             </div>
         </div>
 
-      
+        <!-- GRÁFICO CIRCULAR (DOUGHNUT) CON DATOS EN VIVO -->
         <div class="chart-section">
-
             <h2>Distribución del Personal</h2>
-
             <div class="chart-container">
                 <canvas id="personalChart"></canvas>
             </div>
-
         </div>
-
     </div>
-
 </div>
-
 
 <script src="chart.js"></script>
 
@@ -137,7 +137,7 @@ new Chart(ctx, {
     data: {
         labels: ['Activo', 'Jubilado', 'Inactivo'],
         datasets: [{
-            data: [56, 5, 16],
+            data: [<?php echo $activo; ?>, <?php echo $jubilado; ?>, <?php echo $inactivo; ?>],
             backgroundColor: ['#4CAF50', '#b4b4b4', '#ff6b6b'],
             borderWidth: 0,
         }]
@@ -147,18 +147,15 @@ new Chart(ctx, {
         plugins: {
             legend: {
                 position: 'bottom',
-                 labels: {
-                color: '#000000'
-            }
+                labels: {
+                    color: '#000000'
+                }
             }
         },
         cutout: '65%'
     }
 });
-</script>   
-
-<!-- SCRIPT DE MENÚ ELIMINADO -->
-<!-- <script src="boton_desplegable.js"></script> -->
+</script>
 
 </body>
 </html>
