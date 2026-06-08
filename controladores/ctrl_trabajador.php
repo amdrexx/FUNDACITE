@@ -1,67 +1,135 @@
 <?php
-require_once __DIR__ . '/../modelos/clase_trabajador.php';
 
-class TrabajadorController {
-    private $conexion;
-    private $trabajadorModel;
+session_start();
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+require_once '../conexion.php';
+require_once '../modelos/clase_trabajador.php';
 
-    public function __construct($conexion) {
-        $this->conexion = $conexion;
-        $this->trabajadorModel = new Trabajador($conexion);
-    }
+$_SESSION['old_input'] = $_POST;
 
-    public function store() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Mapeo de tipoDoc del formulario a los valores reales de la BD
-            $tipoDocMap = [
-                'V' => 'Cédula',
-                'E' => 'Cédula de Extranjería'
-            ];
-            $tipoDoc = $_POST['tipoDoc'] ?? '';
-            $tipo_documento = $tipoDocMap[$tipoDoc] ?? '';
+$errores = [];
 
-            // Mapeo de estatus_laboral (el formulario usa "Retirado" -> BD usa "Inactivo")
-            $estatus_laboral = $_POST['estatus_laboral'] ?? '';
-            $statusMap = [
-                'Activo'     => 'Activo',
-                'Jubilado'   => 'Jubilado',
-                'Suspendido' => 'Suspendido',
-                'Retirado'   => 'Inactivo'   // ajuste obligatorio
-            ];
-            $status = $statusMap[$estatus_laboral] ?? '';
+$tipoDoc          = trim($_POST['tipoDoc'] ?? '');
+$cedula           = trim($_POST['cedula'] ?? '');
+$nombres          = trim($_POST['nombres'] ?? '');
+$apellidos        = trim($_POST['apellidos'] ?? '');
+$fechaNacimiento  = trim($_POST['fecha'] ?? '');
+$genero           = trim($_POST['genero'] ?? '');
+$estadoCivil      = trim($_POST['estadoCivil'] ?? '');
+$correo           = trim($_POST['correoElectronico'] ?? '');
+$telefono         = trim($_POST['numeroTelefono'] ?? '');
+$fechaIngreso     = trim($_POST['fecha_ingreso'] ?? '');
+$idCargo          = trim($_POST['cargo_id'] ?? '');
+$status           = trim($_POST['estatus_laboral'] ?? '');
 
-            $this->trabajadorModel->tipo_documento   = $tipo_documento;
-            $this->trabajadorModel->cedula            = $_POST['cedula'] ?? '';
-            $this->trabajadorModel->nombres           = $_POST['nombres'] ?? '';
-            $this->trabajadorModel->apellidos         = $_POST['apellidos'] ?? '';
-            $this->trabajadorModel->fecha_nacimiento  = $_POST['fecha'] ?? '';
-            $this->trabajadorModel->genero            = $_POST['genero'] ?? '';
-            $this->trabajadorModel->estado_civil      = $_POST['estadoCivil'] ?? '';
-            $this->trabajadorModel->correo            = $_POST['correoElectronico'] ?? '';
-            $this->trabajadorModel->telefono          = $_POST['numeroTelefono'] ?? '';
-            $this->trabajadorModel->fecha_ingreso     = $_POST['fecha_ingreso'] ?? '';
-            $this->trabajadorModel->id_cargo          = $_POST['cargo_id'] ?? '';
-            $this->trabajadorModel->status            = $status;
-
-            $errores = $this->trabajadorModel->validar();
-
-            if (!empty($errores)) {
-                $_SESSION['errores'] = $errores;
-                $_SESSION['old_input'] = $_POST;
-                header('Location: ../vistas/registro_trabajador.php');
-                exit;
-            }
-
-            if ($this->trabajadorModel->guardar()) {
-                $_SESSION['exito'] = "Trabajador registrado correctamente.";
-                unset($_SESSION['old_input']);
-                header('Location: ../vistas/registro_trabajador.php?exito=1');
-            } else {
-                $_SESSION['errores'] = ["Error al guardar en la base de datos: " . $this->conexion->error];
-                $_SESSION['old_input'] = $_POST;
-                header('Location: ../vistas/registro_trabajador.php');
-            }
-            exit;
-        }
-    }
+if ($tipoDoc == 'V') {
+    $tipoDocumento = 'Cédula';
+} elseif ($tipoDoc == 'E') {
+    $tipoDocumento = 'Cédula de Extranjería';
+} else {
+    $tipoDocumento = '';
 }
+
+if ($status == 'Retirado') {
+    $status = 'Inactivo';
+}
+
+if (empty($tipoDocumento))
+    $errores[] = "Seleccione el tipo de documento.";
+
+if (empty($cedula))
+    $errores[] = "Ingrese la cédula.";
+
+if (empty($nombres))
+    $errores[] = "Ingrese los nombres.";
+
+if (empty($apellidos))
+    $errores[] = "Ingrese los apellidos.";
+
+if (empty($fechaNacimiento))
+    $errores[] = "Ingrese la fecha de nacimiento.";
+
+if (empty($genero))
+    $errores[] = "Seleccione el género.";
+
+if (empty($estadoCivil))
+    $errores[] = "Seleccione el estado civil.";
+
+if (empty($telefono))
+    $errores[] = "Ingrese el teléfono.";
+
+if (empty($correo))
+    $errores[] = "Ingrese el correo.";
+
+if (empty($fechaIngreso))
+    $errores[] = "Ingrese la fecha de ingreso.";
+
+if (empty($idCargo))
+    $errores[] = "Seleccione un cargo.";
+
+if (empty($status))
+    $errores[] = "Seleccione el estatus laboral.";
+
+$trabajador = new Trabajador($conexion);
+
+if ($trabajador->existeCedula($cedula)) {
+    $errores[] = "La cédula ya se encuentra registrada.";
+}
+
+if (!empty($errores)) {
+
+    $_SESSION['errores'] = $errores;
+
+    header("Location: vistas/registro_trabajador.php");
+    exit;
+}
+
+$conexion->begin_transaction();
+
+try {
+
+    $idTrabajador = $trabajador->registrarTrabajador(
+        $tipoDocumento,
+        $cedula,
+        $nombres,
+        $apellidos,
+        $fechaNacimiento,
+        $genero,
+        $estadoCivil,
+        $telefono,
+        $correo,
+        $status,
+        $idCargo
+    );
+
+    if (!$idTrabajador) {
+        throw new Exception("Error al registrar trabajador.");
+    }
+
+    if (
+        !$trabajador->registrarContrato(
+            $idTrabajador,
+            $fechaIngreso
+        )
+    ) {
+        throw new Exception("Error al registrar contrato.");
+    }
+
+    $conexion->commit();
+
+    unset($_SESSION['old_input']);
+
+    $_SESSION['exito'] =
+        "Trabajador registrado correctamente.";
+
+} catch (Exception $e) {
+
+    $conexion->rollback();
+
+    $_SESSION['errores'][] = $e->getMessage();
+}
+
+header("Location: vistas/registro_trabajador.php");
+exit;

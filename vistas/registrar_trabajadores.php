@@ -1,20 +1,24 @@
 <?php
 session_start();
-$errores  = $_SESSION['errores']  ?? [];
-$old      = $_SESSION['old_input'] ?? [];
-$exito    = $_SESSION['exito']    ?? '';
-unset($_SESSION['errores'], $_SESSION['old_input'], $_SESSION['exito']);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-// Cargar cargos desde la tabla CARGO
-require_once '../conexion.php'; // Ajusta la ruta según la ubicación
-$cargos = [];
-$sqlCargos = "SELECT id_cargo, nombre_cargo FROM CARGO ORDER BY nombre_cargo";
-$resultCargos = $conexion->query($sqlCargos);
-if ($resultCargos && $resultCargos->num_rows > 0) {
-    while ($row = $resultCargos->fetch_assoc()) {
-        $cargos[] = $row;
-    }
-}
+$errores = $_SESSION['errores'] ?? [];
+$old = $_SESSION['old_input'] ?? [];
+$exito = $_SESSION['exito'] ?? '';
+
+unset(
+    $_SESSION['errores'],
+    $_SESSION['old_input'],
+    $_SESSION['exito']
+);
+
+require_once '../conexion.php';
+require_once '../modelos/clase_trabajador.php';
+
+$trabajador = new Trabajador($conexion);
+$cargos = $trabajador->listarCargos();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -60,7 +64,7 @@ if ($resultCargos && $resultCargos->num_rows > 0) {
 
 <!-- FORMULARIO -->
 <div class="main">
-    <form class="form-card" id="formPersonas" method="POST" action="../procesar_trabajador.php">
+    <form class="form-card" id="formPersonas" method="POST" action="../controladores/ctrl_trabajador.php">
         <div class="form-grid">
             <h2 style="text-align: center; margin-bottom: 10px;">Registro de Trabajador</h2>
 
@@ -190,7 +194,7 @@ if ($resultCargos && $resultCargos->num_rows > 0) {
     </form>
 </div>
 
-<script src="/FUNDACITE/vistas/js/valid_personas.js"></script>
+<script src="/FUNDACITE/vistas/js/valid_persons.js"></script>
 
 <!-- Alertas de errores/éxito -->
 <?php if (!empty($errores)): ?>
