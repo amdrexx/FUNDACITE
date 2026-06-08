@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso Fundacite</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/styles.css">
 </head>
 
 <body id="cuerpo-fondo">
@@ -25,7 +25,7 @@
             <input type="password" id="pass-login" placeholder="Ingrese su contraseña">
         </div>
 
-        <button class="btn" onclick="window.location.href='dashboard.html'">
+        <button class="btn" onclick="window.location.href='/FUNDACITE/vistas/dashboard.php'">
         Iniciar Sesión
         </button>
 

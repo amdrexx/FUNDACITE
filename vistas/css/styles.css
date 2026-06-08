@@ -6,7 +6,7 @@
 }
 
 body {
-    background-image: url('fondo.png'); /* Imagen inicial [cite: 4] */
+    background-image: url('/FUNDACITE/vistas/img/fondo.png'); /* Imagen inicial [cite: 4] */
     height: 100vh;
     display: flex;
     justify-content: center;

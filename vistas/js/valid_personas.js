@@ -1,3 +1,4 @@
+// ---------- Cálculo automático de edad al cambiar la fecha de nacimiento ----------
 document.getElementById("fecha").addEventListener("change", function() {
     const fechaNacimiento = this.value;
     const campoEdad = document.getElementById("edad");
@@ -20,6 +21,7 @@ document.getElementById("fecha").addEventListener("change", function() {
     campoEdad.value = edad >= 0 ? edad : "";
 });
 
+// ---------- Solo dígitos en cédula y teléfono ----------
 document.getElementById("cedula").addEventListener("input", function() {
     this.value = this.value.replace(/\D/g, '');
 });
@@ -28,6 +30,7 @@ document.getElementById("numeroTelefono").addEventListener("input", function() {
     this.value = this.value.replace(/\D/g, '');
 });
 
+// ---------- Envío del formulario con validación ----------
 document.getElementById("formPersonas").addEventListener("submit", function(e) {
     e.preventDefault();
 
@@ -41,7 +44,6 @@ document.getElementById("formPersonas").addEventListener("submit", function(e) {
     let estadoCivil       = document.getElementById("estadoCivil").value;
     let correoElectronico = document.getElementById("correoElectronico").value.trim();
     let cargoId           = (document.getElementsByName("cargo_id")[0] || {}).value || "";
-    let tipoContrato      = (document.getElementsByName("tipo_contrato")[0] || {}).value || "";
     let estatusLaboral    = (document.getElementsByName("estatus_laboral")[0] || {}).value || "";
     let fecha             = document.getElementById("fecha").value;
     let edad              = document.getElementById("edad").value.trim();
@@ -57,10 +59,13 @@ document.getElementById("formPersonas").addEventListener("submit", function(e) {
     if (!estadoCivil) errores.push("Estado Civil");
     if (!correoElectronico) errores.push("Correo Electrónico");
     if (!cargoId) errores.push("Cargo");
-    if (!tipoContrato) errores.push("Tipo de Contratación");
     if (!estatusLaboral) errores.push("Estatus Laboral");
     if (!fecha) errores.push("Fecha de Nacimiento");
     if (!edad) errores.push("Edad");
+
+    /* ⚠️ Si en tu código real tienes una línea como esta, elimínala o coméntala:
+       if (!tipoContratacion) errores.push("Tipo de Contratación");
+    */
 
     if (errores.length > 0) {
         showAlert(
@@ -83,6 +88,7 @@ document.getElementById("formPersonas").addEventListener("submit", function(e) {
     }, 1500);
 });
 
+// ---------- Mostrar alerta personalizada ----------
 function showAlert(message, success = false) {
     document.getElementById("customAlert").classList.remove("hidden");
     document.getElementById("alertMessage").innerText = message;
@@ -94,5 +100,7 @@ function showAlert(message, success = false) {
 function closeAlert() {
     document.getElementById("customAlert").classList.add("hidden");
 }
- const hoy = new Date().toISOString().split('T')[0];
-            document.getElementById('fecha_ingreso').value = hoy;
+
+// ---------- Establecer fecha de ingreso automáticamente ----------
+const hoy = new Date().toISOString().split('T')[0];
+document.getElementById('fecha_ingreso').value = hoy;

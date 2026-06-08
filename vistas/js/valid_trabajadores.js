@@ -21,7 +21,6 @@
                 const persona = document.getElementById("persona_id").value;
                 const cargo = document.querySelector("select[name='cargo_id']").value;
                 const fecha = document.getElementById("fecha_ingreso").value;
-                const contrato = document.querySelector("select[name='tipo_contrato']").value;
                 const estatus = document.querySelector("select[name='estatus_laboral']").value;
 
                 let errores = [];
@@ -29,7 +28,6 @@
                 if (!persona) errores.push("Persona (Cédula)");
                 if (!cargo) errores.push("Cargo");
                 if (!fecha) errores.push("Fecha de Ingreso");
-                if (!contrato) errores.push("Tipo de Contratación");
                 if (!estatus) errores.push("Estatus Laboral");
 
               

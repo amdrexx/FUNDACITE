@@ -1,7 +1,7 @@
 body {
     margin: 0;
     font-family: 'Segoe UI', Arial, sans-serif;
-    background: url('inicio.jpeg') no-repeat center center/cover;
+    background: url('/FUNDACITE/vistas/img/inicio.jpeg') no-repeat center center/cover;
 }
 
 

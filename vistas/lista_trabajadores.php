@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <title>Lista de Trabajadores</title>
-  <link rel="stylesheet" href="style_dashboard.css">
-  <link rel="stylesheet" href="bootstrap.min.css">
-  <link rel="stylesheet" href="bootstrap-icons.min.css">   <!-- 👈 NUEVA LÍNEA -->
-  <script src="bootstrap.min.js" defer></script>
+ <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
+  <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
+  <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.scss">
+  <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
 </head>
 
 <body>
 
 <!-- ================= TOPBAR ================= -->
 <div class="topbar">
-    <img src="logo.png" alt="Logo">
+    <img src="/FUNDACITE/vistas/img/logo.png" alt="Logo">
 </div>
 
 
@@ -88,7 +89,7 @@
                     placeholder="Buscar por cédula, nombre o apellido..."
                 >
                 <button class="btn-buscar">Buscar</button>
-                <a href="registrar_trabajador.html" class="btn-persona" style="text-decoration:none;">
+                <a href="registrar_trabajadores.php" class="btn-persona" style="text-decoration:none;">
                     + Agregar Trabajador
                 </a>
             </div>

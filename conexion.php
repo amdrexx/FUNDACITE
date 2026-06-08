@@ -7,7 +7,7 @@
 $host     = "localhost";        // Servidor de la BD
 $usuario  = "root";             // Usuario de MySQL
 $password = "";                 // Contraseña (en LAMPP/XAMPP suele estar vacía)
-$database = "nombre_de_tu_bd";  // 👈 CAMBIA ESTO por el nombre real de tu BD
+$database = "bd_rrhh_fundacite_yaracuy";  // 👈 CAMBIA ESTO por el nombre real de tu BD
 
 // Crear la conexión usando MySQLi (orientado a objetos)
 $conexion = new mysqli($host, $usuario, $password, $database);
