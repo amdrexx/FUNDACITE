@@ -131,4 +131,42 @@ class Trabajador
 
     return $cargos;
 }
+public function listarTrabajadores($buscar = '')
+{
+    $trabajadores = [];
+
+    $sql = "SELECT 
+                t.id_trabajador,
+                t.cedula,
+                t.nombres,
+                t.apellidos,
+                co.fecha_ingreso,
+                t.status,
+                c.nombre_cargo
+            FROM TRABAJADOR t
+            INNER JOIN CARGO c ON t.id_cargo = c.id_cargo
+            LEFT JOIN CONTRATO co ON t.id_trabajador = co.id_trabajador";
+
+    if (!empty($buscar)) {
+        $buscar = $this->conexion->real_escape_string($buscar);
+
+        $sql .= " WHERE 
+                    t.cedula LIKE '%$buscar%' OR
+                    t.nombres LIKE '%$buscar%' OR
+                    t.apellidos LIKE '%$buscar%' OR
+                    c.nombre_cargo LIKE '%$buscar%'";
+    }
+
+    $sql .= " ORDER BY t.id_trabajador DESC";
+
+    $resultado = $this->conexion->query($sql);
+
+    if ($resultado && $resultado->num_rows > 0) {
+        while ($fila = $resultado->fetch_assoc()) {
+            $trabajadores[] = $fila;
+        }
+    }
+
+    return $trabajadores;
+}
 }

@@ -49,7 +49,7 @@ CREATE TABLE CARGO (
 CREATE TABLE TRABAJADOR (
     id_trabajador INT UNSIGNED NOT NULL AUTO_INCREMENT,
     tipo_documento VARCHAR(50) NOT NULL,
-    cedula VARCHAR(20) NOT NULL,
+    cedula VARCHAR(10) NOT NULL,
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
     fecha_nacimiento DATE NOT NULL,
@@ -70,8 +70,8 @@ CREATE TABLE TRABAJADOR (
     FOREIGN KEY (id_cargo) REFERENCES CARGO(id_cargo) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT chk_status CHECK (status IN ('Activo', 'Inactivo', 'Suspendido', 'Jubilado')),
     CONSTRAINT chk_tipo_documento CHECK (tipo_documento IN ('Cédula', 'Pasaporte', 'Cédula de Extranjería')),
-    CONSTRAINT chk_genero CHECK (genero IS NULL OR genero IN ('Masculino', 'Femenino', 'No Binario')),
-    CONSTRAINT chk_estado_civil CHECK (estado_civil IS NULL OR estado_civil IN ('Soltero(a)', 'Casado(a)', 'Divorciado(a)', 'Viudo(a)', 'Concubinato'))
+    CONSTRAINT chk_genero CHECK (genero IS NULL OR genero IN ('Masculino', 'Femenino')),
+    CONSTRAINT chk_estado_civil CHECK (estado_civil IS NULL OR estado_civil IN ('Soltero(a)', 'Casado(a)', 'Divorciado(a)', 'Viudo(a)'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ================================================================================

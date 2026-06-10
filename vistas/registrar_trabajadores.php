@@ -100,7 +100,6 @@ $cargos = $trabajador->listarCargos();
                     <option value="Casado(a)" <?php echo (isset($old['estadoCivil']) && $old['estadoCivil'] == 'Casado(a)') ? 'selected' : ''; ?>>Casado(a)</option>
                     <option value="Divorciado(a)" <?php echo (isset($old['estadoCivil']) && $old['estadoCivil'] == 'Divorciado(a)') ? 'selected' : ''; ?>>Divorciado(a)</option>
                     <option value="Viudo(a)" <?php echo (isset($old['estadoCivil']) && $old['estadoCivil'] == 'Viudo(a)') ? 'selected' : ''; ?>>Viudo(a)</option>
-                    <option value="Concubinato" <?php echo (isset($old['estadoCivil']) && $old['estadoCivil'] == 'Concubinato') ? 'selected' : ''; ?>>Concubinato</option>
                 </select>
             </div>
 
@@ -122,10 +121,6 @@ $cargos = $trabajador->listarCargos();
                     <label class="radio-option">
                         <input type="radio" name="genero" value="Femenino" <?php echo (isset($old['genero']) && $old['genero'] == 'Femenino') ? 'checked' : ''; ?>>
                         <span>Femenino</span>
-                    </label>
-                    <label class="radio-option">
-                        <input type="radio" name="genero" value="No Binario" <?php echo (isset($old['genero']) && $old['genero'] == 'No Binario') ? 'checked' : ''; ?>>
-                        <span>No Binario</span>
                     </label>
                 </div>
             </div>
@@ -194,7 +189,7 @@ $cargos = $trabajador->listarCargos();
     </form>
 </div>
 
-<script src="/FUNDACITE/vistas/js/valid_persons.js"></script>
+<script src="/FUNDACITE/vistas/js/valid_trabajadores.js"></script>
 
 <!-- Alertas de errores/éxito -->
 <?php if (!empty($errores)): ?>

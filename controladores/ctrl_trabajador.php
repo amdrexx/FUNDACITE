@@ -4,9 +4,21 @@ session_start();
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
 require_once '../conexion.php';
 require_once '../modelos/clase_trabajador.php';
 
+$trabajador = new Trabajador($conexion);
+
+if (isset($_GET['accion']) && $_GET['accion'] === 'listar') {
+    $buscar = trim($_GET['buscar'] ?? '');
+    $trabajadores = $trabajador->listarTrabajadores($buscar);
+
+    require_once '../vistas/lista_trabajadores.php';
+    exit;
+}
+
+$_SESSION['old_input'] = $_POST;
 $_SESSION['old_input'] = $_POST;
 
 $errores = [];
@@ -82,7 +94,7 @@ if (!empty($errores)) {
 
     $_SESSION['errores'] = $errores;
 
-    header("Location: vistas/registro_trabajador.php");
+    header("Location: ../vistas/registrar_trabajadores.php");
     exit;
 }
 
@@ -131,5 +143,5 @@ try {
     $_SESSION['errores'][] = $e->getMessage();
 }
 
-header("Location: vistas/registro_trabajador.php");
+header("Location: ../vistas/lista_trabajadores.php");
 exit;

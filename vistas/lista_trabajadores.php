@@ -1,13 +1,27 @@
+<?php
+session_start();
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+require_once '../conexion.php';
+require_once '../modelos/clase_trabajador.php';
+
+$buscar = trim($_GET['buscar'] ?? '');
+
+$trabajador = new Trabajador($conexion);
+$trabajadores = $trabajador->listarTrabajadores($buscar);
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Lista de Trabajadores</title>
- <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
-  <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
-  <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.scss">
-  <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Lista de Trabajadores</title>
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.scss">
+    <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
 </head>
 
 <body>
@@ -17,11 +31,8 @@
     <img src="/FUNDACITE/vistas/img/logo.png" alt="Logo">
 </div>
 
-
-
-
+<!-- ================= SIDEBAR ================= -->
 <div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: calc(102vh - 70px);">
-    
     <ul style="list-style: none; padding: 0; margin: 0;">
         <li>
             <a href="dashboard.html" class="submenu-link">
@@ -34,7 +45,7 @@
             </a>
         </li>
         <li>
-            <a href="lista_trabajadores.html" class="submenu-link">
+            <a href="lista_trabajadores.php" class="submenu-link">
                 <i class="bi bi-person-workspace"></i> <b>TRABAJADORES</b>
             </a>
         </li>
@@ -72,61 +83,73 @@
             </a>
         </li>
     </ul>
-
 </div>
 
+<!-- ================= CONTENIDO ================= -->
+<div class="main">
+    <div class="glass tabla-container">
+        <h2 style="text-align:center; color:white;">Lista de Trabajadores</h2>
 
-    <!-- ================= CONTENIDO ================= -->
-    <div class="main">
-        <div class="glass tabla-container">
-            <h2 style="text-align:center; color:white;">Lista de Trabajadores</h2>
+      <form method="GET" action="lista_trabajadores.php" class="buscador-container" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+    <input
+        type="text"
+        name="buscar"
+        class="input-busqueda"
+        placeholder="Buscar por cédula, nombre, apellido o cargo..."
+        value="<?php echo htmlspecialchars($buscar); ?>"
+    >
+    <button type="submit" class="btn-buscar">Buscar</button>
 
-            <!-- Barra de búsqueda (puedes adaptarla si es necesario) -->
-            <div class="buscador-container">
-                <input 
-                    type="text" 
-                    class="input-busqueda"
-                    placeholder="Buscar por cédula, nombre o apellido..."
-                >
-                <button class="btn-buscar">Buscar</button>
-                <a href="registrar_trabajadores.php" class="btn-persona" style="text-decoration:none;">
-                    + Agregar Trabajador
-                </a>
-            </div>
-
-            <!-- ================= TABLA CON NUEVAS CABECERAS ================= -->
-            <table class="tabla">
-                <thead>
+    <a href="registrar_trabajadores.php" class="btn-persona" style="text-decoration:none;">
+        + Agregar Trabajador
+    </a>
+</form>
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Persona (Cédula)</th>
+                    <th>Cargo</th>
+                    <th>Fecha de Ingreso</th>
+                    <th>Tipo de Contratación</th>
+                    <th>Estatus Laboral</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($trabajadores)): ?>
+                    <?php foreach ($trabajadores as $fila): ?>
+                        <tr>
+                            <td>
+                                <?php
+                                echo htmlspecialchars($fila['cedula'] ?? '') . ' - ' .
+                                     htmlspecialchars(trim(($fila['nombres'] ?? '') . ' ' . ($fila['apellidos'] ?? '')));
+                                ?>
+                            </td>
+                            <td><?php echo htmlspecialchars($fila['nombre_cargo'] ?? 'Sin cargo'); ?></td>
+                            <td><?php echo htmlspecialchars($fila['fecha_ingreso'] ?? ''); ?></td>
+                            <td><?php echo htmlspecialchars($fila['tipo_contrato'] ?? 'Indefinido'); ?></td>
+                            <td><?php echo htmlspecialchars($fila['status'] ?? ''); ?></td>
+                            <td class="acciones">
+                                <a class="btn-editar" href="editar_trabajador.php?id=<?php echo urlencode($fila['id_trabajador'] ?? ''); ?>">
+                                    Editar
+                                </a>
+                                <a class="btn-eliminar" href="eliminar_trabajador.php?id=<?php echo urlencode($fila['id_trabajador'] ?? ''); ?>"
+                                   onclick="return confirm('¿Seguro que deseas eliminar este trabajador?');">
+                                    Eliminar
+                                </a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
                     <tr>
-                        <!-- Aquí se reemplazaron los TH por los labels de los campos -->
-                        <th>Persona (Cédula)</th>
-                        <th>Cargo</th>
-                        <th>Fecha de Ingreso</th>
-                        <th>Tipo de Contratación</th>
-                        <th>Estatus Laboral</th>
-                        <th>Acciones</th>
+                        <td colspan="6" style="text-align:center;">No se encontraron trabajadores registrados.</td>
                     </tr>
-                </thead>
-                <tbody>
-                    <!-- Fila de ejemplo con datos -->
-                    <tr>
-                        <td>12345678 - Juan Pérez</td>
-                        <td>Administrador</td>
-                        <td>2024-01-15</td>
-                        <td>Fijo</td>
-                        <td>Activo</td>
-                        <td class="acciones">
-                           <button class="btn-editar" onclick="editarPersona('12345678')">Editar</button>
-                            <button class="btn-eliminar" onclick="eliminarPersona('12345678')">Eliminar</button>
-                        </td>
-                    </tr>
-                    <!-- Agrega más filas según los registros -->
-                </tbody>
-            </table>
-        </div>
+                <?php endif; ?>
+            </tbody>
+        </table>
     </div>
+</div>
 
-    <script src="boton_desplegable.js"></script>
-    <script src="valid_trabajadores.js"></script>
+<script src="boton_desplegable.js"></script>
 </body>
 </html>
