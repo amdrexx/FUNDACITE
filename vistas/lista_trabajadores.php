@@ -4,6 +4,14 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+$errores = $_SESSION['error_edicion'] ?? [];
+$exito_edicion = $_SESSION['exito_edicion'] ?? '';
+
+unset(
+    $_SESSION['error_edicion'],
+    $_SESSION['exito_edicion']
+);
+
 require_once '../conexion.php';
 require_once '../modelos/clase_trabajador.php';
 
@@ -151,5 +159,26 @@ $trabajadores = $trabajador->listarTrabajadores($buscar);
 </div>
 
 <script src="boton_desplegable.js"></script>
+<?php if (!empty($errores)): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var alertDiv = document.getElementById('customAlert');
+        var msg = document.getElementById('alertMessage');
+        msg.textContent = <?php echo json_encode(implode("\n", $errores)); ?>;
+        alertDiv.classList.remove('hidden');
+    });
+</script>
+<?php endif; ?>
+
+<?php if (!empty($exito_edicion)): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var alertDiv = document.getElementById('customAlert');
+        var msg = document.getElementById('alertMessage');
+        msg.textContent = <?php echo json_encode($exito_edicion); ?>;
+        alertDiv.classList.remove('hidden');
+    });
+</script>
+<?php endif; ?>
 </body>
 </html>

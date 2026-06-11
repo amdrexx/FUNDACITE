@@ -56,7 +56,7 @@ if (isset($_POST['editar_trabajador'])) {
     }
 
     if (!empty($errores)) {
-        $_SESSION['errores'] = $errores;
+        $_SESSION['error_edicion'] = $errores;
         header("Location: ../vistas/editar_trabajador.php?id=" . $idTrabajador);
         exit;
     }
@@ -69,12 +69,12 @@ if (isset($_POST['editar_trabajador'])) {
         $status,
         $idCargo
     )) {
-        $_SESSION['exito'] = "Trabajador actualizado correctamente.";
+        $_SESSION['exito_edicion'] = "Trabajador actualizado correctamente.";
         header("Location: ../vistas/lista_trabajadores.php");
         exit;
     }
 
-    $_SESSION['errores'] = ["Error al actualizar el trabajador."];
+    $_SESSION['error_edicion'] = ["Error al actualizar el trabajador."];
     header("Location: ../vistas/editar_trabajador.php?id=" . $idTrabajador);
     exit;
 }
@@ -111,60 +111,48 @@ if ($status == 'Retirado') {
     $status = 'Inactivo';
 }
 
-if (empty($tipoDocumento)) {
+if (empty($tipoDocumento))
     $errores[] = "Seleccione el tipo de documento.";
-}
 
-if (empty($cedula)) {
+if (empty($cedula))
     $errores[] = "Ingrese la cédula.";
-}
 
-if (empty($nombres)) {
+if (empty($nombres))
     $errores[] = "Ingrese los nombres.";
-}
 
-if (empty($apellidos)) {
+if (empty($apellidos))
     $errores[] = "Ingrese los apellidos.";
-}
 
-if (empty($fechaNacimiento)) {
+if (empty($fechaNacimiento))
     $errores[] = "Ingrese la fecha de nacimiento.";
-}
 
-if (empty($genero)) {
+if (empty($genero))
     $errores[] = "Seleccione el género.";
-}
 
-if (empty($estadoCivil)) {
+if (empty($estadoCivil))
     $errores[] = "Seleccione el estado civil.";
-}
 
-if (empty($telefono)) {
+if (empty($telefono))
     $errores[] = "Ingrese el teléfono.";
-}
 
-if (empty($correo)) {
+if (empty($correo))
     $errores[] = "Ingrese el correo.";
-}
 
-if (empty($fechaIngreso)) {
+if (empty($fechaIngreso))
     $errores[] = "Ingrese la fecha de ingreso.";
-}
 
-if (empty($idCargo)) {
+if (empty($idCargo))
     $errores[] = "Seleccione un cargo.";
-}
 
-if (empty($status)) {
+if (empty($status))
     $errores[] = "Seleccione el estatus laboral.";
-}
 
 if ($trabajador->existeCedula($cedula)) {
     $errores[] = "La cédula ya se encuentra registrada.";
 }
 
 if (!empty($errores)) {
-    $_SESSION['errores'] = $errores;
+    $_SESSION['error_registro'] = $errores;
     header("Location: ../vistas/registrar_trabajadores.php");
     exit;
 }
@@ -199,14 +187,14 @@ try {
 
     unset($_SESSION['old_input']);
 
-    $_SESSION['exito'] = "Trabajador registrado correctamente.";
-    header("Location: ../vistas/lista_trabajadores.php");
+    $_SESSION['exito_registro'] = "Trabajador registrado correctamente.";
+    header("Location: ../vistas/registrar_trabajadores.php");
     exit;
 
 } catch (Exception $e) {
 
     $conexion->rollback();
-    $_SESSION['errores'] = [$e->getMessage()];
+    $_SESSION['error_registro'] = [$e->getMessage()];
     header("Location: ../vistas/registrar_trabajadores.php");
     exit;
 }

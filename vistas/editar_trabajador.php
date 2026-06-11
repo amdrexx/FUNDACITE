@@ -4,6 +4,11 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+$errores = $_SESSION['error_edicion'] ?? [];
+$exito   = $_SESSION['exito_edicion'] ?? '';
+
+unset($_SESSION['error_edicion'], $_SESSION['exito_edicion']);
+
 require_once '../conexion.php';
 require_once '../modelos/clase_trabajador.php';
 
@@ -62,28 +67,14 @@ unset($_SESSION['errores'], $_SESSION['exito']);
 </div>
 
 <div class="main">
-    <form class="form-card" method="POST" action="../controladores/ctrl_trabajador.php">
+  <form class="form-card" id="formPersonas" method="POST" action="../controladores/ctrl_trabajador.php">
         <div class="form-grid">
 
             <h2 class="full-width" style="text-align:center; margin-bottom:10px;">
                 Editar Trabajador
             </h2>
 
-            <?php if (!empty($errores)): ?>
-                <div class="custom-alert full-width">
-                    <div class="alert-box">
-                        <p><?php echo htmlspecialchars(implode("\n", $errores)); ?></p>
-                    </div>
-                </div>
-            <?php endif; ?>
-
-            <?php if (!empty($exito)): ?>
-                <div class="custom-alert full-width">
-                    <div class="alert-box">
-                        <p><?php echo htmlspecialchars($exito); ?></p>
-                    </div>
-                </div>
-            <?php endif; ?>
+      
 
             <input type="hidden" name="editar_trabajador" value="1">
             <input type="hidden" name="id_trabajador" value="<?php echo htmlspecialchars($dato['id_trabajador']); ?>">
@@ -183,6 +174,6 @@ unset($_SESSION['errores'], $_SESSION['exito']);
     </form>
 </div>
 
-<script src="/vistas/"></script>
+<script src="/FUNDACITE/vistas/js/valid_trabajadores.js"></script>
 </body>
 </html>

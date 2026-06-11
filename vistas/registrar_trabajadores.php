@@ -4,14 +4,14 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-$errores = $_SESSION['errores'] ?? [];
+$errores = $_SESSION['error_registro'] ?? [];
 $old = $_SESSION['old_input'] ?? [];
-$exito = $_SESSION['exito'] ?? '';
+$exito_registro = $_SESSION['exito_registro'] ?? '';
 
 unset(
-    $_SESSION['errores'],
+    $_SESSION['error_registro'],
     $_SESSION['old_input'],
-    $_SESSION['exito']
+    $_SESSION['exito_registro']
 );
 
 require_once '../conexion.php';
@@ -203,12 +203,12 @@ $cargos = $trabajador->listarCargos();
 </script>
 <?php endif; ?>
 
-<?php if (!empty($exito)): ?>
+<?php if (!empty($exito_registro)): ?>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var alertDiv = document.getElementById('customAlert');
         var msg = document.getElementById('alertMessage');
-        msg.textContent = <?php echo json_encode($exito); ?>;
+        msg.textContent = <?php echo json_encode($exito_registro); ?>;
         alertDiv.classList.remove('hidden');
     });
 </script>
