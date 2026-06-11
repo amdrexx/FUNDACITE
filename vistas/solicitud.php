@@ -85,7 +85,6 @@ td{
 
     <!-- FORMULARIO 1 -->
     <div class="logo">
-        Solicita tu vaina pues njds
         <small>YARACUY</small>
     </div>
 

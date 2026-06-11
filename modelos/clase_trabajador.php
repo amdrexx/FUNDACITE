@@ -169,4 +169,68 @@ public function listarTrabajadores($buscar = '')
 
     return $trabajadores;
 }
+public function obtenerTrabajadorPorId($idTrabajador)
+{
+    $sql = "SELECT 
+                t.id_trabajador,
+                t.tipo_documento AS tipoDoc,
+                t.cedula,
+                t.nombres,
+                t.apellidos,
+                t.fecha_nacimiento AS fecha,
+                t.genero,
+                t.estado_civil AS estadoCivil,
+                t.telefono AS numeroTelefono,
+                t.correo AS correoElectronico,
+                t.status AS estatus_laboral,
+                t.id_cargo,
+                c.nombre_cargo,
+                co.fecha_ingreso
+            FROM TRABAJADOR t
+            LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo
+            LEFT JOIN CONTRATO co ON t.id_trabajador = co.id_trabajador
+            WHERE t.id_trabajador = ?";
+
+    $stmt = $this->conexion->prepare($sql);
+    $stmt->bind_param("i", $idTrabajador);
+    $stmt->execute();
+
+    $resultado = $stmt->get_result();
+
+    if ($resultado && $resultado->num_rows > 0) {
+        return $resultado->fetch_assoc();
+    }
+
+    return null;
+}
+
+public function actualizarTrabajador(
+    $idTrabajador,
+    $estadoCivil,
+    $telefono,
+    $correo,
+    $status,
+    $idCargo
+) {
+    $sql = "UPDATE TRABAJADOR
+            SET estado_civil = ?,
+                telefono = ?,
+                correo = ?,
+                status = ?,
+                id_cargo = ?
+            WHERE id_trabajador = ?";
+
+    $stmt = $this->conexion->prepare($sql);
+    $stmt->bind_param(
+        "ssssii",
+        $estadoCivil,
+        $telefono,
+        $correo,
+        $status,
+        $idCargo,
+        $idTrabajador
+    );
+
+    return $stmt->execute();
+}
 }

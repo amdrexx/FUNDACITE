@@ -10,6 +10,9 @@ require_once '../modelos/clase_trabajador.php';
 
 $trabajador = new Trabajador($conexion);
 
+// =====================================
+// LISTAR TRABAJADORES
+// =====================================
 if (isset($_GET['accion']) && $_GET['accion'] === 'listar') {
     $buscar = trim($_GET['buscar'] ?? '');
     $trabajadores = $trabajador->listarTrabajadores($buscar);
@@ -18,7 +21,67 @@ if (isset($_GET['accion']) && $_GET['accion'] === 'listar') {
     exit;
 }
 
-$_SESSION['old_input'] = $_POST;
+// =====================================
+// ACTUALIZAR TRABAJADOR
+// =====================================
+if (isset($_POST['editar_trabajador'])) {
+
+    $idTrabajador = intval($_POST['id_trabajador'] ?? 0);
+    $estadoCivil  = trim($_POST['estadoCivil'] ?? '');
+    $correo       = trim($_POST['correoElectronico'] ?? '');
+    $telefono     = trim($_POST['numeroTelefono'] ?? '');
+    $idCargo      = intval($_POST['cargo_id'] ?? 0);
+    $status       = trim($_POST['estatus_laboral'] ?? '');
+
+    $errores = [];
+
+    if (empty($estadoCivil)) {
+        $errores[] = "Seleccione el estado civil.";
+    }
+
+    if (empty($correo)) {
+        $errores[] = "Ingrese el correo electrónico.";
+    }
+
+    if (empty($telefono)) {
+        $errores[] = "Ingrese el número de teléfono.";
+    }
+
+    if (empty($idCargo)) {
+        $errores[] = "Seleccione un cargo.";
+    }
+
+    if (empty($status)) {
+        $errores[] = "Seleccione el estatus laboral.";
+    }
+
+    if (!empty($errores)) {
+        $_SESSION['errores'] = $errores;
+        header("Location: ../vistas/editar_trabajador.php?id=" . $idTrabajador);
+        exit;
+    }
+
+    if ($trabajador->actualizarTrabajador(
+        $idTrabajador,
+        $estadoCivil,
+        $telefono,
+        $correo,
+        $status,
+        $idCargo
+    )) {
+        $_SESSION['exito'] = "Trabajador actualizado correctamente.";
+        header("Location: ../vistas/lista_trabajadores.php");
+        exit;
+    }
+
+    $_SESSION['errores'] = ["Error al actualizar el trabajador."];
+    header("Location: ../vistas/editar_trabajador.php?id=" . $idTrabajador);
+    exit;
+}
+
+// =====================================
+// REGISTRAR TRABAJADOR
+// =====================================
 $_SESSION['old_input'] = $_POST;
 
 $errores = [];
@@ -48,52 +111,60 @@ if ($status == 'Retirado') {
     $status = 'Inactivo';
 }
 
-if (empty($tipoDocumento))
+if (empty($tipoDocumento)) {
     $errores[] = "Seleccione el tipo de documento.";
+}
 
-if (empty($cedula))
+if (empty($cedula)) {
     $errores[] = "Ingrese la cédula.";
+}
 
-if (empty($nombres))
+if (empty($nombres)) {
     $errores[] = "Ingrese los nombres.";
+}
 
-if (empty($apellidos))
+if (empty($apellidos)) {
     $errores[] = "Ingrese los apellidos.";
+}
 
-if (empty($fechaNacimiento))
+if (empty($fechaNacimiento)) {
     $errores[] = "Ingrese la fecha de nacimiento.";
+}
 
-if (empty($genero))
+if (empty($genero)) {
     $errores[] = "Seleccione el género.";
+}
 
-if (empty($estadoCivil))
+if (empty($estadoCivil)) {
     $errores[] = "Seleccione el estado civil.";
+}
 
-if (empty($telefono))
+if (empty($telefono)) {
     $errores[] = "Ingrese el teléfono.";
+}
 
-if (empty($correo))
+if (empty($correo)) {
     $errores[] = "Ingrese el correo.";
+}
 
-if (empty($fechaIngreso))
+if (empty($fechaIngreso)) {
     $errores[] = "Ingrese la fecha de ingreso.";
+}
 
-if (empty($idCargo))
+if (empty($idCargo)) {
     $errores[] = "Seleccione un cargo.";
+}
 
-if (empty($status))
+if (empty($status)) {
     $errores[] = "Seleccione el estatus laboral.";
-
-$trabajador = new Trabajador($conexion);
+}
 
 if ($trabajador->existeCedula($cedula)) {
     $errores[] = "La cédula ya se encuentra registrada.";
 }
 
 if (!empty($errores)) {
-
     $_SESSION['errores'] = $errores;
-
     header("Location: ../vistas/registrar_trabajadores.php");
     exit;
 }
@@ -120,12 +191,7 @@ try {
         throw new Exception("Error al registrar trabajador.");
     }
 
-    if (
-        !$trabajador->registrarContrato(
-            $idTrabajador,
-            $fechaIngreso
-        )
-    ) {
+    if (!$trabajador->registrarContrato($idTrabajador, $fechaIngreso)) {
         throw new Exception("Error al registrar contrato.");
     }
 
@@ -133,15 +199,14 @@ try {
 
     unset($_SESSION['old_input']);
 
-    $_SESSION['exito'] =
-        "Trabajador registrado correctamente.";
+    $_SESSION['exito'] = "Trabajador registrado correctamente.";
+    header("Location: ../vistas/lista_trabajadores.php");
+    exit;
 
 } catch (Exception $e) {
 
     $conexion->rollback();
-
-    $_SESSION['errores'][] = $e->getMessage();
+    $_SESSION['errores'] = [$e->getMessage()];
+    header("Location: ../vistas/registrar_trabajadores.php");
+    exit;
 }
-
-header("Location: ../vistas/lista_trabajadores.php");
-exit;

@@ -1,0 +1,188 @@
+<?php
+session_start();
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+require_once '../conexion.php';
+require_once '../modelos/clase_trabajador.php';
+
+$idTrabajador = intval($_GET['id'] ?? 0);
+
+$trabajador = new Trabajador($conexion);
+$dato = $trabajador->obtenerTrabajadorPorId($idTrabajador);
+$cargos = $trabajador->listarCargos();
+
+if (!$dato) {
+    die("Trabajador no encontrado.");
+}
+
+$errores = $_SESSION['errores'] ?? [];
+$exito   = $_SESSION['exito'] ?? '';
+
+unset($_SESSION['errores'], $_SESSION['exito']);
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Trabajador</title>
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
+    <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+    <img src="/FUNDACITE/vistas/img/logo.png" alt="Logo">
+</div>
+<div id="customAlert" class="custom-alert hidden">
+    <div class="alert-box">
+        <p id="alertMessage"></p>
+        <button onclick="closeAlert()">Aceptar</button>
+    </div>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <ul style="list-style: none; padding: 0; margin: 0;">
+        <li><a href="dashboard.html" class="submenu-link"><i class="bi bi-house-door-fill"></i> <b>INICIO</b></a></li>
+        <li><a href="lista_personas.html" class="submenu-link"><i class="bi bi-people-fill"></i> <b>PERSONAS</b></a></li>
+        <li><a href="lista_trabajadores.php" class="submenu-link"><i class="bi bi-person-workspace"></i> <b>TRABAJADORES</b></a></li>
+        <li><a href="lista_cargos.html" class="submenu-link"><i class="bi bi-briefcase-fill"></i> <b>CARGO</b></a></li>
+        <li><a href="lista_direcciones.html" class="submenu-link"><i class="bi bi-geo-alt-fill"></i> <b>DIRECCION</b></a></li>
+        <li><a href="lista_contratos.html" class="submenu-link"><i class="bi bi-file-earmark-text-fill"></i> <b>CONTRATOS</b></a></li>
+        <li><a href="lista_usuarios.html" class="submenu-link"><i class="bi bi-person-circle"></i> <b>USUARIO</b></a></li>
+        <li><a href="lista_solicitudes.html" class="submenu-link"><i class="bi bi-calendar2-check-fill"></i> <b>SOLICITUDES DE DÍAS DE DISFRUTE</b></a></li>
+    </ul>
+
+    <ul style="list-style: none; padding: 0; margin-bottom: 20px;">
+        <li><a href="" class="submenu-link"><i class="bi bi-box-arrow-right"></i> <b>CERRAR SESIÓN</b></a></li>
+    </ul>
+</div>
+
+<div class="main">
+    <form class="form-card" method="POST" action="../controladores/ctrl_trabajador.php">
+        <div class="form-grid">
+
+            <h2 class="full-width" style="text-align:center; margin-bottom:10px;">
+                Editar Trabajador
+            </h2>
+
+            <?php if (!empty($errores)): ?>
+                <div class="custom-alert full-width">
+                    <div class="alert-box">
+                        <p><?php echo htmlspecialchars(implode("\n", $errores)); ?></p>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($exito)): ?>
+                <div class="custom-alert full-width">
+                    <div class="alert-box">
+                        <p><?php echo htmlspecialchars($exito); ?></p>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <input type="hidden" name="editar_trabajador" value="1">
+            <input type="hidden" name="id_trabajador" value="<?php echo htmlspecialchars($dato['id_trabajador']); ?>">
+
+            <!-- NO EDITABLES -->
+            <div class="field">
+                <label>Tipo de Documento</label>
+                <input type="text" value="<?php echo htmlspecialchars($dato['tipoDoc'] ?? ''); ?>" readonly>
+            </div>
+
+            <div class="field">
+                <label>Cédula</label>
+                <input type="text" value="<?php echo htmlspecialchars($dato['cedula'] ?? ''); ?>" readonly>
+            </div>
+
+            <div class="field">
+                <label>Nombres</label>
+                <input type="text" value="<?php echo htmlspecialchars($dato['nombres'] ?? ''); ?>" readonly>
+            </div>
+
+            <div class="field">
+                <label>Apellidos</label>
+                <input type="text" value="<?php echo htmlspecialchars($dato['apellidos'] ?? ''); ?>" readonly>
+            </div>
+
+            <div class="field">
+                <label>Fecha de Nacimiento</label>
+                <input type="text" value="<?php echo htmlspecialchars($dato['fecha'] ?? ''); ?>" readonly>
+            </div>
+
+            <div class="field">
+                <label>Género</label>
+                <input type="text" value="<?php echo htmlspecialchars($dato['genero'] ?? ''); ?>" readonly>
+            </div>
+
+            <div class="field">
+                <label>Fecha de Ingreso</label>
+                <input type="text" value="<?php echo htmlspecialchars($dato['fecha_ingreso'] ?? ''); ?>" readonly>
+            </div>
+
+            <!-- EDITABLES -->
+            <div class="field">
+                <label>Estado Civil</label>
+                <select name="estadoCivil" required>
+                    <option value="">Seleccione...</option>
+                    <option value="Soltero(a)" <?php echo (($dato['estadoCivil'] ?? '') == 'Soltero(a)') ? 'selected' : ''; ?>>Soltero(a)</option>
+                    <option value="Casado(a)" <?php echo (($dato['estadoCivil'] ?? '') == 'Casado(a)') ? 'selected' : ''; ?>>Casado(a)</option>
+                    <option value="Divorciado(a)" <?php echo (($dato['estadoCivil'] ?? '') == 'Divorciado(a)') ? 'selected' : ''; ?>>Divorciado(a)</option>
+                    <option value="Viudo(a)" <?php echo (($dato['estadoCivil'] ?? '') == 'Viudo(a)') ? 'selected' : ''; ?>>Viudo(a)</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Correo Electrónico</label>
+                <input type="email" name="correoElectronico" value="<?php echo htmlspecialchars($dato['correoElectronico'] ?? ''); ?>" required>
+            </div>
+
+            <div class="field">
+                <label>Número de Teléfono</label>
+                <input type="text" name="numeroTelefono" value="<?php echo htmlspecialchars($dato['numeroTelefono'] ?? ''); ?>" required>
+            </div>
+
+            <div class="field">
+                <label>Cargo</label>
+                <select name="cargo_id" required>
+                    <option value="">Seleccione un cargo</option>
+                    <?php foreach ($cargos as $cargo): ?>
+                        <option value="<?php echo htmlspecialchars($cargo['id_cargo']); ?>"
+                            <?php echo (($dato['id_cargo'] ?? '') == $cargo['id_cargo']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($cargo['nombre_cargo']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Estatus Laboral</label>
+                <select name="estatus_laboral" required>
+                    <option value="">Seleccione...</option>
+                    <option value="Activo" <?php echo (($dato['estatus_laboral'] ?? '') == 'Activo') ? 'selected' : ''; ?>>Activo</option>
+                    <option value="Jubilado" <?php echo (($dato['estatus_laboral'] ?? '') == 'Jubilado') ? 'selected' : ''; ?>>Jubilado</option>
+                    <option value="Suspendido" <?php echo (($dato['estatus_laboral'] ?? '') == 'Suspendido') ? 'selected' : ''; ?>>Suspendido</option>
+                    <option value="Retirado" <?php echo (($dato['estatus_laboral'] ?? '') == 'Retirado') ? 'selected' : ''; ?>>Retirado</option>
+                </select>
+            </div>
+
+            <div class="contenedor-botones full-width">
+                <a href="lista_trabajadores.php" class="btn-accion" style="text-decoration:none; text-align:center;">
+                    Volver
+                </a>
+                <button type="submit" class="btn-accion">
+                    Guardar cambios
+                </button>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+<script src="/vistas/"></script>
+</body>
+</html>
