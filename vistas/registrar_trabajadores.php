@@ -201,18 +201,27 @@ $cargos = $trabajador->listarCargos();
         alertDiv.classList.remove('hidden');
     });
 </script>
-<?php endif; ?>
 
 <?php if (!empty($exito_registro)): ?>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var alertDiv = document.getElementById('customAlert');
-        var msg = document.getElementById('alertMessage');
-        msg.textContent = <?php echo json_encode($exito_registro); ?>;
-        alertDiv.classList.remove('hidden');
-    });
+document.addEventListener('DOMContentLoaded', function() {
+
+    var alertDiv = document.getElementById('customAlert');
+    var msg = document.getElementById('alertMessage');
+
+    msg.textContent = <?php echo json_encode($exito_registro); ?>;
+
+    alertDiv.classList.remove('hidden');
+
+    const boton = document.querySelector(".alert-box button");
+
+    if (boton) {
+        boton.onclick = function() {
+            window.location.href = "/FUNDACITE/vistas/lista_trabajadores.php";
+        };
+    }
+});
 </script>
 <?php endif; ?>
-
 </body>
 </html>

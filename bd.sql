@@ -140,13 +140,20 @@ CREATE TABLE DISFRUTE_DE_VACACIONES (
 
 CREATE TABLE USUARIO (
     id_usuario INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    id_trabajador INT UNSIGNED NOT NULL,
     nombre VARCHAR(100) NOT NULL,
     contrasena VARCHAR(255) NOT NULL,
     tipo_usuario VARCHAR(50) NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'Activo',
     PRIMARY KEY (id_usuario),
     UNIQUE KEY uq_usuario_nombre (nombre),
+    UNIQUE KEY uq_usuario_trabajador (id_trabajador),
     INDEX idx_usuario_status (status),
+    CONSTRAINT fk_usuario_trabajador
+        FOREIGN KEY (id_trabajador)
+        REFERENCES TRABAJADOR(id_trabajador)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
     CONSTRAINT chk_usuario_status CHECK (status IN ('Activo', 'Inactivo', 'Bloqueado')),
     CONSTRAINT chk_tipo_usuario CHECK (tipo_usuario IN ('Administrador', 'Supervisor', 'Usuario', 'Invitado'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -228,8 +228,15 @@ function showAlert(message, success = false) {
     }
 }
 
+let redireccionarListado = false;
+
 function closeAlert() {
+
     document.getElementById("customAlert")?.classList.add("hidden");
+
+    if (redireccionarListado) {
+        window.location.href = "/FUNDACITE/vistas/lista_trabajadores.php";
+    }
 }
 
 // ==========================
