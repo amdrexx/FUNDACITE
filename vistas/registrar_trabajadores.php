@@ -201,6 +201,7 @@ $cargos = $trabajador->listarCargos();
         alertDiv.classList.remove('hidden');
     });
 </script>
+<?php endif; ?>
 
 <?php if (!empty($exito_registro)): ?>
 <script>

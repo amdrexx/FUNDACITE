@@ -11,6 +11,30 @@ require_once '../modelos/clase_trabajador.php';
 $trabajador = new Trabajador($conexion);
 
 // =====================================
+// ELIMINAR LOGICAMENTE TRABAJADOR
+// =====================================
+if (isset($_POST['eliminar_trabajador'])) {
+
+    $idTrabajador = intval($_POST['id_trabajador'] ?? 0);
+
+    if ($idTrabajador <= 0) {
+        $_SESSION['error_eliminacion'] = ["ID de trabajador no válido."];
+        header("Location: ../vistas/lista_trabajadores.php");
+        exit;
+    }
+
+    if ($trabajador->eliminarLogicamenteTrabajador($idTrabajador)) {
+        $_SESSION['exito_eliminacion'] = "Trabajador eliminado lógicamente correctamente.";
+        header("Location: ../vistas/lista_trabajadores.php");
+        exit;
+    }
+
+    $_SESSION['error_eliminacion'] = ["Error al eliminar lógicamente el trabajador."];
+    header("Location: ../vistas/lista_trabajadores.php");
+    exit;
+}
+
+// =====================================
 // LISTAR TRABAJADORES
 // =====================================
 if (isset($_GET['accion']) && $_GET['accion'] === 'listar') {

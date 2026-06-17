@@ -233,4 +233,17 @@ public function actualizarTrabajador(
 
     return $stmt->execute();
 }
+public function eliminarLogicamenteTrabajador($idTrabajador)
+{
+    $nuevoStatus = "Inactivo";
+
+    $sql = "UPDATE TRABAJADOR
+            SET status = ?
+            WHERE id_trabajador = ?";
+
+    $stmt = $this->conexion->prepare($sql);
+    $stmt->bind_param("si", $nuevoStatus, $idTrabajador);
+
+    return $stmt->execute();
+}
 }

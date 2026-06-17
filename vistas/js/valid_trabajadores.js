@@ -205,7 +205,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 return false;
             }
 
+            // CAMBIO NECESARIO: evitar envío inmediato para que la alerta se vea
+            e.preventDefault();
             showAlert("Guardando cambios...", true);
+
+            setTimeout(() => {
+                formularioEdicion.submit();
+            }, 1200);
         });
     }
 });

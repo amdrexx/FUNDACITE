@@ -67,7 +67,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
 </div>
 
 <div class="main">
-  <form class="form-card" id="formPersonas" method="POST" action="../controladores/ctrl_trabajador.php">
+  <form class="form-card" id="formEditarTrabajador" method="POST" action="../controladores/ctrl_trabajador.php">
         <div class="form-grid">
 
             <h2 class="full-width" style="text-align:center; margin-bottom:10px;">
@@ -162,10 +162,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
             </div>
 
             <div class="contenedor-botones full-width">
-                <a href="lista_trabajadores.php" class="btn-accion" style="text-decoration:none; text-align:center;">
-                    Volver
-                </a>
-                <button type="submit" class="btn-accion">
+                <button type="submit" class="btn-guardar" style="margin-left: 10px;">
                     Guardar cambios
                 </button>
             </div>
