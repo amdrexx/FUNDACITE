@@ -178,6 +178,13 @@ public function obtenerTrabajadorPorId($idTrabajador)
                 t.nombres,
                 t.apellidos,
                 t.fecha_nacimiento AS fecha,
+
+                TIMESTAMPDIFF(
+                    YEAR,
+                    t.fecha_nacimiento,
+                    CURDATE()
+                ) AS edad,
+
                 t.genero,
                 t.estado_civil AS estadoCivil,
                 t.telefono AS numeroTelefono,

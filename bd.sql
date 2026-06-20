@@ -1,5 +1,4 @@
 CREATE DATABASE IF NOT EXISTS bd_rrhh_fundacite_yaracuy;
-
 USE bd_rrhh_fundacite_yaracuy;
 
 -- ================================================================================
@@ -205,6 +204,7 @@ LEFT JOIN DIRECCION d ON t.id_dir = d.id_dir
 LEFT JOIN PARROQUIA p ON d.cod_par = p.cod_par
 LEFT JOIN MUNICIPIO m ON p.cod_muni = m.cod_muni
 LEFT JOIN ESTADO e ON m.cod_est = e.cod_est;
+
 INSERT INTO CARGO (nombre_cargo) VALUES
 ('Administrador'),
 ('Analista'),

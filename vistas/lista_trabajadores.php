@@ -138,16 +138,20 @@ $trabajadores = $trabajador->listarTrabajadores($buscar);
                             <td><?php echo htmlspecialchars($fila['tipo_contrato'] ?? 'Indefinido'); ?></td>
                             <td><?php echo htmlspecialchars($fila['status'] ?? ''); ?></td>
                            <td class="acciones">
-                        <a class="btn-editar" href="editar_trabajador.php?id=<?php echo urlencode($fila['id_trabajador'] ?? ''); ?>">
+                        <a class="btn-ver" href="ver_trabajador.php?id=<?php echo urlencode($fila['id_trabajador'] ?? ''); ?>">
+                            Ver
+                        </a>
+                           <a class="btn-editar" href="editar_trabajador.php?id=<?php echo urlencode($fila['id_trabajador'] ?? ''); ?>">
                             Editar
                         </a>
 
                         <form action="../controladores/ctrl_trabajador.php" method="POST" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas eliminar este trabajador?');">
                             <input type="hidden" name="id_trabajador" value="<?php echo htmlspecialchars($fila['id_trabajador'] ?? ''); ?>">
                             <button type="submit" name="eliminar_trabajador" class="btn-eliminar" style="border:none; cursor:pointer;">
-                                Eliminar
+                                Inactivar
                             </button>
                         </form>
+                         
                     </td>
                         </tr>
                     <?php endforeach; ?>

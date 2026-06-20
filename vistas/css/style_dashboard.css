@@ -477,9 +477,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     background:#3694f8;
     transform:translateY(-2px);
 }
- 
+ /* ================= BOTENES ================= */
 .btn-editar,
-        .btn-eliminar {
+        .btn-eliminar,
+        .btn-ver {
             padding: 8px 16px;
             margin: 2px;
             border: none;
@@ -496,6 +497,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         .btn-editar {
             background: #0487f3bd;
             color: #212121;
+            text-decoration: none;
         }
 
         .btn-editar:hover {
@@ -510,6 +512,16 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
         .btn-eliminar:hover {
             background: #b02a37;
+            transform: scale(1.03);
+        }
+        .btn-ver {
+            background: #3f3fff;
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-ver:hover {
+            background: #2626f6;
             transform: scale(1.03);
         }
 
