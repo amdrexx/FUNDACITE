@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solicitud de Permiso</title>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    background:#f5f5f5;
+    margin:20px;
+}
+
+.hoja{
+    width:900px;
+    margin:auto;
+    background:white;
+    padding:20px;
+    border:1px solid #999;
+}
+
+.logo{
+    text-align:right;
+    font-size:48px;
+    font-weight:bold;
+    color:#444;
+    margin-bottom:5px;
+}
+
+.logo small{
+    display:block;
+    font-size:12px;
+    font-weight:normal;
+}
+
+h2{
+    text-align:center;
+    font-size:22px;
+    margin:10px 0 20px 0;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12px;
+}
+
+td{
+    border:1px solid black;
+    padding:4px;
+    vertical-align:top;
+    height:28px;
+}
+
+.center{
+    text-align:center;
+}
+
+.section{
+    background:#e9e9e9;
+    font-weight:bold;
+    text-align:center;
+}
+
+.lineas{
+    height:70px;
+}
+
+.checkbox{
+    margin-right:15px;
+}
+
+.copia{
+    margin-top:30px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="hoja">
+
+    <!-- FORMULARIO 1 -->
+    <div class="logo">
+        <small>YARACUY</small>
+    </div>
+
+    <h2>SOLICITUD DE PERMISO</h2>
+
+    <table>
+
+        <tr>
+            <td colspan="4">2. Apellido y Nombres</td>
+            <td width="180">
+                1. Fecha<br><br>
+                Día &nbsp;&nbsp;&nbsp; Mes &nbsp;&nbsp;&nbsp; Año
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="4">4. Motivo del Permiso</td>
+            <td>3. N° Cédula de identidad</td>
+        </tr>
+
+        <tr>
+            <td colspan="4">6. Cargo del Solicitante</td>
+            <td>5. Código de Permiso</td>
+        </tr>
+
+        <tr>
+            <td width="180">
+                7. Duración del Permiso<br><br>
+                No. de días
+            </td>
+
+            <td class="center">
+                Iniciación<br><br>
+                Día &nbsp; Mes &nbsp; Año
+            </td>
+
+            <td class="center">
+                Regreso<br><br>
+                Día &nbsp; Mes &nbsp; Año
+            </td>
+
+            <td width="180">
+                8. Tipo de Permiso<br><br>
+
+                <input type="checkbox"> Oblig.<br>
+                <input type="checkbox"> Potest.
+            </td>
+
+            <td>
+                9. Firma del Trabajador(a)
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="5" class="section">
+                APROBACIÓN Y AUTORIZACIÓN (PARA SER LLENADO POR EL SUPERVISOR INMEDIATO)
+            </td>
+        </tr>
+
+        <tr>
+
+            <td>
+                10. Permiso<br><br>
+
+                <input type="checkbox"> Remunerado<br>
+                <input type="checkbox"> No Remunerado
+            </td>
+
+            <td colspan="2" class="center">
+                11. Se requiere suplente<br><br>
+
+                Sí &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; No
+                <br><br>
+                De ser afirmativo, favor anexar perfil requerido
+            </td>
+
+            <td colspan="2">
+                12. Firma del Supervisor Inmediato
+            </td>
+
+        </tr>
+
+        <tr>
+            <td colspan="5" class="lineas">
+                13. Observaciones
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="5" class="section">
+                COORDINACIÓN DE RECURSOS HUMANOS
+            </td>
+        </tr>
+
+        <tr>
+            <td>14. Días disponibles</td>
+            <td colspan="2">15. Recibido por:</td>
+            <td colspan="2">16. Procesado por:</td>
+        </tr>
+
+    </table>
+
+</div>
+
+</body>
+</html>
