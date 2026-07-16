@@ -1,185 +1,65 @@
 <?php
-// ======================================================
-// ARCHIVO: controladores/ContratoControlador.php
-// DESCRIPCIÓN: Controlador del módulo de Contratos
-// ======================================================
+// ARCHIVO: /FUNDACITE/controladores/ctrl_contrato.php
 
-require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../conexion.php'; 
 require_once __DIR__ . '/../modelos/clase_contrato.php';
 
-class ContratoControlador
-{
+class ContratoControlador {
     private $modelo;
 
-    public function __construct($conexion)
-    {
+    public function __construct($conexion = null) {
+        if ($conexion === null) {
+            global $conexion; 
+        }
         $this->modelo = new clase_contrato($conexion);
     }
 
-    // ======================================================
-    // OBTENER TRABAJADORES ACTIVOS
-    // ======================================================
-    public function mostrarTrabajadoresActivos()
-    {
-        return $this->modelo->obtenerTrabajadoresActivos();
-    }
-
-    // ======================================================
-    // LISTAR CONTRATOS
-    // ======================================================
-    public function mostrarContratos()
-    {
+    public function mostrarContratos() {
         return $this->modelo->listarContratos();
     }
 
-    // ======================================================
-    // OBTENER UN CONTRATO
-    // ======================================================
-    public function obtenerContrato($id)
-    {
-        return $this->modelo->obtenerContrato($id);
-    }
+    public function guardar() {
+        if (isset($_POST['registrar_contrato'])) {
+            $id_trabajador                 = intval($_POST['id_trabajador']);
+            $tipo_contrato                 = trim($_POST['tipo_contrato']);
+            $fecha_contrato                = $_POST['fecha_contrato'];
+            $lugar_trabajo                 = trim($_POST['lugar_trabajo']);
+            $nombre_presidente             = trim($_POST['nombre_presidente']);
+            $cedula_presidente             = trim($_POST['cedula_presidente']);
+            $gaceta_designacion_presidente = trim($_POST['gaceta_designacion_presidente']);
 
-    // ======================================================
-    // REGISTRAR CONTRATO
-    // ======================================================
-    public function guardar()
-    {
+            $tipos_validos = ['Indefinido', 'Tiempo determinado', 'Obra determinada', 'Pasantía', 'Suplencia'];
 
-        if (!isset($_POST['registrar_contrato'])) {
-            return;
-        }
-
-        $id_trabajador = intval($_POST['id_trabajador']);
-        $tipo_contrato = trim($_POST['tipo_contrato']);
-        $fecha_ingreso = trim($_POST['fecha_ingreso']);
-        $lugar_trabajo = trim($_POST['lugar_trabajo']);
-        $salario       = floatval($_POST['salario']);
-        $notas_empresa = trim($_POST['notas_empresa']);
-
-        if (
-            empty($id_trabajador) ||
-            empty($tipo_contrato) ||
-            empty($fecha_ingreso) ||
-            empty($lugar_trabajo) ||
-            $salario <= 0
-        ) {
-
-            header("Location: ../vistas/registrar_contrato.php?status=error");
-            exit;
-        }
-
-        // Evitar que un trabajador tenga dos contratos
-        if ($this->modelo->trabajadorTieneContrato($id_trabajador)) {
-
-            header("Location: ../vistas/registrar_contrato.php?status=existe");
-            exit;
-        }
-
-        $guardar = $this->modelo->registrarContrato(
-            $id_trabajador,
-            $notas_empresa,
-            $tipo_contrato,
-            $fecha_ingreso,
-            $lugar_trabajo,
-            $salario
-        );
-
-        if ($guardar) {
-
-            header("Location: ../vistas/registrar_contrato.php?status=success");
-            exit;
-
-        } else {
-
-            header("Location: ../vistas/registrar_contrato.php?status=error");
-            exit;
-
-        }
-    }
-
-    // ======================================================
-    // ACTUALIZAR CONTRATO
-    // ======================================================
-    public function actualizar()
-    {
-
-        if (!isset($_POST['editar_contrato'])) {
-            return;
-        }
-
-        $id_contrato   = intval($_POST['id_contrato']);
-        $id_trabajador = intval($_POST['id_trabajador']);
-        $tipo_contrato = trim($_POST['tipo_contrato']);
-        $fecha_ingreso = trim($_POST['fecha_ingreso']);
-        $lugar_trabajo = trim($_POST['lugar_trabajo']);
-        $salario       = floatval($_POST['salario']);
-        $notas_empresa = trim($_POST['notas_empresa']);
-
-        $actualizar = $this->modelo->actualizarContrato(
-            $id_contrato,
-            $id_trabajador,
-            $notas_empresa,
-            $tipo_contrato,
-            $fecha_ingreso,
-            $lugar_trabajo,
-            $salario
-        );
-
-        if ($actualizar) {
-
-            header("Location: ../vistas/registrar_contrato.php?status=updated");
-            exit;
-
-        } else {
-
-            header("Location: ../vistas/editar_contrato.php?id=".$id_contrato."&status=error");
-            exit;
-
-        }
-    }
-
-    // ======================================================
-    // ELIMINAR CONTRATO
-    // ======================================================
-    public function eliminar()
-    {
-
-        if (
-            isset($_GET['action']) &&
-            $_GET['action'] == 'eliminar' &&
-            isset($_GET['id'])
-        ) {
-
-            $id = intval($_GET['id']);
-
-            if ($this->modelo->eliminarContrato($id)) {
-
-                header("Location: ../vistas/registrar_contrato.php?status=deleted");
-                exit;
-
+            if ($id_trabajador > 0 && in_array($tipo_contrato, $tipos_validos) && !empty($fecha_contrato)) {
+                if ($this->modelo->registrarContrato($id_trabajador, $tipo_contrato, $fecha_contrato, $lugar_trabajo, $nombre_presidente, $cedula_presidente, $gaceta_designacion_presidente)) {
+                    header("Location: /FUNDACITE/vistas/registrar_contrato.php?status=success");
+                    exit();
+                } else {
+                    header("Location: /FUNDACITE/vistas/registrar_contrato.php?status=error");
+                    exit();
+                }
             } else {
+                header("Location: /FUNDACITE/vistas/registrar_contrato.php?status=error");
+                exit();
+            }
+        }
+    }
 
-                header("Location: ../vistas/registrar_contrato.php?status=error");
-                exit;
-
+    public function borrar() {
+        if (isset($_GET['action']) && $_GET['action'] == 'eliminar' && !empty($_GET['id'])) {
+            $id = intval($_GET['id']);
+            if ($this->modelo->eliminarContrato($id)) {
+                header("Location: /FUNDACITE/vistas/registrar_contrato.php?status=deleted");
+                exit();
+            } else {
+                header("Location: /FUNDACITE/vistas/registrar_contrato.php?status=error");
+                exit();
             }
         }
     }
 }
 
-// ======================================================
-// INSTANCIA
-// ======================================================
-
-$controladorContrato = new ContratoControlador($conexion);
-
-// ======================================================
-// EJECUTAR ACCIONES
-// ======================================================
-
+$controladorContrato = new ContratoControlador();
 $controladorContrato->guardar();
-$controladorContrato->actualizar();
-$controladorContrato->eliminar();
-
+$controladorContrato->borrar();
 ?>

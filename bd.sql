@@ -81,16 +81,15 @@ CREATE TABLE TRABAJADOR (
 CREATE TABLE CONTRATO (
     id_contrato INT UNSIGNED NOT NULL AUTO_INCREMENT,
     id_trabajador INT UNSIGNED NOT NULL,
-    notas_empresa TEXT,
     tipo_contrato VARCHAR(50) NOT NULL,
-    fecha_ingreso DATE NOT NULL,
-    lugar_trabajo VARCHAR(100),
-    salario DECIMAL(10, 2) NOT NULL,
+    fecha_contrato DATE NOT NULL,
+    lugar_trabajo VARCHAR(150) NOT NULL,
+    nombre_presidente VARCHAR(150) NOT NULL,
+    cedula_presidente VARCHAR(20) NOT NULL,
+    gaceta_designacion_presidente VARCHAR(100) NOT NULL,
     PRIMARY KEY (id_contrato),
-    INDEX idx_contrato_trabajador (id_trabajador),
     FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR(id_trabajador) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT chk_tipo_contrato CHECK (tipo_contrato IN ('Indefinido', 'Tiempo determinado', 'Obra determinada', 'Pasantía', 'Suplencia')),
-    CONSTRAINT chk_salario_positivo CHECK (salario > 0)
+    CONSTRAINT chk_tipo_contrato CHECK (tipo_contrato IN ('Indefinido', 'Tiempo determinado', 'Obra determinada', 'Pasantía', 'Suplencia'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE SOLICITUD (

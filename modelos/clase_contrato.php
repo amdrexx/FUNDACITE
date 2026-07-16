@@ -1,232 +1,44 @@
 <?php
-// ======================================================
-// ARCHIVO: modelos/clase_contrato.php
-// DESCRIPCIÓN: Modelo para la gestión de contratos
-// ======================================================
+// ARCHIVO: /FUNDACITE/modelos/clase_contrato.php
 
-class clase_contrato
-{
-    private $conexion;
+class clase_contrato {
+    private $db;
 
-    public function __construct($conexion)
-    {
-        $this->conexion = $conexion;
-    }
-
-    // ======================================================
-    // OBTENER TRABAJADORES ACTIVOS
-    // ======================================================
-    public function obtenerTrabajadoresActivos()
-    {
-        $sql = "SELECT
-                    id_trabajador,
-                    cedula,
-                    nombres,
-                    apellidos
-                FROM TRABAJADOR
-                WHERE status = 'Activo'
-                ORDER BY apellidos ASC, nombres ASC";
-
-        $resultado = $this->conexion->query($sql);
-
-        if ($resultado) {
-            return $resultado->fetch_all(MYSQLI_ASSOC);
+    public function __construct($conexion = null) {
+        if ($conexion !== null) {
+            $this->db = $conexion;
+        } else {
+            global $conexion;
+            $this->db = $conexion;
         }
-
-        return [];
     }
 
-    // ======================================================
     // REGISTRAR CONTRATO
-    // ======================================================
-    public function registrarContrato(
-        $id_trabajador,
-        $notas_empresa,
-        $tipo_contrato,
-        $fecha_ingreso,
-        $lugar_trabajo,
-        $salario
-    ) {
-
-        $sql = "INSERT INTO CONTRATO
-                (
-                    id_trabajador,
-                    notas_empresa,
-                    tipo_contrato,
-                    fecha_ingreso,
-                    lugar_trabajo,
-                    salario
-                )
-                VALUES
-                (?, ?, ?, ?, ?, ?)";
-
-        $stmt = $this->conexion->prepare($sql);
-
-        if (!$stmt) {
-            return false;
-        }
-
-        $stmt->bind_param(
-            "issssd",
-            $id_trabajador,
-            $notas_empresa,
-            $tipo_contrato,
-            $fecha_ingreso,
-            $lugar_trabajo,
-            $salario
-        );
-
+    public function registrarContrato($id_trabajador, $tipo_contrato, $fecha_contrato, $lugar_trabajo, $nombre_presidente, $cedula_presidente, $gaceta_designacion_presidente) {
+        $sql = "INSERT INTO CONTRATO (id_trabajador, tipo_contrato, fecha_contrato, lugar_trabajo, nombre_presidente, cedula_presidente, gaceta_designacion_presidente) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("issssss", $id_trabajador, $tipo_contrato, $fecha_contrato, $lugar_trabajo, $nombre_presidente, $cedula_presidente, $gaceta_designacion_presidente);
         return $stmt->execute();
     }
 
-    // ======================================================
-    // LISTAR CONTRATOS
-    // ======================================================
-    public function listarContratos()
-    {
-        $sql = "SELECT
-
-                    c.id_contrato,
-                    c.id_trabajador,
-
-                    CONCAT(
-                        t.nombres,
-                        ' ',
-                        t.apellidos
-                    ) AS nombre_trabajador,
-
-                    t.cedula,
-
-                    c.notas_empresa,
-                    c.tipo_contrato,
-                    c.fecha_ingreso,
-                    c.lugar_trabajo,
-                    c.salario
-
+    // LISTAR CONTRATOS (CORREGIDO CON LAS COLUMNAS 'nombres' Y 'apellidos')
+    public function listarContratos() {
+        $sql = "SELECT c.id_contrato, c.tipo_contrato, c.fecha_contrato, 
+                       CONCAT(t.nombres, ' ', t.apellidos) AS nombre_trabajador 
                 FROM CONTRATO c
-
-                INNER JOIN TRABAJADOR t
-                    ON c.id_trabajador = t.id_trabajador
-
+                INNER JOIN TRABAJADOR t ON c.id_trabajador = t.id_trabajador
                 ORDER BY c.id_contrato DESC";
-
-        $resultado = $this->conexion->query($sql);
-
-        if ($resultado) {
-            return $resultado->fetch_all(MYSQLI_ASSOC);
-        }
-
-        return [];
+        $resultado = $this->db->query($sql);
+        return $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
     }
 
-    // ======================================================
-    // OBTENER UN CONTRATO
-    // ======================================================
-    public function obtenerContrato($id_contrato)
-    {
-        $sql = "SELECT *
-
-                FROM CONTRATO
-
-                WHERE id_contrato = ?";
-
-        $stmt = $this->conexion->prepare($sql);
-
-        if (!$stmt) {
-            return false;
-        }
-
-        $stmt->bind_param("i", $id_contrato);
-
-        $stmt->execute();
-
-        return $stmt->get_result()->fetch_assoc();
-    }
-
-    // ======================================================
-    // ACTUALIZAR CONTRATO
-    // ======================================================
-    public function actualizarContrato(
-        $id_contrato,
-        $id_trabajador,
-        $notas_empresa,
-        $tipo_contrato,
-        $fecha_ingreso,
-        $lugar_trabajo,
-        $salario
-    ) {
-
-        $sql = "UPDATE CONTRATO
-                SET
-                    id_trabajador = ?,
-                    notas_empresa = ?,
-                    tipo_contrato = ?,
-                    fecha_ingreso = ?,
-                    lugar_trabajo = ?,
-                    salario = ?
-                WHERE id_contrato = ?";
-
-        $stmt = $this->conexion->prepare($sql);
-
-        if (!$stmt) {
-            return false;
-        }
-
-        $stmt->bind_param(
-            "issssdi",
-            $id_trabajador,
-            $notas_empresa,
-            $tipo_contrato,
-            $fecha_ingreso,
-            $lugar_trabajo,
-            $salario,
-            $id_contrato
-        );
-
-        return $stmt->execute();
-    }
-
-    // ======================================================
     // ELIMINAR CONTRATO
-    // ======================================================
-    public function eliminarContrato($id_contrato)
-    {
-        $sql = "DELETE FROM CONTRATO
-                WHERE id_contrato = ?";
-
-        $stmt = $this->conexion->prepare($sql);
-
-        if (!$stmt) {
-            return false;
-        }
-
+    public function eliminarContrato($id_contrato) {
+        $sql = "DELETE FROM CONTRATO WHERE id_contrato = ?";
+        $stmt = $this->db->prepare($sql);
         $stmt->bind_param("i", $id_contrato);
-
         return $stmt->execute();
-    }
-
-    // ======================================================
-    // VERIFICAR SI EL TRABAJADOR YA TIENE CONTRATO
-    // ======================================================
-    public function trabajadorTieneContrato($id_trabajador)
-    {
-        $sql = "SELECT id_contrato
-                FROM CONTRATO
-                WHERE id_trabajador = ?";
-
-        $stmt = $this->conexion->prepare($sql);
-
-        if (!$stmt) {
-            return false;
-        }
-
-        $stmt->bind_param("i", $id_trabajador);
-
-        $stmt->execute();
-
-        $resultado = $stmt->get_result();
-
-        return ($resultado->num_rows > 0);
     }
 }
 ?>

@@ -19,7 +19,7 @@ $primas = $prima->mostrarPrimas();
 
   
   <?php include "includes/layout.php"; ?>
-   
+  
     <div class="main">
         <div class="glass tabla-container">
             <h2 style="text-align:center; color:white;">Lista Primas</h2>
