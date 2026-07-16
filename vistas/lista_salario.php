@@ -1,10 +1,11 @@
 <?php
 require_once '../conexion.php';
 require_once '../modelos/clase_salario.php';
-
+session_start();
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
 
 $salario = null;
 $salarios = [];
@@ -34,78 +35,16 @@ if ($salario !== null) {
 <head>
     <meta charset="UTF-8">
     <title>Lista Salario</title>
-    <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
+      <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.scss">
+    <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
 </head>
 <body>
 
   
-    <button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
-        <div></div>
-        <div></div>
-        <div></div>
-    </button>
-
-    <!-- ================= TOPBAR ================= -->
-<div class="topbar">
-    <img src="/FUNDACITE/vistas/img/logo.png" alt="Logo">
-</div>
-
-   <!-- ================= SIDEBAR ================= -->
-<div class="sidebar" id="sidebar" style="display: flex; flex-direction: column; justify-content: space-between; height: calc(102vh - 70px);">
-     <ul style="list-style: none; padding: 0; margin: 0;">
-         <li>
-            <a href="/FUNDACITE/vistas/dashboard.php" class="submenu-link">
-                <i class="bi bi-house-door-fill"></i> <b>INICIO</b>
-            </a>
-        </li>
-        <li>
-            <a href="/FUNDACITE/vistas/lista_trabajadores.php" class="submenu-link">
-                <i class="bi bi-person-workspace"></i> <b>TRABAJADORES</b>
-            </a>
-        </li>
-        <li>
-            <a href="/FUNDACITE/vistas/lista_cargos.php" class="submenu-link">
-                <i class="bi bi-briefcase-fill"></i> <b>CARGO</b>
-            </a>
-        </li>
-        <li>
-            <a href="/FUNDACITE/vistas/lista_direcciones.php" class="submenu-link">
-                <i class="bi bi-geo-alt-fill"></i> <b>DIRECCION</b>
-            </a>
-        </li>
-        <li>
-            <a href="/FUNDACITE/vistas/lista_contratos.php" class="submenu-link">
-                <i class="bi bi-file-earmark-text-fill"></i> <b>CONTRATOS</b>
-            </a>
-        </li>
-        <li>
-            <a href="/FUNDACITE/vistas/lista_usuarios.php" class="submenu-link">
-                <i class="bi bi-person-circle"></i> <b>USUARIO</b>
-            </a>
-        </li>
-        <li>
-            <a href="/FUNDACITE/vistas/lista_salario.php" class="submenu-link">
-                <i class="bi bi-coin"></i> <b>SALARIO</b>
-            </a>
-        </li>
-        <li>
-            <a href="/FUNDACITE/vistas/lista_primas.php" class="submenu-link">
-                <i class="bi bi-wallet"></i> <b>PRIMA</b>
-            </a>
-        </li>
-        <li>
-            <a href="/FUNDACITE/vistas/lista_dias_disfrute.php" class="submenu-link">
-                <i class="bi bi-calendar2-check-fill"></i> <b>SOLICITUD DE DIAS DE DISFRUTE</b>
-            </a>
-        </li>
-    </ul>
-    <ul style="list-style: none; padding: 0; margin-bottom: 20px;">
-        <li><a href="" class="submenu-link"><i class="bi bi-box-arrow-right"></i> <b>CERRAR SESIÓN</b></a></li>
-    </ul>
-</div>
-
-    <div class="overlay"></div>
-
+  <?php include "includes/layout.php"; ?>
    
     <div class="main">
         <div class="glass tabla-container">

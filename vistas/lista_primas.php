@@ -12,14 +12,17 @@ $primas = $prima->mostrarPrimas();
 <head>
     <meta charset="UTF-8">
     <title>Listas de primas</title>
-    <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
+     <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.scss">
+    <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
 </head>
 <body>
 
   
   <?php include "includes/layout.php"; ?>
-  
+
     <div class="main">
         <div class="glass tabla-container">
             <h2 style="text-align:center; color:white;">Lista Primas</h2>
