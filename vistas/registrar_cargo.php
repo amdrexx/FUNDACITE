@@ -18,6 +18,28 @@ require_once("../controladores/ctrl_cargo.php");
 
 // Llamamos al método del controlador para traer los registros reales
 $cargos = $controladorCargo->mostrarCargos();
+
+// Definir mensaje según el estado recibido por URL si aplica
+$mensaje_alerta = '';
+if (isset($_GET['status'])) {
+    switch ($_GET['status']) {
+        case 'success':
+            $mensaje_alerta = "✅ ¡Cargo registrado exitosamente!";
+            break;
+        case 'updated':
+            $mensaje_alerta = "🔄 ¡Cargo actualizado correctamente!";
+            break;
+        case 'deleted':
+            $mensaje_alerta = "🗑️ ¡Cargo eliminado correctamente!";
+            break;
+        case 'duplicate':
+            $mensaje_alerta = "⚠️ El cargo ingresado ya se encuentra registrado.";
+            break;
+        case 'error':
+            $mensaje_alerta = "⚠️ Hubo un error al procesar la solicitud. Intente nuevamente.";
+            break;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -29,37 +51,31 @@ $cargos = $controladorCargo->mostrarCargos();
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.scss">
     <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
+    <script>
+        function closeAlert() {
+            var alertDiv = document.getElementById('customAlert');
+            if (alertDiv) {
+                alertDiv.classList.add('hidden');
+            }
+        }
+    </script>
 </head>
 
 <body>
+
+<!-- Alerta personalizada idéntica a registrar_trabajador -->
+<div id="customAlert" class="custom-alert hidden">
+    <div class="alert-box">
+        <p id="alertMessage"></p>
+        <button onclick="closeAlert()">Aceptar</button>
+    </div>
+</div>
 
 <?php include "includes/layout.php"; ?>
 
 <div class="main" style="display: block !important; clear: both !important;">
 
     <div style="max-width: 600px; width: 100%; margin: 0 auto; display: block; box-sizing: border-box;">
-
-        <?php if (isset($_GET['status'])): ?>
-            <div style="margin: 0 auto 20px auto; width: 100%; text-align: center; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; box-sizing: border-box;
-                <?php
-                    if ($_GET['status'] == 'success' || $_GET['status'] == 'updated') {
-                        echo 'background-color: rgba(0, 255, 0, 0.2); color: #ccffcc; border: 1px solid #00ff00;';
-                    } elseif ($_GET['status'] == 'deleted') {
-                        echo 'background-color: rgba(255, 165, 0, 0.2); color: #ffe0b3; border: 1px solid #ffa500;';
-                    } else {
-                        echo 'background-color: rgba(255, 0, 0, 0.2); color: #ffcccc; border: 1px solid #ff0000;';
-                    }
-                ?>">
-                <?php
-                    switch ($_GET['status']) {
-                        case 'success': echo "✅ ¡Cargo registrado exitosamente!"; break;
-                        case 'updated': echo "🔄 ¡Cargo actualizado correctamente!"; break;
-                        case 'deleted': echo "🗑️ ¡Cargo eliminado correctamente!"; break;
-                        case 'error': echo "⚠️ Hubo un error al procesar la solicitud. Intente nuevamente."; break;
-                    }
-                ?>
-            </div>
-        <?php endif; ?>
 
         <div style="width: 100%; display: block; margin-bottom: 30px; box-sizing: border-box;">
             <form class="form-card" id="formCargos" action="../controladores/ctrl_cargo.php" method="POST" style="width: 100% !important; max-width: 100% !important; box-sizing: border-box; margin: 0 !important;">
@@ -116,7 +132,20 @@ $cargos = $controladorCargo->mostrarCargos();
             </div>
         </div>
 
-    </div> </div>
+    </div> 
+</div>
+
+<!-- Disparador de la alerta si existe mensaje -->
+<?php if (!empty($mensaje_alerta)): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var alertDiv = document.getElementById('customAlert');
+        var msg = document.getElementById('alertMessage');
+        msg.textContent = <?php echo json_encode($mensaje_alerta); ?>;
+        alertDiv.classList.remove('hidden');
+    });
+</script>
+<?php endif; ?>
 
 </body>
 </html>
