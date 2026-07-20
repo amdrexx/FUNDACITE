@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
 
+    
     // ==========================
     // FORMULARIO DE REGISTRO
     // ==========================
@@ -56,22 +57,26 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         // ==========================
-        // SOLO LETRAS EN NOMBRES
+        // SOLO LETRAS EN NOMBRES (sin caracteres repetidos en exceso)
         // ==========================
         const nombresInput = document.getElementById("nombres");
         if (nombresInput) {
             nombresInput.addEventListener("input", function () {
-                this.value = this.value.replace(/[^a-zA-ZÁÉÍÓÚáéíóúÑñ\s]/g, '');
+                let valor = this.value.replace(/[^a-zA-ZÁÉÍÓÚáéíóúÑñ\s]/g, '');
+                valor = limitarCaracteresRepetidos(valor, 2);
+                this.value = valor;
             });
         }
 
         // ==========================
-        // SOLO LETRAS EN APELLIDOS
+        // SOLO LETRAS EN APELLIDOS (sin caracteres repetidos en exceso)
         // ==========================
         const apellidosInput = document.getElementById("apellidos");
         if (apellidosInput) {
             apellidosInput.addEventListener("input", function () {
-                this.value = this.value.replace(/[^a-zA-ZÁÉÍÓÚáéíóúÑñ\s]/g, '');
+                let valor = this.value.replace(/[^a-zA-ZÁÉÍÓÚáéíóúÑñ\s]/g, '');
+                valor = limitarCaracteresRepetidos(valor, 2);
+                this.value = valor;
             });
         }
 
@@ -215,6 +220,17 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
+
+// ==========================
+// LIMITAR CARACTERES REPETIDOS CONSECUTIVOS
+// ==========================
+// Evita que un mismo carácter se repita más de "maxRepeticiones" veces seguidas.
+// Ejemplo con maxRepeticiones = 2: "Aaaaaron" -> "Aaaron" no, "Aaaron" -> "Aaron"... 
+// en general "aaaa" se recorta a "aa".
+function limitarCaracteresRepetidos(valor, maxRepeticiones = 2) {
+    const patron = new RegExp(`(.)\\1{${maxRepeticiones},}`, 'g');
+    return valor.replace(patron, (coincidencia, caracter) => caracter.repeat(maxRepeticiones));
+}
 
 // ==========================
 // ALERTA PERSONALIZADA
