@@ -61,20 +61,25 @@ style="display:flex;flex-direction:column;justify-content:space-between;height:c
             </ul>
         </li>
 
+        <?php include_once __DIR__ . '/permissions.php'; ?>
+
+        <?php if (esAdministradorODirector()): ?>
         <li>
             <a href="/FUNDACITE/vistas/registrar_contrato.php" class="submenu-link">
                 <i class="bi bi-file-earmark-text-fill"></i>
                 <b>CONTRATOS</b>
             </a>
         </li>
-
+         <?php endif; ?>
+        <?php if (esAdministrador()): ?>
         <li>
             <a href="/FUNDACITE/vistas/lista_usuarios.php" class="submenu-link">
                 <i class="bi bi-person-circle"></i>
                 <b>USUARIOS</b>
             </a>
         </li>
-        
+        <?php endif; ?>
+
         <li>
             <a href="/FUNDACITE/vistas/lista_salario.php" class="submenu-link">
                 <i class="bi bi-coin"></i> <b>SALARIO</b>
@@ -86,12 +91,14 @@ style="display:flex;flex-direction:column;justify-content:space-between;height:c
             </a>
         </li>
 
+        <?php if (esAdministradorODirector()): ?>
         <li>
             <a href="/FUNDACITE/vistas/lista_dias_disfrute.php" class="submenu-link">
                 <i class="bi bi-calendar2-check-fill"></i>
                 <b>SOLICITUDES</b>
             </a>
         </li>
+        <?php endif; ?>
 
     </ul>
 

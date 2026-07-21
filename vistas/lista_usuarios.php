@@ -1,6 +1,8 @@
 <?php
 include "includes/guardian.php";
 session_start();
+require_once __DIR__ . '/includes/permissions.php';
+requireAdministrador();
 require_once '../conexion.php';
 require_once '../modelos/clase_usuario.php';
 
@@ -23,6 +25,7 @@ unset($_SESSION['error_registro'], $_SESSION['exito_registro']);
 <body>
 
 <?php include "includes/layout.php"; ?>
+<?php include_once __DIR__ . '/includes/permissions.php'; ?>
 
 <div class="main">
 <div class="glass tabla-container">
@@ -33,7 +36,9 @@ unset($_SESSION['error_registro'], $_SESSION['exito_registro']);
 placeholder="Buscar usuario, cédula o trabajador"
 value="<?php echo htmlspecialchars($buscar); ?>">
 <button class="btn-buscar">Buscar</button>
+<?php if (esAdministrador()): ?>
 <a href="registrar_usuario.php" class="btn-persona" style="text-decoration:none;">+ Agregar Usuario</a>
+<?php endif; ?>
 </form>
 
 
@@ -58,24 +63,27 @@ value="<?php echo htmlspecialchars($buscar); ?>">
 <td><?php echo htmlspecialchars($u['tipo_usuario']); ?></td>
 <td><?php echo htmlspecialchars($u['status']); ?></td>
 <td>
+<?php if (esAdministrador()): ?>
 <a class="btn-editar" href="editar_usuario.php?id=<?php echo $u['id_usuario']; ?>">Editar
     <i class="bi bi-pencil-square"></i>
 </a>
 
-
-<?php if($u['status']=="Activo"): ?>
-<a class="btn-eliminar"
-onclick="return confirm('¿Desea inactivar este usuario?')"
-href="../controladores/ctrl_usuario.php?eliminar=<?php echo $u['id_usuario']; ?>">
-Inactivar
-</a>
+    <?php if($u['status']=="Activo"): ?>
+    <a class="btn-eliminar"
+    onclick="return confirm('¿Desea inactivar este usuario?')"
+    href="../controladores/ctrl_usuario.php?eliminar=<?php echo $u['id_usuario']; ?>">
+    Inactivar
+    </a>
+    <?php else: ?>
+    <a class="btn-ver"
+    onclick="return confirm('¿Desea activar este usuario?')"
+    href="../controladores/ctrl_usuario.php?activar=<?php echo $u['id_usuario']; ?>">
+        <i class="bi bi-person-check"></i>
+    Activar
+    </a>
+    <?php endif; ?>
 <?php else: ?>
-<a class="btn-ver"
-onclick="return confirm('¿Desea activar este usuario?')"
-href="../controladores/ctrl_usuario.php?activar=<?php echo $u['id_usuario']; ?>">
-    <i class="bi bi-person-check"></i>
-Activar
-</a>
+    <span>Sin permisos</span>
 <?php endif; ?>
 </td>
 </tr>

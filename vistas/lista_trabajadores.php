@@ -36,6 +36,8 @@ $trabajadores = $trabajador->listarTrabajadores($buscar);
     
 <?php include "includes/layout.php"; ?>
 
+<?php include_once __DIR__ . '/includes/permissions.php'; ?>
+
 <!-- ================= CONTENIDO ================= -->
 <div class="main">
     <div class="glass tabla-container">
@@ -89,6 +91,7 @@ $trabajadores = $trabajador->listarTrabajadores($buscar);
                             Editar
                         </a>
 
+                        <?php if (esAdministradorODirector()): ?>
                         <form action="../controladores/ctrl_trabajador.php" method="POST" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas eliminar este trabajador?');">
                             <input type="hidden" name="id_trabajador" value="<?php echo htmlspecialchars($fila['id_trabajador'] ?? ''); ?>">
                             <button type="submit" name="eliminar_trabajador" class="btn-eliminar" style="border:none; cursor:pointer;">
@@ -96,6 +99,7 @@ $trabajadores = $trabajador->listarTrabajadores($buscar);
                                 Inactivar
                             </button>
                         </form>
+                        <?php endif; ?>
                          
                     </td>
                         </tr>

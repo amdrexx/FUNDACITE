@@ -1,3 +1,5 @@
+<?php include_once __DIR__ . '/includes/permissions.php';
+requireAdministradorODirector(); ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -13,6 +15,7 @@
 
   
   <?php include "includes/layout.php"; ?>
+  <?php include_once __DIR__ . '/includes/permissions.php'; ?>
 
    
     <div class="main">
@@ -26,9 +29,11 @@
                    
                 >
                 <button class="btn-buscar">Buscar</button>
+                <?php if (esAdministradorODirector()): ?>
                 <a href="/FUNDACITE/vistas/registrar_dias_disfrute.php" class="btn-persona" style="text-decoration:none;">
                     + Agregar
                 </a>
+                <?php endif; ?>
             </div>
 
 

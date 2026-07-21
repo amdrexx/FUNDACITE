@@ -5,6 +5,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+require_once __DIR__ . '/../vistas/includes/permissions.php';
 require_once '../conexion.php';
 require_once '../modelos/clase_trabajador.php';
 
@@ -14,6 +15,12 @@ $trabajador = new Trabajador($conexion);
 // ELIMINAR LOGICAMENTE TRABAJADOR
 // =====================================
 if (isset($_POST['eliminar_trabajador'])) {
+
+    if (!esAdministradorODirector()) {
+        $_SESSION['error_eliminacion'] = ["No tienes permisos para eliminar trabajadores."];
+        header("Location: ../vistas/lista_trabajadores.php");
+        exit;
+    }
 
     $idTrabajador = intval($_POST['id_trabajador'] ?? 0);
 

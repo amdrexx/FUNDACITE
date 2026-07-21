@@ -3,9 +3,12 @@
 // ARCHIVO: controladores/ctrl_usuario.php
 // DESCRIPCIÓN: Controlador para la gestión de usuarios
 // ============================================================================
-
 session_start();
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
+require_once __DIR__ . '/../vistas/includes/permissions.php';
 require_once "../conexion.php";
 require_once "../modelos/clase_usuario.php";
 
@@ -15,6 +18,12 @@ $usuario = new Usuario($conexion);
 // REGISTRAR USUARIO
 // ============================================================================
 if (isset($_POST['registrar_usuario'])) {
+
+    if (!esAdministrador()) {
+        $_SESSION['error_registro'] = ["No tienes permisos para registrar usuarios."];
+        header("Location: ../vistas/lista_usuarios.php");
+        exit;
+    }
 
     $id_trabajador = trim($_POST['id_trabajador'] ?? '');
     $nombre         = trim($_POST['nombre'] ?? '');
@@ -102,6 +111,12 @@ if (isset($_POST['registrar_usuario'])) {
 // ============================================================================
 if (isset($_POST['editar_usuario'])) {
 
+    if (!esAdministrador()) {
+        $_SESSION['error_registro'] = ["No tienes permisos para editar usuarios."];
+        header("Location: ../vistas/lista_usuarios.php");
+        exit;
+    }
+
     $id_usuario     = intval($_POST['id_usuario']);
     $id_trabajador  = intval($_POST['id_trabajador']);
     $nombre         = trim($_POST['nombre']);
@@ -167,6 +182,12 @@ if (isset($_POST['editar_usuario'])) {
 // ============================================================================
 if (isset($_GET['eliminar'])) {
 
+    if (!esAdministrador()) {
+        $_SESSION['error_registro'] = ["No tienes permisos para eliminar usuarios."];
+        header("Location: ../vistas/lista_usuarios.php");
+        exit;
+    }
+
     $id_usuario = intval($_GET['eliminar']);
 
     if ($usuario->eliminar($id_usuario)) {
@@ -186,6 +207,12 @@ if (isset($_GET['eliminar'])) {
 // ACTIVAR USUARIO
 // ============================================================================
 if (isset($_GET['activar'])) {
+
+    if (!esAdministrador()) {
+        $_SESSION['error_registro'] = ["No tienes permisos para activar usuarios."];
+        header("Location: ../vistas/lista_usuarios.php");
+        exit;
+    }
 
     $id_usuario = intval($_GET['activar']);
 

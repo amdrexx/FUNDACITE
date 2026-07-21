@@ -154,7 +154,7 @@ CREATE TABLE USUARIO (
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     CONSTRAINT chk_usuario_status CHECK (status IN ('Activo', 'Inactivo', 'Bloqueado')),
-    CONSTRAINT chk_tipo_usuario CHECK (tipo_usuario IN ('Administrador', 'Supervisor', 'Usuario', 'Invitado'))
+    CONSTRAINT chk_tipo_usuario CHECK (tipo_usuario IN ('Administrador', 'Director', 'Analista'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ================================================================================

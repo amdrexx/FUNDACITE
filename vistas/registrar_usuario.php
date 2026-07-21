@@ -1,6 +1,8 @@
 <?php
 include "includes/guardian.php";
 session_start();
+require_once __DIR__ . '/includes/permissions.php';
+requireAdministrador();
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -44,6 +46,8 @@ $trabajadores = $trabajadorObj->listarTrabajadoresSinUsuario();
 </div>
 
 <?php include "includes/layout.php"; ?>
+<?php include_once __DIR__ . '/includes/permissions.php'; ?>
+<?php requireAdministrador(); ?>
 
 <!-- FORMULARIO -->
 <div class="main">
@@ -83,10 +87,9 @@ $trabajadores = $trabajadorObj->listarTrabajadoresSinUsuario();
                 <label>Tipo de Usuario</label>
                 <select name="tipo_usuario" id="tipo_usuario">
                     <option value="">Seleccione un rol...</option>
-                    <option value="Usuario" <?php echo (isset($old['tipo_usuario']) && $old['tipo_usuario'] == 'Usuario') ? 'selected' : ''; ?>>Usuario</option>
                     <option value="Administrador" <?php echo (isset($old['tipo_usuario']) && $old['tipo_usuario'] == 'Administrador') ? 'selected' : ''; ?>>Administrador</option>
-                    <option value="Supervisor" <?php echo (isset($old['tipo_usuario']) && $old['tipo_usuario'] == 'Supervisor') ? 'selected' : ''; ?>>Supervisor</option>
-                    <option value="Invitado" <?php echo (isset($old['tipo_usuario']) && $old['tipo_usuario'] == 'Invitado') ? 'selected' : ''; ?>>Invitado</option>
+                    <option value="Director" <?php echo (isset($old['tipo_usuario']) && $old['tipo_usuario'] == 'Director') ? 'selected' : ''; ?>>Director</option>
+                    <option value="Analista" <?php echo (isset($old['tipo_usuario']) && $old['tipo_usuario'] == 'Analista') ? 'selected' : ''; ?>>Analista</option>
                 </select>
             </div>
 
