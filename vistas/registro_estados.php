@@ -1,4 +1,6 @@
 <?php
+session_start();
+include_once "includes/guardian.php";
 require_once("../controladores/ctrl_estado.php");
 
 $controlador = new EstadoController();
@@ -54,14 +56,10 @@ $estados = $controlador->listar();
         <div class="contenedor-estados">
 
             <!-- FORMULARIO -->
-            <div class="form-card">
-    <center>
-        <h2>
-            <?php echo $editar ? "Editar Estado" : "Registro de Estado"; ?>
-        </h2>
-    </center>
+<!-- FORMULARIO -->
+<div class="form-card">
 
-    <form method="POST" class="form-estado">
+    <form method="POST">
 
         <input
             type="hidden"
@@ -69,28 +67,32 @@ $estados = $controlador->listar();
             value="<?= $editar['cod_est'] ?? ''; ?>"
         >
 
-        <div class="fila-estado">
+        <div class="full-width">
+            <h2 style="text-align:center;">
+                <?= $editar ? "Editar Estado" : "Registro de Estado"; ?>
+            </h2>
+        </div>
 
-            <div class="field">
-                
-                <label>Nombre del Estado</label>
+        <div class="field full-width">
+            <label><strong>Nombre del Estado</strong></label>
 
-                <input
-                    type="text"
-                    name="nombre"
-                    placeholder="Ingrese el estado"
-                    required
-                    value="<?= $editar['nombre'] ?? ''; ?>"
-                >
+            <input
+                type="text"
+                name="nombre"
+                placeholder="Ingrese el estado"
+                value="<?= $editar['nombre'] ?? ''; ?>"
+                required
+            >
+        </div>
 
-            </div>
+        <div class="full-width">
 
             <?php if ($editar) { ?>
 
                 <button
                     type="submit"
-                    class="btn-guardar full-width"
                     name="actualizar"
+                    class="btn-guardar"
                 >
                     Actualizar
                 </button>
@@ -99,8 +101,8 @@ $estados = $controlador->listar();
 
                 <button
                     type="submit"
-                    class="btn-guardar full-width"
                     name="guardar"
+                    class="btn-guardar"
                 >
                     Guardar
                 </button>

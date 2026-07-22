@@ -3,7 +3,8 @@ session_start();
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-
+include_once "includes/roles.php";
+include_once "includes/guardian.php";
 require_once("../controladores/ctrl_municipio.php");
 
 $controlador = new MunicipioController();
@@ -100,109 +101,100 @@ $municipios = $controlador->listar();
 
         <div class="contenedor-estados">
 
-            <!-- ================= FORMULARIO ================= -->
+<!-- ================= FORMULARIO ================= -->
 
-            <div class="form-card">
+<div class="form-card">
 
-                <center>
+    <form method="POST">
 
-                    <h2>
+        <?php if ($municipioEditar) { ?>
 
-                        <?php echo $municipioEditar ? "Editar Municipio" : "Registro de Municipio"; ?>
+            <input
+                type="hidden"
+                name="cod_muni"
+                value="<?= $municipioEditar['cod_muni']; ?>"
+            >
 
-                    </h2>
+        <?php } ?>
 
-                </center>
+        <!-- TÍTULO -->
+        <div class="full-width">
+            <h2 style="text-align:center;">
+                <?= $municipioEditar ? "Editar Municipio" : "Registro de Municipio"; ?>
+            </h2>
+        </div>
 
-                <form method="POST">
+        <!-- ESTADO -->
+        <div class="field">
 
-                    <?php if ($municipioEditar) { ?>
+            <label>Seleccione el Estado</label>
 
-                        <input
-                            type="hidden"
-                            name="cod_muni"
-                            value="<?php echo $municipioEditar['cod_muni']; ?>"
-                        >
+            <select name="cod_est" required>
 
-                    <?php } ?>
+                <option value="">Seleccione un Estado</option>
 
-                    <div class="field">
+                <?php foreach ($estados as $estado) { ?>
 
-                        <label>Seleccione el Estado</label>
+                    <option
+                        value="<?= $estado['cod_est']; ?>"
+                        <?= ($municipioEditar && $municipioEditar['cod_est'] == $estado['cod_est']) ? 'selected' : ''; ?>
+                    >
+                        <?= $estado['nombre']; ?>
+                    </option>
 
-                        <select
-                            name="cod_est"
-                            required
-                        >
+                <?php } ?>
 
-                            <option value="">Seleccione un Estado</option>
+            </select>
 
-                            <?php foreach ($estados as $estado) { ?>
+        </div>
 
-                                <option
-                                    value="<?php echo $estado['cod_est']; ?>"
-                                    <?php
-                                    if (
-                                        $municipioEditar &&
-                                        $municipioEditar['cod_est'] == $estado['cod_est']
-                                    ) {
-                                        echo "selected";
-                                    }
-                                    ?>
-                                >
+        <!-- MUNICIPIO -->
+        <div class="field">
 
-                                    <?php echo $estado['nombre']; ?>
+            <label>Nombre del Municipio</label>
 
-                                </option>
+            <input
+                type="text"
+                name="nombre"
+                placeholder="Ingrese el municipio"
+                value="<?= $municipioEditar['nombre'] ?? ''; ?>"
+                required
+            >
 
-                            <?php } ?>
+        </div>
 
-                        </select>
+        <!-- BOTÓN -->
+        <div class="full-width" style="text-align:center;">
 
-                    </div>
+            <?php if ($municipioEditar) { ?>
 
-                    <div class="field">
+                <button
+                    type="submit"
+                    name="actualizar"
+                    class="btn-guardar"
+                    style="max-width:350px;"
+                >
+                    Actualizar Municipio
+                </button>
 
-                        <label>Nombre del Municipio</label>
+            <?php } else { ?>
 
-                        <input
-                            type="text"
-                            name="nombre"
-                            required
-                            value="<?php echo $municipioEditar ? $municipioEditar['nombre'] : ''; ?>"
-                        >
+                <button
+                    type="submit"
+                    name="guardar"
+                    class="btn-guardar"
+                    style="max-width:350px;"
+                >
+                    Guardar Municipio
+                </button>
 
-                    </div>
+            <?php } ?>
 
-                    <?php if ($municipioEditar) { ?>
+        </div>
 
-                        <button
-                            type="submit"
-                            name="actualizar"
-                            class="btn-guardar"
-                        >
+    </form>
 
-                            Actualizar Municipio
-
-                        </button>
-
-                    <?php } else { ?>
-
-                        <button
-                            type="submit"
-                            name="guardar"
-                            class="btn-guardar"
-                        >
-
-                            Guardar Municipio
-
-                        </button>
-
-                    <?php } ?>
-
-                </form>
-
-            </div>
+</div>
 
             <br>
 

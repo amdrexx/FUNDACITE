@@ -1,5 +1,5 @@
 <?php
-include "includes/guardian.php";
+include_once "includes/guardian.php";
 session_start();
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -16,6 +16,22 @@ $cargos = $trabajador->listarCargos();
 
 if (!$dato) {
     die("Trabajador no encontrado.");
+}
+
+// Arma el texto completo de la dirección (Dirección - Parroquia, Municipio, Estado)
+$direccionCompleta = '';
+if (!empty($dato['direccion'])) {
+    $direccionCompleta = $dato['direccion'];
+
+    $ubicacion = array_filter([
+        $dato['parroquia'] ?? '',
+        $dato['municipio'] ?? '',
+        $dato['estado'] ?? ''
+    ]);
+
+    if (!empty($ubicacion)) {
+        $direccionCompleta .= ' - ' . implode(', ', $ubicacion);
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -114,6 +130,11 @@ if (!$dato) {
                     type="text"
                     value="<?php echo htmlspecialchars($dato['edad'] ?? ''); ?>"
                     readonly>
+            </div>
+
+            <div class="field">
+                <label>Dirección</label>
+                <input type="text" value="<?php echo htmlspecialchars($direccionCompleta); ?>" readonly>
             </div>
 
         </div>

@@ -5,7 +5,8 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-require_once __DIR__ . '/../vistas/includes/permissions.php';
+require_once __DIR__ . '/../vistas/includes/guardian.php';
+
 require_once '../conexion.php';
 require_once '../modelos/clase_trabajador.php';
 
@@ -15,12 +16,6 @@ $trabajador = new Trabajador($conexion);
 // ELIMINAR LOGICAMENTE TRABAJADOR
 // =====================================
 if (isset($_POST['eliminar_trabajador'])) {
-
-    if (!esAdministradorODirector()) {
-        $_SESSION['error_eliminacion'] = ["No tienes permisos para eliminar trabajadores."];
-        header("Location: ../vistas/lista_trabajadores.php");
-        exit;
-    }
 
     $idTrabajador = intval($_POST['id_trabajador'] ?? 0);
 
@@ -63,6 +58,7 @@ if (isset($_POST['editar_trabajador'])) {
     $telefono     = trim($_POST['numeroTelefono'] ?? '');
     $idCargo      = intval($_POST['cargo_id'] ?? 0);
     $status       = trim($_POST['estatus_laboral'] ?? '');
+    $idDir        = intval($_POST['id_dir'] ?? 0);
 
     $errores = [];
 
@@ -98,7 +94,8 @@ if (isset($_POST['editar_trabajador'])) {
         $telefono,
         $correo,
         $status,
-        $idCargo
+        $idCargo,
+        $idDir > 0 ? $idDir : null
     )) {
         $_SESSION['exito_edicion'] = "Trabajador actualizado correctamente.";
         header("Location: ../vistas/lista_trabajadores.php");
@@ -129,6 +126,9 @@ $telefono         = trim($_POST['numeroTelefono'] ?? '');
 $fechaIngreso     = trim($_POST['fecha_ingreso'] ?? '');
 $idCargo          = trim($_POST['cargo_id'] ?? '');
 $status           = trim($_POST['estatus_laboral'] ?? '');
+
+// Dirección: el trabajador elige una ya existente en el maestro de direcciones
+$idDir            = intval($_POST['id_dir'] ?? 0);
 
 if ($tipoDoc == 'V') {
     $tipoDocumento = 'Cédula';
@@ -178,6 +178,9 @@ if (empty($idCargo))
 if (empty($status))
     $errores[] = "Seleccione el estatus laboral.";
 
+if (empty($idDir))
+    $errores[] = "Seleccione de dónde es el trabajador (dirección).";
+
 if ($trabajador->existeCedula($cedula)) {
     $errores[] = "La cédula ya se encuentra registrada.";
 }
@@ -202,7 +205,8 @@ try {
         $telefono,
         $correo,
         $status,
-        $idCargo
+        $idCargo,
+        $idDir
     );
 
     if (!$idTrabajador) {

@@ -8,7 +8,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-require_once __DIR__ . '/../vistas/includes/permissions.php';
+require_once __DIR__ . '/../vistas/includes/roles.php';
 require_once "../conexion.php";
 require_once "../modelos/clase_usuario.php";
 
@@ -25,10 +25,11 @@ if (isset($_POST['registrar_usuario'])) {
         exit;
     }
 
-    $id_trabajador = trim($_POST['id_trabajador'] ?? '');
-    $nombre         = trim($_POST['nombre'] ?? '');
-    $contrasena     = trim($_POST['contrasena'] ?? '');
-    $tipo_usuario   = trim($_POST['tipo_usuario'] ?? '');
+    $id_trabajador       = trim($_POST['id_trabajador'] ?? '');
+    $nombre              = trim($_POST['nombre'] ?? '');
+    $contrasena          = trim($_POST['contrasena'] ?? '');
+    $confirmar_contrasena = trim($_POST['confirmar_contrasena'] ?? '');
+    $tipo_usuario        = trim($_POST['tipo_usuario'] ?? '');
 
     $errores = [];
 
@@ -58,6 +59,10 @@ if (isset($_POST['registrar_usuario'])) {
         $errores[] = "La contraseña debe tener al menos 6 caracteres.";
     }
 
+    if ($contrasena !== $confirmar_contrasena) {
+        $errores[] = "Las contraseñas no coinciden.";
+    }
+
     if (empty($tipo_usuario)) {
         $errores[] = "Debe seleccionar un tipo de usuario.";
     }
@@ -75,9 +80,7 @@ if (isset($_POST['registrar_usuario'])) {
     // ==========================
 
     if (!empty($errores)) {
-
         $_SESSION['error_registro'] = $errores;
-
         header("Location: ../vistas/registrar_usuario.php");
         exit;
     }
@@ -92,13 +95,9 @@ if (isset($_POST['registrar_usuario'])) {
         $contrasena,
         $tipo_usuario
     )) {
-
         unset($_SESSION['old_input']);
-
         $_SESSION['exito_registro'] = "Usuario registrado correctamente.";
-
     } else {
-
         $_SESSION['error_registro'][] = "No fue posible registrar el usuario.";
     }
 
@@ -117,11 +116,12 @@ if (isset($_POST['editar_usuario'])) {
         exit;
     }
 
-    $id_usuario     = intval($_POST['id_usuario']);
-    $id_trabajador  = intval($_POST['id_trabajador']);
-    $nombre         = trim($_POST['nombre']);
-    $tipo_usuario   = trim($_POST['tipo_usuario']);
-    $contrasena     = trim($_POST['contrasena']);
+    $id_usuario          = intval($_POST['id_usuario']);
+    $id_trabajador       = intval($_POST['id_trabajador']);
+    $nombre              = trim($_POST['nombre']);
+    $tipo_usuario        = trim($_POST['tipo_usuario']);
+    $contrasena          = trim($_POST['contrasena']);
+    $confirmar_contrasena = trim($_POST['confirmar_contrasena']);
 
     $errores = [];
 
@@ -137,6 +137,16 @@ if (isset($_POST['editar_usuario'])) {
         $errores[] = "Debe seleccionar un tipo de usuario.";
     }
 
+    // Validar contraseña solo si el usuario escribió algo para cambiarla
+    if (!empty($contrasena)) {
+        if (strlen($contrasena) < 6) {
+            $errores[] = "La nueva contraseña debe tener al menos 6 caracteres.";
+        }
+        if ($contrasena !== $confirmar_contrasena) {
+            $errores[] = "Las contraseñas no coinciden.";
+        }
+    }
+
     if ($usuario->existeNombre($nombre, $id_usuario)) {
         $errores[] = "Ese nombre de usuario ya está registrado.";
     }
@@ -146,10 +156,8 @@ if (isset($_POST['editar_usuario'])) {
     }
 
     if (!empty($errores)) {
-
         $_SESSION['error_registro'] = $errores;
-
-        header("Location: ../vistas/lista_usuarios.php");
+        header("Location: ../vistas/editar_usuario.php?id=" . $id_usuario);
         exit;
     }
 
@@ -161,15 +169,11 @@ if (isset($_POST['editar_usuario'])) {
     );
 
     if ($actualizado) {
-
         if (!empty($contrasena)) {
             $usuario->actualizarPassword($id_usuario, $contrasena);
         }
-
         $_SESSION['exito_registro'] = "Usuario actualizado correctamente.";
-
     } else {
-
         $_SESSION['error_registro'][] = "No fue posible actualizar el usuario.";
     }
 
@@ -191,11 +195,8 @@ if (isset($_GET['eliminar'])) {
     $id_usuario = intval($_GET['eliminar']);
 
     if ($usuario->eliminar($id_usuario)) {
-
         $_SESSION['exito_registro'] = "Usuario desactivado correctamente.";
-
     } else {
-
         $_SESSION['error_registro'][] = "No fue posible desactivar el usuario.";
     }
 
@@ -217,11 +218,8 @@ if (isset($_GET['activar'])) {
     $id_usuario = intval($_GET['activar']);
 
     if ($usuario->activar($id_usuario)) {
-
         $_SESSION['exito_registro'] = "Usuario activado correctamente.";
-
     } else {
-
         $_SESSION['error_registro'][] = "No fue posible activar el usuario.";
     }
 
@@ -239,11 +237,8 @@ if (isset($_GET['buscar'])) {
     $datos = $usuario->buscarPorId($id_usuario);
 
     if ($datos) {
-
         $_SESSION['usuario_editar'] = $datos;
-
     } else {
-
         $_SESSION['error_registro'][] = "Usuario no encontrado.";
     }
 

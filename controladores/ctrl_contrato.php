@@ -1,9 +1,14 @@
 <?php
 // ARCHIVO: /FUNDACITE/controladores/ctrl_contrato.php
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once __DIR__ . '/../vistas/includes/guardian.php';
+requireAdministradorODirector();
+
 require_once __DIR__ . '/../conexion.php'; 
-require_once __DIR__ . '/../vistas/includes/permissions.php';
-requireAdministrador();
 require_once __DIR__ . '/../modelos/clase_contrato.php';
 
 class ContratoControlador {

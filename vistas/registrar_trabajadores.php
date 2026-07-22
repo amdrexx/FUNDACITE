@@ -1,5 +1,5 @@
 <?php
-include "includes/guardian.php";
+include_once "includes/guardian.php";
 session_start();
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -20,6 +20,7 @@ require_once '../modelos/clase_trabajador.php';
 
 $trabajador = new Trabajador($conexion);
 $cargos = $trabajador->listarCargos();
+$direcciones = $trabajador->listarDirecciones();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -53,7 +54,7 @@ $cargos = $trabajador->listarCargos();
             <div class="field">
                 <label>Tipo de Documento</label>
                 <select name="tipoDoc" id="tipoDoc">
-                    <option value="">Seleccione...</option>
+                    <option value="" disabled selected>Seleccione...</option>
                     <option value="V" <?php echo (isset($old['tipoDoc']) && $old['tipoDoc'] == 'V') ? 'selected' : ''; ?>>Venezolano (Cédula)</option>
                     <option value="E" <?php echo (isset($old['tipoDoc']) && $old['tipoDoc'] == 'E') ? 'selected' : ''; ?>>Extranjero (Cédula de Extranjería)</option>
                 </select>
@@ -76,7 +77,7 @@ $cargos = $trabajador->listarCargos();
             <div class="field">
                 <label>Estado Civil</label>
                 <select name="estadoCivil" id="estadoCivil">
-                    <option value="">Seleccione...</option>
+                    <option value="" disabled selected>Seleccione...</option>
                     <option value="Soltero(a)" <?php echo (isset($old['estadoCivil']) && $old['estadoCivil'] == 'Soltero(a)') ? 'selected' : ''; ?>>Soltero(a)</option>
                     <option value="Casado(a)" <?php echo (isset($old['estadoCivil']) && $old['estadoCivil'] == 'Casado(a)') ? 'selected' : ''; ?>>Casado(a)</option>
                     <option value="Divorciado(a)" <?php echo (isset($old['estadoCivil']) && $old['estadoCivil'] == 'Divorciado(a)') ? 'selected' : ''; ?>>Divorciado(a)</option>
@@ -143,7 +144,7 @@ $cargos = $trabajador->listarCargos();
             <div class="field">
                 <label>Cargo</label>
                 <select name="cargo_id">
-                    <option value="">Seleccione un cargo</option>
+                    <option value="" disabled selected>Seleccione un cargo</option>
                     <?php foreach ($cargos as $cargo): ?>
                         <option value="<?php echo $cargo['id_cargo']; ?>"
                             <?php echo (isset($old['cargo_id']) && $old['cargo_id'] == $cargo['id_cargo']) ? 'selected' : ''; ?>>
@@ -157,11 +158,25 @@ $cargos = $trabajador->listarCargos();
             <div class="field">
                 <label>Estatus Laboral</label>
                 <select name="estatus_laboral">
-                    <option value="">Seleccione</option>
+                    <option value="" disabled selected>Seleccione</option>
                     <option value="Activo" <?php echo (isset($old['estatus_laboral']) && $old['estatus_laboral'] == 'Activo') ? 'selected' : ''; ?>>Activo</option>
                     <option value="Jubilado" <?php echo (isset($old['estatus_laboral']) && $old['estatus_laboral'] == 'Jubilado') ? 'selected' : ''; ?>>Jubilado</option>
                     <option value="Suspendido" <?php echo (isset($old['estatus_laboral']) && $old['estatus_laboral'] == 'Suspendido') ? 'selected' : ''; ?>>Suspendido</option>
                     <option value="Retirado" <?php echo (isset($old['estatus_laboral']) && $old['estatus_laboral'] == 'Retirado') ? 'selected' : ''; ?>>Retirado (se guarda como Inactivo)</option>
+                </select>
+            </div>
+
+            <!-- Dirección: de dónde es el trabajador (elige una ya registrada en el maestro) -->
+            <div class="field">
+                <label>¿De dónde es? (Dirección)</label>
+                <select name="id_dir" id="id_dir">
+                    <option value="" disabled selected>Seleccione una dirección</option>
+                    <?php foreach ($direcciones as $dir): ?>
+                        <option value="<?php echo $dir['id_dir']; ?>"
+                            <?php echo (isset($old['id_dir']) && $old['id_dir'] == $dir['id_dir']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($dir['direccion'] . ' - ' . $dir['parroquia'] . ', ' . $dir['municipio'] . ', ' . $dir['estado']); ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
             </div>
 

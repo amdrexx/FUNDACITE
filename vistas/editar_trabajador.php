@@ -1,5 +1,5 @@
 <?php
-include "includes/guardian.php";
+include_once "includes/guardian.php";
 session_start();
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -18,6 +18,7 @@ $idTrabajador = intval($_GET['id'] ?? 0);
 $trabajador = new Trabajador($conexion);
 $dato = $trabajador->obtenerTrabajadorPorId($idTrabajador);
 $cargos = $trabajador->listarCargos();
+$direcciones = $trabajador->listarDirecciones();
 
 if (!$dato) {
     die("Trabajador no encontrado.");
@@ -141,6 +142,19 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                     <option value="Jubilado" <?php echo (($dato['estatus_laboral'] ?? '') == 'Jubilado') ? 'selected' : ''; ?>>Jubilado</option>
                     <option value="Suspendido" <?php echo (($dato['estatus_laboral'] ?? '') == 'Suspendido') ? 'selected' : ''; ?>>Suspendido</option>
                     <option value="Retirado" <?php echo (($dato['estatus_laboral'] ?? '') == 'Retirado') ? 'selected' : ''; ?>>Retirado</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Dirección (¿De dónde es?)</label>
+                <select name="id_dir">
+                    <option value="" disabled selected>Seleccione una dirección</option>
+                    <?php foreach ($direcciones as $dir): ?>
+                        <option value="<?php echo $dir['id_dir']; ?>"
+                            <?php echo (($dato['id_dir'] ?? '') == $dir['id_dir']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($dir['direccion'] . ' - ' . $dir['parroquia'] . ', ' . $dir['municipio'] . ', ' . $dir['estado']); ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
             </div>
 

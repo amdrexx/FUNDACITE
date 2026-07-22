@@ -3,6 +3,7 @@ include "includes/guardian.php";
 session_start();
 require_once __DIR__ . '/includes/permissions.php';
 requireAdministrador();
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -17,10 +18,8 @@ unset(
     $_SESSION['exito_registro']
 );
 
-// Usamos la conexión y el modelo existente de trabajador para rellenar el SELECT
 require_once '../conexion.php';
 require_once '../modelos/clase_trabajador.php';
-
 
 $trabajadorObj = new Trabajador($conexion);
 $trabajadores = $trabajadorObj->listarTrabajadoresSinUsuario();
@@ -32,8 +31,6 @@ $trabajadores = $trabajadorObj->listarTrabajadoresSinUsuario();
     <title>Registro de Usuarios</title>
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
-    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.scss">
     <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
 </head>
 <body>
@@ -46,8 +43,6 @@ $trabajadores = $trabajadorObj->listarTrabajadoresSinUsuario();
 </div>
 
 <?php include "includes/layout.php"; ?>
-<?php include_once __DIR__ . '/includes/permissions.php'; ?>
-<?php requireAdministrador(); ?>
 
 <!-- FORMULARIO -->
 <div class="main">
@@ -80,6 +75,12 @@ $trabajadores = $trabajadorObj->listarTrabajadoresSinUsuario();
             <div class="field">
                 <label>Contraseña</label>
                 <input type="password" name="contrasena" id="contrasena" placeholder="Ingrese la contraseña de acceso">
+            </div>
+
+            <!-- Confirmar Contraseña -->
+            <div class="field">
+                <label>Confirmar Contraseña</label>
+                <input type="password" name="confirmar_contrasena" id="confirmar_contrasena" placeholder="Repita la contraseña">
             </div>
 
             <!-- Tipo de Usuario -->

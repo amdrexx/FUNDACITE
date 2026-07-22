@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-include "includes/guardian.php";
+include_once "includes/guardian.php";
 
 if (!isset($_SESSION["id_usuario"])) {
     header("Location: ../index.php");

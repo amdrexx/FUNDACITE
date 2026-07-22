@@ -24,6 +24,38 @@ class Trabajador
         return $stmt->get_result()->num_rows > 0;
     }
 
+    /**
+     * Lista las direcciones ya registradas en el maestro de direcciones
+     * (tabla DIRECCION), con su ruta completa Estado/Municipio/Parroquia,
+     * para mostrarlas como opciones de selección en el registro de trabajador.
+     */
+    public function listarDirecciones()
+    {
+        $direcciones = [];
+
+        $sql = "SELECT
+                    d.id_dir,
+                    d.nombre AS direccion,
+                    p.nombre AS parroquia,
+                    m.nombre AS municipio,
+                    e.nombre AS estado
+                FROM DIRECCION d
+                INNER JOIN PARROQUIA p ON d.cod_par = p.cod_par
+                INNER JOIN MUNICIPIO m ON p.cod_muni = m.cod_muni
+                INNER JOIN ESTADO e ON m.cod_est = e.cod_est
+                ORDER BY e.nombre, m.nombre, p.nombre, d.nombre";
+
+        $resultado = $this->conexion->query($sql);
+
+        if ($resultado && $resultado->num_rows > 0) {
+            while ($fila = $resultado->fetch_assoc()) {
+                $direcciones[] = $fila;
+            }
+        }
+
+        return $direcciones;
+    }
+
     public function registrarTrabajador(
         $tipoDocumento,
         $cedula,
@@ -36,7 +68,8 @@ class Trabajador
         $telefono,
         $correo,
         $status,
-        $idCargo
+        $idCargo,
+        $idDir = null
     )
     {
         $sql = "INSERT INTO TRABAJADOR
@@ -52,17 +85,18 @@ class Trabajador
             telefono,
             correo,
             status,
-            id_cargo
+            id_cargo,
+            id_dir
         )
         VALUES
         (
-            ?,?,?,?,?,?,?,?,?,?,?,?
+            ?,?,?,?,?,?,?,?,?,?,?,?,?
         )";
 
         $stmt = $this->conexion->prepare($sql);
 
         $stmt->bind_param(
-            "sssssssssssi",
+            "sssssssssssii",
             $tipoDocumento,
             $cedula,
             $nombres,
@@ -74,7 +108,8 @@ class Trabajador
             $telefono,
             $correo,
             $status,
-            $idCargo
+            $idCargo,
+            $idDir
         );
 
         if ($stmt->execute()) {
@@ -166,9 +201,18 @@ class Trabajador
                     t.correo AS correoElectronico,
                     t.status AS estatus_laboral,
                     t.id_cargo,
-                    c.nombre_cargo
+                    c.nombre_cargo,
+                    t.id_dir,
+                    d.nombre AS direccion,
+                    p.nombre AS parroquia,
+                    m.nombre AS municipio,
+                    e.nombre AS estado
                 FROM TRABAJADOR t
                 LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo
+                LEFT JOIN DIRECCION d ON t.id_dir = d.id_dir
+                LEFT JOIN PARROQUIA p ON d.cod_par = p.cod_par
+                LEFT JOIN MUNICIPIO m ON p.cod_muni = m.cod_muni
+                LEFT JOIN ESTADO e ON m.cod_est = e.cod_est
                 WHERE t.id_trabajador = ?";
 
         $stmt = $this->conexion->prepare($sql);
@@ -190,24 +234,27 @@ class Trabajador
         $telefono,
         $correo,
         $status,
-        $idCargo
+        $idCargo,
+        $idDir = null
     ) {
         $sql = "UPDATE TRABAJADOR
                 SET estado_civil = ?,
                     telefono = ?,
                     correo = ?,
                     status = ?,
-                    id_cargo = ?
+                    id_cargo = ?,
+                    id_dir = ?
                 WHERE id_trabajador = ?";
 
         $stmt = $this->conexion->prepare($sql);
         $stmt->bind_param(
-            "ssssii",
+            "ssssiii",
             $estadoCivil,
             $telefono,
             $correo,
             $status,
             $idCargo,
+            $idDir,
             $idTrabajador
         );
 

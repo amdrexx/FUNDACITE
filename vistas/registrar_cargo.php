@@ -1,5 +1,6 @@
 <?php
 session_start();
+include_once "includes/guardian.php";
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -24,19 +25,19 @@ $mensaje_alerta = '';
 if (isset($_GET['status'])) {
     switch ($_GET['status']) {
         case 'success':
-            $mensaje_alerta = "✅ ¡Cargo registrado exitosamente!";
+            $mensaje_alerta = "¡Cargo registrado exitosamente!";
             break;
         case 'updated':
-            $mensaje_alerta = "🔄 ¡Cargo actualizado correctamente!";
+            $mensaje_alerta = "¡Cargo actualizado correctamente!";
             break;
         case 'deleted':
-            $mensaje_alerta = "🗑️ ¡Cargo eliminado correctamente!";
+            $mensaje_alerta = " ¡Cargo eliminado correctamente!";
             break;
         case 'duplicate':
-            $mensaje_alerta = "⚠️ El cargo ingresado ya se encuentra registrado.";
+            $mensaje_alerta = " El cargo ingresado ya se encuentra registrado.";
             break;
         case 'error':
-            $mensaje_alerta = "⚠️ Hubo un error al procesar la solicitud. Intente nuevamente.";
+            $mensaje_alerta = " Hubo un error al procesar la solicitud. Intente nuevamente.";
             break;
     }
 }
@@ -111,7 +112,7 @@ if (isset($_GET['status'])) {
                                             <i class="bi bi-pencil-square"></i>
                                             Editar
                                         </a>
-
+                                     <?php if (esAdministradorODirector()): ?> 
                                         <a href="../controladores/ctrl_cargo.php?action=eliminar&id=<?php echo urlencode($cargo['id_cargo'] ?? ''); ?>" 
                                            class="btn-eliminar" 
                                            style="text-decoration: none; display: inline-block;" 
@@ -119,6 +120,7 @@ if (isset($_GET['status'])) {
                                             <i class="bi bi-trash"></i>
                                             Eliminar
                                         </a>
+                                     <?php endif; ?>   
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

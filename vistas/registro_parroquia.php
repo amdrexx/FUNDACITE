@@ -1,6 +1,7 @@
 <?php
+session_start();
+include_once "includes/guardian.php";
 require_once("../controladores/ctrl_parroquia.php");
-
 $controller = new ParroquiaController();
 $estados = $controller->listarEstados();
 
@@ -182,35 +183,30 @@ if (isset($_GET["editar"])) {
                     </div>
 
                     <?php if (!$editar) { ?>
+                    <div
+                        class="botones-parroquia"
+                        style="display:flex; gap:8px; margin-top:10px;"
+                    >
 
-                        <div class="botones-parroquia">
+                        <button
+                            type="button"
+                            id="btnAgregar"
+                            class="btn-editar"
+                        >
+                            <i class="bi bi-plus-circle"></i>
+                            Añadir parroquia
+                        </button>
 
-                            <button
-                                type="button"
-                                class="btn-accion"
-                                id="btnAgregar"
-                            >
+                        <button
+                            type="button"
+                            id="btnEliminarParroquia"
+                            class="btn-eliminar"
+                        >
+                            <i class="bi bi-dash-circle"></i>
+                            Eliminar parroquia
+                        </button>
 
-                                <i class="bi bi-plus-circle"></i>
-
-                                Añadir parroquia
-
-                            </button>
-
-                            <button
-                                type="button"
-                                class="btn-quitar-parroquia"
-                                id="btnEliminarParroquia"
-                            >
-
-                                <i class="bi bi-dash-circle"></i>
-
-                                Eliminar parroquia
-
-                            </button>
-
-                        </div>
-
+                    </div>
                     <?php } ?>
 
                     <button

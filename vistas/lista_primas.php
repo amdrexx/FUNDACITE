@@ -1,4 +1,6 @@
 <?php
+session_start();
+include_once "includes/guardian.php";
 require_once '../conexion.php';
 require_once '../modelos/clase_primas.php';
 

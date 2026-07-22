@@ -1,5 +1,8 @@
-<?php include_once __DIR__ . '/includes/permissions.php';
-requireAdministradorODirector(); ?>
+<?php
+session_start();
+include_once "includes/guardian.php";
+requireAdministradorODirector();
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -15,7 +18,6 @@ requireAdministradorODirector(); ?>
 
   
   <?php include "includes/layout.php"; ?>
-  <?php include_once __DIR__ . '/includes/permissions.php'; ?>
 
    
     <div class="main">
@@ -61,10 +63,12 @@ requireAdministradorODirector(); ?>
                         <td class="acciones">
                             <button class="btn-editar" 
                             onclick="editarDireccion('Lara','Iribarren','Catedral','El Centro')">
+                            <i class="bi bi-pencil-square"></i>
                             Editar
                         </button>
                         <button class="btn-eliminar" 
                             onclick="eliminarDireccion('Lara','Iribarren','Catedral','El Centro')">
+                            <i class="bi bi-trash"></i>
                             Eliminar
                         </button>
                         </td>
@@ -80,10 +84,12 @@ requireAdministradorODirector(); ?>
                         <td class="acciones">
                             <button class="btn-editar" 
                             onclick="editarDireccion('Zulia','Maracaibo','Coquivacoa','La Lago')">
+                            <i class="bi bi-pencil-square"></i>
                             Editar
                         </button>
                         <button class="btn-eliminar" 
                             onclick="eliminarDireccion('Zulia','Maracaibo','Coquivacoa','La Lago')">
+                            <i class="bi bi-trash"></i>
                             Eliminar
                         </button>
                         </td>

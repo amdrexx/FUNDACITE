@@ -653,3 +653,179 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .btn-eliminar:hover{
     background: #b71c1c;
 }
+/* ============================================
+   CLASE RESPONSIVE PARA CELULARES Y LAPTOPS
+   ============================================ */
+
+.responsive {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+/* Laptop pequeña (1366px o menor) */
+@media (max-width: 1366px) {
+
+    .responsive{
+        padding: 15px;
+    }
+
+    .main{
+        margin-left: 260px;
+        padding: 100px 15px;
+    }
+
+    .form-card{
+        width: 95%;
+        max-width: 900px;
+    }
+
+    .tabla{
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+
+/* Tablets */
+@media (max-width: 992px) {
+
+    .responsive{
+        padding: 15px;
+    }
+
+    .main{
+        margin-left: 0;
+        padding: 90px 15px;
+    }
+
+    .sidebar{
+        width: 240px;
+        left: -240px;
+        transition: left .3s ease;
+    }
+
+    .sidebar.active{
+        left: 0;
+    }
+
+    .menu-btn.active{
+        left: 20px;
+    }
+
+    .form-card{
+        width: 100%;
+    }
+
+    .form-grid,
+    .form-card form{
+        grid-template-columns: 1fr;
+    }
+
+    .full-width{
+        grid-column: span 1;
+    }
+
+    .cards{
+        grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
+    }
+
+    .chart-container{
+        width: 100%;
+    }
+}
+
+/* Celulares */
+@media (max-width: 768px){
+
+    .responsive{
+        padding: 10px;
+    }
+
+    .topbar{
+        height: 60px;
+    }
+
+    .topbar img{
+        height: 180px;
+    }
+
+    .menu-btn{
+        top: 8px;
+        left: 10px;
+    }
+
+    .sidebar{
+        top: 60px;
+        height: calc(100% - 60px);
+        width: 240px;
+    }
+
+    .main{
+        margin-left: 0;
+        padding: 80px 10px;
+    }
+
+    .dashboard-container{
+        width: 100%;
+    }
+
+    .cards{
+        grid-template-columns: 1fr;
+    }
+
+    .chart-container{
+        width: 100%;
+        padding: 10px;
+    }
+
+    .tabla{
+        font-size: 13px;
+    }
+
+    .btn-editar,
+    .btn-eliminar,
+    .btn-ver{
+        width: 100%;
+        justify-content: center;
+        margin: 4px 0;
+    }
+
+    .buscador-container{
+        flex-direction: column;
+    }
+
+    .input-busqueda,
+    .btn-buscar,
+    .btn-persona{
+        width: 100%;
+    }
+}
+
+/* Celulares pequeños */
+@media (max-width: 480px){
+
+    .responsive{
+        padding: 8px;
+    }
+
+    .form-card{
+        padding: 15px;
+    }
+
+    .field input,
+    .field select{
+        font-size: 14px;
+        height: 38px;
+    }
+
+    .btn-guardar{
+        height: 40px;
+        font-size: 15px;
+    }
+
+    .tabla{
+        font-size: 12px;
+    }
+}

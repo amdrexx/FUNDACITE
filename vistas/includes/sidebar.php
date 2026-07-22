@@ -16,13 +16,14 @@ style="display:flex;flex-direction:column;justify-content:space-between;height:c
                 <b>TRABAJADORES</b>
             </a>
         </li>
-
+       
         <li>
             <a href="/FUNDACITE/vistas/registrar_cargo.php" class="submenu-link">
                 <i class="bi bi-briefcase-fill"></i>
                 <b>CARGO</b>
             </a>
         </li>
+       
 
         <li class="submenu" id="menuDireccion">
             <div class="submenu-btn" id="btnDireccion">
@@ -61,8 +62,6 @@ style="display:flex;flex-direction:column;justify-content:space-between;height:c
             </ul>
         </li>
 
-        <?php include_once __DIR__ . '/permissions.php'; ?>
-
         <?php if (esAdministradorODirector()): ?>
         <li>
             <a href="/FUNDACITE/vistas/registrar_contrato.php" class="submenu-link">
@@ -70,7 +69,8 @@ style="display:flex;flex-direction:column;justify-content:space-between;height:c
                 <b>CONTRATOS</b>
             </a>
         </li>
-         <?php endif; ?>
+        <?php endif; ?>
+
         <?php if (esAdministrador()): ?>
         <li>
             <a href="/FUNDACITE/vistas/lista_usuarios.php" class="submenu-link">
@@ -80,18 +80,22 @@ style="display:flex;flex-direction:column;justify-content:space-between;height:c
         </li>
         <?php endif; ?>
 
+        <?php if (esAdministradorODirector()): ?> 
         <li>
             <a href="/FUNDACITE/vistas/lista_salario.php" class="submenu-link">
                 <i class="bi bi-coin"></i> <b>SALARIO</b>
             </a>
         </li>
+         <?php endif; ?>
+
+      
         <li>
             <a href="/FUNDACITE/vistas/lista_primas.php" class="submenu-link">
                 <i class="bi bi-wallet"></i> <b>PRIMA</b>
             </a>
         </li>
-
-        <?php if (esAdministradorODirector()): ?>
+        
+        <?php if (esAdministradorODirector()): ?> 
         <li>
             <a href="/FUNDACITE/vistas/lista_dias_disfrute.php" class="submenu-link">
                 <i class="bi bi-calendar2-check-fill"></i>
@@ -99,6 +103,7 @@ style="display:flex;flex-direction:column;justify-content:space-between;height:c
             </a>
         </li>
         <?php endif; ?>
+       
 
     </ul>
 

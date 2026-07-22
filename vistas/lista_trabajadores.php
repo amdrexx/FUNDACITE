@@ -1,5 +1,6 @@
 <?php
 session_start();
+include_once "includes/guardian.php";
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -35,8 +36,6 @@ $trabajadores = $trabajador->listarTrabajadores($buscar);
 <body>
     
 <?php include "includes/layout.php"; ?>
-
-<?php include_once __DIR__ . '/includes/permissions.php'; ?>
 
 <!-- ================= CONTENIDO ================= -->
 <div class="main">
@@ -83,15 +82,18 @@ $trabajadores = $trabajador->listarTrabajadores($buscar);
                             <td><?php echo htmlspecialchars($fila['tipo_contrato'] ?? 'Sin contrato'); ?></td>
                             <td><?php echo htmlspecialchars($fila['status'] ?? ''); ?></td>
                            <td class="acciones">
+
+                            
                         <a class="btn-ver" href="ver_trabajador.php?id=<?php echo urlencode($fila['id_trabajador'] ?? ''); ?>">
-                            Ver
+                        <i class="bi bi-eye"></i>    
+                        Ver
                         </a>
                            <a class="btn-editar" href="editar_trabajador.php?id=<?php echo urlencode($fila['id_trabajador'] ?? ''); ?>">
                              <i class="bi bi-pencil-square"></i>
                             Editar
                         </a>
-
-                        <?php if (esAdministradorODirector()): ?>
+                      
+                        <?php if (esAdministradorODirector()): ?> 
                         <form action="../controladores/ctrl_trabajador.php" method="POST" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas eliminar este trabajador?');">
                             <input type="hidden" name="id_trabajador" value="<?php echo htmlspecialchars($fila['id_trabajador'] ?? ''); ?>">
                             <button type="submit" name="eliminar_trabajador" class="btn-eliminar" style="border:none; cursor:pointer;">
@@ -99,8 +101,7 @@ $trabajadores = $trabajador->listarTrabajadores($buscar);
                                 Inactivar
                             </button>
                         </form>
-                        <?php endif; ?>
-                         
+                          <?php endif; ?> 
                     </td>
                         </tr>
                     <?php endforeach; ?>

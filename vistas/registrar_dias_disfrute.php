@@ -1,7 +1,6 @@
 <?php
-include "includes/guardian.php";
+include_once "includes/guardian.php";
 session_start();
-require_once __DIR__ . '/includes/permissions.php';
 requireAdministradorODirector();
 
 $consulta_exitosa = $_SESSION['consulta_exitosa'] ?? false;
