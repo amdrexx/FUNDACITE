@@ -82,7 +82,7 @@ style="display:flex;flex-direction:column;justify-content:space-between;height:c
 
         <?php if (esAdministradorODirector()): ?> 
         <li>
-            <a href="/FUNDACITE/vistas/lista_salario.php" class="submenu-link">
+            <a href="/FUNDACITE/vistas/registrar_salario.php" class="submenu-link">
                 <i class="bi bi-coin"></i> <b>SALARIO</b>
             </a>
         </li>

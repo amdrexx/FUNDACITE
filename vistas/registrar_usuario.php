@@ -1,7 +1,7 @@
 <?php
 include "includes/guardian.php";
 session_start();
-require_once __DIR__ . '/includes/permissions.php';
+require_once __DIR__ . '/includes/roles.php';
 requireAdministrador();
 
 ini_set('display_errors', 1);
