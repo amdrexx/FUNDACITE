@@ -12,7 +12,6 @@ $idTrabajador = intval($_GET['id'] ?? 0);
 
 $trabajador = new Trabajador($conexion);
 $dato = $trabajador->obtenerTrabajadorPorId($idTrabajador);
-$cargos = $trabajador->listarCargos();
 
 if (!$dato) {
     die("Trabajador no encontrado.");
@@ -88,11 +87,30 @@ if (!empty($dato['direccion'])) {
                 <label>Fecha de Nacimiento</label>
                 <input type="text" value="<?php echo htmlspecialchars($dato['fecha'] ?? ''); ?>" readonly>
             </div>
+<div class="field">
+    <label>Género</label>
+    <div class="radio-group">
+        <label class="radio-option">
+            <input
+                type="radio"
+                name="genero"
+                value="Masculino"
+                <?php echo (($dato['genero'] ?? '') == 'Masculino') ? 'checked' : ''; ?>
+                onclick="return false;">
+            <span>Masculino</span>
+        </label>
 
-            <div class="field">
-                <label>Género</label>
-                <input type="text" value="<?php echo htmlspecialchars($dato['genero'] ?? ''); ?>" readonly>
-            </div>
+        <label class="radio-option">
+            <input
+                type="radio"
+                name="genero"
+                value="Femenino"
+                <?php echo (($dato['genero'] ?? '') == 'Femenino') ? 'checked' : ''; ?>
+                onclick="return false;">
+            <span>Femenino</span>
+        </label>
+    </div>
+</div>
 
             <div class="field">
                 <label>Fecha de Ingreso</label>
@@ -112,11 +130,6 @@ if (!empty($dato['direccion'])) {
             <div class="field">
                 <label>Número de Teléfono</label>
                 <input type="text" value="<?php echo htmlspecialchars($dato['numeroTelefono'] ?? ''); ?>" readonly>
-            </div>
-
-            <div class="field">
-                <label>Cargo</label>
-                <input type="text" value="<?php echo htmlspecialchars($dato['nombre_cargo'] ?? ''); ?>" readonly>
             </div>
 
             <div class="field">

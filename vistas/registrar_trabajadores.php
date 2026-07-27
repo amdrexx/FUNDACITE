@@ -19,7 +19,6 @@ require_once '../conexion.php';
 require_once '../modelos/clase_trabajador.php';
 
 $trabajador = new Trabajador($conexion);
-$cargos = $trabajador->listarCargos();
 $direcciones = $trabajador->listarDirecciones();
 ?>
 <!DOCTYPE html>
@@ -140,20 +139,6 @@ $direcciones = $trabajador->listarDirecciones();
                 <input type="date" name="fecha_ingreso" id="fecha_ingreso" value="<?php echo htmlspecialchars($old['fecha_ingreso'] ?? ''); ?>">
             </div>
 
-            <!-- Cargo (dinámico desde CARGO) -->
-            <div class="field">
-                <label>Cargo</label>
-                <select name="cargo_id">
-                    <option value="" disabled selected>Seleccione un cargo</option>
-                    <?php foreach ($cargos as $cargo): ?>
-                        <option value="<?php echo $cargo['id_cargo']; ?>"
-                            <?php echo (isset($old['cargo_id']) && $old['cargo_id'] == $cargo['id_cargo']) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($cargo['nombre_cargo']); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
             <!-- Estatus Laboral -->
             <div class="field">
                 <label>Estatus Laboral</label>
@@ -185,7 +170,7 @@ $direcciones = $trabajador->listarDirecciones();
     </form>
 </div>
 
-<script src="/FUNDACITE/vistas/js/valid_trabajadores.js"></script>
+<script src="/FUNDACITE/vistas/js/valid_trabajadores.js?v=20260727"></script>
 
 <!-- Alertas de errores/éxito -->
 <?php if (!empty($errores)): ?>

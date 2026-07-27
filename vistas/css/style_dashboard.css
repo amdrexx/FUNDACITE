@@ -410,6 +410,35 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     box-shadow: 0 0 0 3px rgba(50,130,184,0.25);
     background: #fff;
 }
+/* ==========================================
+   DIFERENCIAR CAMPOS EDITABLES Y SOLO LECTURA
+   ========================================== */
+
+/* Campos de solo lectura */
+.field input[readonly],
+.field textarea[readonly]{
+    background: #b8b8b8 !important;
+    color: #555;
+    border: 1px solid #9a9a9a;
+    cursor: default;
+}
+
+/* Campos editables */
+.field input:not([readonly]),
+.field select,
+.field textarea:not([readonly]){
+    background: #ffffff;
+    color: #000;
+}
+
+/* Cuando el usuario haga clic en un campo editable */
+.field input:not([readonly]):focus,
+.field select:focus,
+.field textarea:not([readonly]):focus{
+    background: #ffffff;
+    border-color: #3282B8;
+    box-shadow: 0 0 0 3px rgba(50,130,184,.25);
+}
 .radio-group {
     display: flex;
     gap: 20px;

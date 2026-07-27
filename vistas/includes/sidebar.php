@@ -16,11 +16,20 @@ style="display:flex;flex-direction:column;justify-content:space-between;height:c
                 <b>TRABAJADORES</b>
             </a>
         </li>
+
        
         <li>
             <a href="/FUNDACITE/vistas/registrar_cargo.php" class="submenu-link">
                 <i class="bi bi-briefcase-fill"></i>
                 <b>CARGO</b>
+            </a>
+        </li>
+
+
+        <li>
+            <a href="/FUNDACITE/vistas/asignar_cargo.php" class="submenu-link">
+                <i class="bi bi-briefcase-fill"></i> 
+                <b>ASIGNAR CARGO</b>
             </a>
         </li>
        

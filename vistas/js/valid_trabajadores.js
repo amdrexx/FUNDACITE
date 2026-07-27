@@ -97,7 +97,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const fechaIngreso = document.getElementById("fecha_ingreso").value;
             const estadoCivil = document.getElementById("estadoCivil").value;
             const genero = document.querySelector('input[name="genero"]:checked');
-            const cargo = document.querySelector('select[name="cargo_id"]').value;
             const estatus = document.querySelector('select[name="estatus_laboral"]').value;
 
             if (!tipoDoc) errores.push("Tipo de Documento");
@@ -110,7 +109,6 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!fechaNac) errores.push("Fecha de Nacimiento");
             if (!telefono) errores.push("Número de Teléfono");
             if (!fechaIngreso) errores.push("Fecha de Ingreso");
-            if (!cargo) errores.push("Cargo");
             if (!estatus) errores.push("Estatus Laboral");
 
             if (errores.length > 0) {
@@ -179,13 +177,11 @@ document.addEventListener("DOMContentLoaded", function () {
             const estadoCivil = document.querySelector('select[name="estadoCivil"]')?.value.trim() || '';
             const correo = document.querySelector('input[name="correoElectronico"]')?.value.trim() || '';
             const telefono = document.querySelector('input[name="numeroTelefono"]')?.value.trim() || '';
-            const cargo = document.querySelector('select[name="cargo_id"]')?.value || '';
             const estatus = document.querySelector('select[name="estatus_laboral"]')?.value.trim() || '';
 
             if (!estadoCivil) errores.push("Estado Civil");
             if (!correo) errores.push("Correo Electrónico");
             if (!telefono) errores.push("Número de Teléfono");
-            if (!cargo) errores.push("Cargo");
             if (!estatus) errores.push("Estatus Laboral");
 
             if (errores.length > 0) {

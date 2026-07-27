@@ -68,7 +68,6 @@ class Trabajador
         $telefono,
         $correo,
         $status,
-        $idCargo,
         $idDir = null
     )
     {
@@ -85,18 +84,17 @@ class Trabajador
             telefono,
             correo,
             status,
-            id_cargo,
             id_dir
         )
         VALUES
         (
-            ?,?,?,?,?,?,?,?,?,?,?,?,?
+            ?,?,?,?,?,?,?,?,?,?,?,?
         )";
 
         $stmt = $this->conexion->prepare($sql);
 
         $stmt->bind_param(
-            "sssssssssssii",
+            "sssssssssssi",
             $tipoDocumento,
             $cedula,
             $nombres,
@@ -108,7 +106,6 @@ class Trabajador
             $telefono,
             $correo,
             $status,
-            $idCargo,
             $idDir
         );
 
@@ -117,25 +114,6 @@ class Trabajador
         }
 
         return false;
-    }
-
-    public function listarCargos()
-    {
-        $cargos = [];
-
-        $sql = "SELECT id_cargo, nombre_cargo
-                FROM CARGO
-                ORDER BY nombre_cargo";
-
-        $resultado = $this->conexion->query($sql);
-
-        if ($resultado && $resultado->num_rows > 0) {
-            while ($fila = $resultado->fetch_assoc()) {
-                $cargos[] = $fila;
-            }
-        }
-
-        return $cargos;
     }
 
     public function listarTrabajadores($buscar = '')
@@ -149,10 +127,8 @@ class Trabajador
                     t.apellidos,
                     t.fecha_ingreso,
                     t.status,
-                    c.nombre_cargo,
                     co.tipo_contrato
                 FROM TRABAJADOR t
-                INNER JOIN CARGO c ON t.id_cargo = c.id_cargo
                 LEFT JOIN CONTRATO co ON co.id_trabajador = t.id_trabajador";
 
         if (!empty($buscar)) {
@@ -161,8 +137,7 @@ class Trabajador
             $sql .= " WHERE 
                         t.cedula LIKE '%$buscar%' OR
                         t.nombres LIKE '%$buscar%' OR
-                        t.apellidos LIKE '%$buscar%' OR
-                        c.nombre_cargo LIKE '%$buscar%'";
+                        t.apellidos LIKE '%$buscar%'";
         }
 
         $sql .= " ORDER BY t.id_trabajador DESC";
@@ -200,15 +175,12 @@ class Trabajador
                     t.telefono AS numeroTelefono,
                     t.correo AS correoElectronico,
                     t.status AS estatus_laboral,
-                    t.id_cargo,
-                    c.nombre_cargo,
                     t.id_dir,
                     d.nombre AS direccion,
                     p.nombre AS parroquia,
                     m.nombre AS municipio,
                     e.nombre AS estado
                 FROM TRABAJADOR t
-                LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo
                 LEFT JOIN DIRECCION d ON t.id_dir = d.id_dir
                 LEFT JOIN PARROQUIA p ON d.cod_par = p.cod_par
                 LEFT JOIN MUNICIPIO m ON p.cod_muni = m.cod_muni
@@ -234,7 +206,6 @@ class Trabajador
         $telefono,
         $correo,
         $status,
-        $idCargo,
         $idDir = null
     ) {
         $sql = "UPDATE TRABAJADOR
@@ -242,18 +213,16 @@ class Trabajador
                     telefono = ?,
                     correo = ?,
                     status = ?,
-                    id_cargo = ?,
                     id_dir = ?
                 WHERE id_trabajador = ?";
 
         $stmt = $this->conexion->prepare($sql);
         $stmt->bind_param(
-            "ssssiii",
+            "ssssii",
             $estadoCivil,
             $telefono,
             $correo,
             $status,
-            $idCargo,
             $idDir,
             $idTrabajador
         );

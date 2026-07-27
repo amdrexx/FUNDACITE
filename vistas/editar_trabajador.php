@@ -17,7 +17,6 @@ $idTrabajador = intval($_GET['id'] ?? 0);
 
 $trabajador = new Trabajador($conexion);
 $dato = $trabajador->obtenerTrabajadorPorId($idTrabajador);
-$cargos = $trabajador->listarCargos();
 $direcciones = $trabajador->listarDirecciones();
 
 if (!$dato) {
@@ -88,11 +87,32 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                 <label>Fecha de Nacimiento</label>
                 <input type="text" value="<?php echo htmlspecialchars($dato['fecha'] ?? ''); ?>" readonly>
             </div>
+<div class="field">
+    <label>Género</label>
+    <div class="radio-group">
+        <label class="radio-option">
+            <input
+                type="radio"
+                name="genero"
+                value="Masculino"
+                <?php echo (($dato['genero'] ?? '') == 'Masculino') ? 'checked' : ''; ?>
+                onclick="return false;">
+            <span>Masculino</span>
+        </label>
 
-            <div class="field">
-                <label>Género</label>
-                <input type="text" value="<?php echo htmlspecialchars($dato['genero'] ?? ''); ?>" readonly>
-            </div>
+        <label class="radio-option">
+            <input
+                type="radio"
+                name="genero"
+                value="Femenino"
+                <?php echo (($dato['genero'] ?? '') == 'Femenino') ? 'checked' : ''; ?>
+                onclick="return false;">
+            <span>Femenino</span>
+        </label>
+    </div>
+</div>
+
+
 
             <div class="field">
                 <label>Fecha de Ingreso</label>
@@ -119,19 +139,6 @@ unset($_SESSION['errores'], $_SESSION['exito']);
             <div class="field">
                 <label>Número de Teléfono</label>
                 <input type="text" name="numeroTelefono" value="<?php echo htmlspecialchars($dato['numeroTelefono'] ?? ''); ?>" required>
-            </div>
-
-            <div class="field">
-                <label>Cargo</label>
-                <select name="cargo_id" required>
-                    <option value="">Seleccione un cargo</option>
-                    <?php foreach ($cargos as $cargo): ?>
-                        <option value="<?php echo htmlspecialchars($cargo['id_cargo']); ?>"
-                            <?php echo (($dato['id_cargo'] ?? '') == $cargo['id_cargo']) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($cargo['nombre_cargo']); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
             </div>
 
             <div class="field">
@@ -168,6 +175,6 @@ unset($_SESSION['errores'], $_SESSION['exito']);
     </form>
 </div>
 
-<script src="/FUNDACITE/vistas/js/valid_trabajadores.js"></script>
+<script src="/FUNDACITE/vistas/js/valid_trabajadores.js?v=20260727"></script>
 </body>
 </html>

@@ -56,7 +56,6 @@ if (isset($_POST['editar_trabajador'])) {
     $estadoCivil  = trim($_POST['estadoCivil'] ?? '');
     $correo       = trim($_POST['correoElectronico'] ?? '');
     $telefono     = trim($_POST['numeroTelefono'] ?? '');
-    $idCargo      = intval($_POST['cargo_id'] ?? 0);
     $status       = trim($_POST['estatus_laboral'] ?? '');
     $idDir        = intval($_POST['id_dir'] ?? 0);
 
@@ -72,10 +71,6 @@ if (isset($_POST['editar_trabajador'])) {
 
     if (empty($telefono)) {
         $errores[] = "Ingrese el número de teléfono.";
-    }
-
-    if (empty($idCargo)) {
-        $errores[] = "Seleccione un cargo.";
     }
 
     if (empty($status)) {
@@ -94,7 +89,6 @@ if (isset($_POST['editar_trabajador'])) {
         $telefono,
         $correo,
         $status,
-        $idCargo,
         $idDir > 0 ? $idDir : null
     )) {
         $_SESSION['exito_edicion'] = "Trabajador actualizado correctamente.";
@@ -124,7 +118,6 @@ $estadoCivil      = trim($_POST['estadoCivil'] ?? '');
 $correo           = trim($_POST['correoElectronico'] ?? '');
 $telefono         = trim($_POST['numeroTelefono'] ?? '');
 $fechaIngreso     = trim($_POST['fecha_ingreso'] ?? '');
-$idCargo          = trim($_POST['cargo_id'] ?? '');
 $status           = trim($_POST['estatus_laboral'] ?? '');
 
 // Dirección: el trabajador elige una ya existente en el maestro de direcciones
@@ -172,9 +165,6 @@ if (empty($correo))
 if (empty($fechaIngreso))
     $errores[] = "Ingrese la fecha de ingreso.";
 
-if (empty($idCargo))
-    $errores[] = "Seleccione un cargo.";
-
 if (empty($status))
     $errores[] = "Seleccione el estatus laboral.";
 
@@ -205,7 +195,6 @@ try {
         $telefono,
         $correo,
         $status,
-        $idCargo,
         $idDir
     );
 

@@ -47,7 +47,7 @@ $trabajadores = $trabajador->listarTrabajadores($buscar);
         type="text"
         name="buscar"
         class="input-busqueda"
-        placeholder="Buscar por cédula, nombre, apellido o cargo..."
+        placeholder="Buscar por cédula, nombre o apellido..."
         value="<?php echo htmlspecialchars($buscar); ?>"
     >
     <button type="submit" class="btn-buscar">Buscar</button>
@@ -60,7 +60,6 @@ $trabajadores = $trabajador->listarTrabajadores($buscar);
             <thead>
                 <tr>
                     <th>Persona (Cédula)</th>
-                    <th>Cargo</th>
                     <th>Fecha de Ingreso</th>
                     <th>Tipo de Contratación</th>
                     <th>Estatus Laboral</th>
@@ -77,7 +76,6 @@ $trabajadores = $trabajador->listarTrabajadores($buscar);
                                      htmlspecialchars(trim(($fila['nombres'] ?? '') . ' ' . ($fila['apellidos'] ?? '')));
                                 ?>
                             </td>
-                            <td><?php echo htmlspecialchars($fila['nombre_cargo'] ?? 'Sin cargo'); ?></td>
                             <td><?php echo htmlspecialchars($fila['fecha_ingreso'] ?? ''); ?></td>
                             <td><?php echo htmlspecialchars($fila['tipo_contrato'] ?? 'Sin contrato'); ?></td>
                             <td><?php echo htmlspecialchars($fila['status'] ?? ''); ?></td>
@@ -107,7 +105,7 @@ $trabajadores = $trabajador->listarTrabajadores($buscar);
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="6" style="text-align:center;">No se encontraron trabajadores registrados.</td>
+                        <td colspan="5" style="text-align:center;">No se encontraron trabajadores registrados.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
