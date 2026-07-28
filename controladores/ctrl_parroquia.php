@@ -90,16 +90,26 @@ class ParroquiaController
     /*=========================
       ELIMINAR
     =========================*/
-    public function eliminar()
-    {
-        if (isset($_GET["eliminar"])) {
+public function eliminar()
+{
+    if (isset($_GET["eliminar"])) {
 
-            $this->modelo->eliminar($_GET["eliminar"]);
+        $resultado = $this->modelo->eliminar($_GET["eliminar"]);
 
-            header("Location: ../vistas/registro_parroquia.php");
-            exit();
+        $mensaje = "ok";
+
+        if ($resultado === "RESTRICT") {
+            $mensaje = "restrict";
+        } elseif ($resultado === "NOT_FOUND") {
+            $mensaje = "notfound";
+        } elseif ($resultado === false) {
+            $mensaje = "error";
         }
+
+        header("Location: ../vistas/registro_parroquia.php?msg=" . $mensaje);
+        exit();
     }
+}
 
     /*=========================
       CARGAR MUNICIPIOS AJAX

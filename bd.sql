@@ -16,7 +16,10 @@ CREATE TABLE MUNICIPIO (
     cod_est INT UNSIGNED NOT NULL,
     nombre VARCHAR(100) NOT NULL,
     PRIMARY KEY (cod_muni),
-    FOREIGN KEY (cod_est) REFERENCES ESTADO(cod_est) ON DELETE CASCADE ON UPDATE CASCADE
+    FOREIGN KEY (cod_est)
+        REFERENCES ESTADO(cod_est)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE PARROQUIA (
@@ -24,16 +27,23 @@ CREATE TABLE PARROQUIA (
     cod_muni INT UNSIGNED NOT NULL,
     nombre VARCHAR(100) NOT NULL,
     PRIMARY KEY (cod_par),
-    FOREIGN KEY (cod_muni) REFERENCES MUNICIPIO(cod_muni) ON DELETE CASCADE ON UPDATE CASCADE
+    FOREIGN KEY (cod_muni)
+        REFERENCES MUNICIPIO(cod_muni)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE DIRECCION (
     id_dir INT UNSIGNED NOT NULL AUTO_INCREMENT,
     cod_par INT UNSIGNED NOT NULL,
-    nombre VARCHAR(100) NOT NULL,
+    nombre VARCHAR(100) NULL,
     PRIMARY KEY (id_dir),
-    FOREIGN KEY (cod_par) REFERENCES PARROQUIA(cod_par) ON DELETE CASCADE ON UPDATE CASCADE
+    FOREIGN KEY (cod_par)
+        REFERENCES PARROQUIA(cod_par)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 -- ================================================================================
 -- 2. TABLAS MAESTRAS PRINCIPALES
@@ -66,7 +76,7 @@ CREATE TABLE TRABAJADOR (
     INDEX idx_trabajador_status (status),
     INDEX idx_trabajador_cargo (id_cargo),
     INDEX idx_trabajador_dir (id_dir),
-    FOREIGN KEY (id_dir) REFERENCES DIRECCION(id_dir) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (id_dir) REFERENCES DIRECCION(id_dir) ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (id_cargo) REFERENCES CARGO(id_cargo) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT chk_status CHECK (status IN ('Activo', 'Inactivo', 'Jubilado')),
     CONSTRAINT chk_tipo_documento CHECK (tipo_documento IN ('Cédula', 'Pasaporte', 'Cédula de Extranjería')),
@@ -88,7 +98,10 @@ CREATE TABLE CONTRATO (
     cedula_presidente VARCHAR(20) NOT NULL,
     gaceta_designacion_presidente VARCHAR(100) NOT NULL,
     PRIMARY KEY (id_contrato),
-    FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR(id_trabajador) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_contrato_trabajador 
+        FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR(id_trabajador) 
+        ON DELETE CASCADE 
+        ON UPDATE RESTRICT,
     CONSTRAINT chk_tipo_contrato CHECK (tipo_contrato IN ('Indefinido', 'Tiempo determinado', 'Obra determinada', 'Pasantía', 'Suplencia'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -162,10 +175,12 @@ CREATE TABLE USUARIO (
 -- ================================================================================
 CREATE TABLE SALARIO (
     id_salario INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    id_trabajador INT UNSIGNED,
     fecha DATE NOT NULL,
     monto DECIMAL(10,2) NOT NULL,
     estado VARCHAR(20) NOT NULL DEFAULT 'Activo',
-    PRIMARY KEY (id_salario)
+    PRIMARY KEY (id_salario),
+    FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR(id_trabajador) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE PRIMA (

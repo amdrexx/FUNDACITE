@@ -57,7 +57,11 @@ if (isset($_POST['editar_trabajador'])) {
     $correo       = trim($_POST['correoElectronico'] ?? '');
     $telefono     = trim($_POST['numeroTelefono'] ?? '');
     $status       = trim($_POST['estatus_laboral'] ?? '');
-    $idDir        = intval($_POST['id_dir'] ?? 0);
+
+    // Dirección: viene del combo en cascada (Estado -> Municipio -> Parroquia) + texto exacto
+    $idDirActual    = intval($_POST['id_dir'] ?? 0);
+    $codPar         = intval($_POST['cod_par'] ?? 0);
+    $direccionTexto = trim($_POST['direccion_texto'] ?? '');
 
     $errores = [];
 
@@ -77,8 +81,33 @@ if (isset($_POST['editar_trabajador'])) {
         $errores[] = "Seleccione el estatus laboral.";
     }
 
+    if (empty($codPar)) {
+        $errores[] = "Seleccione la parroquia correspondiente a la dirección.";
+    }
+
+    if (empty($direccionTexto)) {
+        $errores[] = "Ingrese la dirección exacta.";
+    }
+
     if (!empty($errores)) {
         $_SESSION['error_edicion'] = $errores;
+        header("Location: ../vistas/editar_trabajador.php?id=" . $idTrabajador);
+        exit;
+    }
+
+    // Si el trabajador ya tenía una dirección asignada, se ACTUALIZA ese mismo
+    // registro (mismo id_dir, nueva parroquia/texto). Si por algún motivo no
+    // tenía ninguna, se crea una nueva (caso excepcional / datos antiguos).
+    if ($idDirActual > 0) {
+        $direccionOk = $trabajador->actualizarDireccion($idDirActual, $codPar, $direccionTexto);
+        $idDir = $idDirActual;
+    } else {
+        $idDir = $trabajador->crearDireccion($codPar, $direccionTexto);
+        $direccionOk = ($idDir !== false);
+    }
+
+    if (!$direccionOk) {
+        $_SESSION['error_edicion'] = ["Error al actualizar la dirección."];
         header("Location: ../vistas/editar_trabajador.php?id=" . $idTrabajador);
         exit;
     }
@@ -89,7 +118,7 @@ if (isset($_POST['editar_trabajador'])) {
         $telefono,
         $correo,
         $status,
-        $idDir > 0 ? $idDir : null
+        $idDir
     )) {
         $_SESSION['exito_edicion'] = "Trabajador actualizado correctamente.";
         header("Location: ../vistas/lista_trabajadores.php");
@@ -120,8 +149,11 @@ $telefono         = trim($_POST['numeroTelefono'] ?? '');
 $fechaIngreso     = trim($_POST['fecha_ingreso'] ?? '');
 $status           = trim($_POST['estatus_laboral'] ?? '');
 
-// Dirección: el trabajador elige una ya existente en el maestro de direcciones
-$idDir            = intval($_POST['id_dir'] ?? 0);
+// Dirección: viene del combo en cascada (Estado -> Municipio -> Parroquia) + texto exacto
+$codEst          = intval($_POST['cod_est'] ?? 0);
+$codMuni         = intval($_POST['cod_muni'] ?? 0);
+$codPar          = intval($_POST['cod_par'] ?? 0);
+$direccionTexto  = trim($_POST['direccion_texto'] ?? '');
 
 if ($tipoDoc == 'V') {
     $tipoDocumento = 'Cédula';
@@ -168,8 +200,17 @@ if (empty($fechaIngreso))
 if (empty($status))
     $errores[] = "Seleccione el estatus laboral.";
 
-if (empty($idDir))
-    $errores[] = "Seleccione de dónde es el trabajador (dirección).";
+if (empty($codEst))
+    $errores[] = "Seleccione el estado.";
+
+if (empty($codMuni))
+    $errores[] = "Seleccione el municipio.";
+
+if (empty($codPar))
+    $errores[] = "Seleccione la parroquia.";
+
+if (empty($direccionTexto))
+    $errores[] = "Ingrese la dirección exacta.";
 
 if ($trabajador->existeCedula($cedula)) {
     $errores[] = "La cédula ya se encuentra registrada.";
@@ -182,6 +223,13 @@ if (!empty($errores)) {
 }
 
 try {
+
+    // Crear el registro de dirección (o reutilizar uno idéntico) y obtener su id
+    $idDir = $trabajador->crearDireccion($codPar, $direccionTexto);
+
+    if (!$idDir) {
+        throw new Exception("Error al registrar la dirección.");
+    }
 
     $idTrabajador = $trabajador->registrarTrabajador(
         $tipoDocumento,

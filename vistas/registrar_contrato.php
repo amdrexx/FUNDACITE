@@ -1,7 +1,11 @@
 <?php
 session_start();
 include_once "includes/guardian.php";
-requireAdministradorODirector();
+
+if (function_exists('requireAdministradorODirector')) {
+    requireAdministradorODirector();
+}
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -11,6 +15,14 @@ require_once("../controladores/ctrl_contrato.php");
 
 // Traemos los contratos reales de la BD
 $contratos = $controladorContrato->mostrarContratos();
+
+// Determinamos el mensaje y estado para el Modal
+$status = $_GET['status'] ?? null;
+$mensajeExito = $_SESSION['exito_contrato'] ?? null;
+$mensajeError = isset($_SESSION['error_contrato']) && is_array($_SESSION['error_contrato']) ? implode("<br>", $_SESSION['error_contrato']) : null;
+
+// Limpiamos las variables de sesión para que no se repitan
+unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -19,9 +31,9 @@ $contratos = $controladorContrato->mostrarContratos();
     <title>Gestión de Contratos</title>
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
-    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.scss">
     <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
+    <!-- Librería SweetAlert2 para la ventana modal -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -32,28 +44,7 @@ $contratos = $controladorContrato->mostrarContratos();
 
     <div style="max-width: 600px; width: 100%; margin: 0 auto; display: block; box-sizing: border-box;">
 
-        <?php if (isset($_GET['status'])): ?>
-            <div style="margin: 0 auto 20px auto; width: 100%; text-align: center; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; box-sizing: border-box;
-                <?php
-                    if ($_GET['status'] == 'success' || $_GET['status'] == 'updated') {
-                        echo 'background-color: rgba(0, 255, 0, 0.2); color: #ccffcc; border: 1px solid #00ff00;';
-                    } elseif ($_GET['status'] == 'deleted') {
-                        echo 'background-color: rgba(255, 165, 0, 0.2); color: #ffe0b3; border: 1px solid #ffa500;';
-                    } else {
-                        echo 'background-color: rgba(255, 0, 0, 0.2); color: #ffcccc; border: 1px solid #ff0000;';
-                    }
-                ?>">
-                <?php
-                    switch ($_GET['status']) {
-                        case 'success': echo "✅ ¡Contrato registrado exitosamente!"; break;
-                        case 'updated': echo "🔄 ¡Contrato actualizado correctamente!"; break;
-                        case 'deleted': echo "🗑️ ¡Contrato eliminado correctamente!"; break;
-                        case 'error': echo "⚠️ Hubo un error al procesar la solicitud."; break;
-                    }
-                ?>
-            </div>
-        <?php endif; ?>
-
+        <!-- FORMULARIO DE REGISTRO -->
         <div style="width: 100%; display: block; margin-bottom: 30px; box-sizing: border-box;">
             <form class="form-card" id="formContratos" action="../controladores/ctrl_contrato.php" method="POST" style="width: 100% !important; max-width: 100% !important; box-sizing: border-box; margin: 0 !important;">
                 <center><h2>Registrar Nuevo Contrato</h2></center>
@@ -70,7 +61,7 @@ $contratos = $controladorContrato->mostrarContratos();
 
                 <div class="field">
                     <label>Trabajador Seleccionado</label>
-                    <input type="text" id="nombre_trabajador" placeholder="Busca un trabajador primero...">
+                    <input type="text" id="nombre_trabajador" placeholder="Busca un trabajador primero..." readonly style="background-color: rgba(255, 255, 255, 0.1); cursor: not-allowed;">
                 </div>
 
                 <div class="field">
@@ -94,25 +85,27 @@ $contratos = $controladorContrato->mostrarContratos();
                     <input type="text" name="lugar_trabajo" placeholder="Ej: Zona Industrial, Edificio FUNDACITE, San Felipe" required>
                 </div>
 
+                <!-- DATOS DEL PRESIDENTE AUTO-COMPLETADOS -->
                 <div class="field">
                     <label>Nombre del Presidente</label>
-                    <input type="text" name="nombre_presidente" placeholder="Ej: Miguel Ángel Solórzano Belizario" required>
+                    <input type="text" name="nombre_presidente" value="Miguel Ángel Solórzano Belizario" placeholder="Ej: Miguel Ángel Solórzano Belizario" required>
                 </div>
 
                 <div class="field">
                     <label>Cédula del Presidente</label>
-                    <input type="text" name="cedula_presidente" placeholder="Ej: V-19.817.987" required>
+                    <input type="text" name="cedula_presidente" value="V-19.817.987" placeholder="Ej: V-19.817.987" required>
                 </div>
 
                 <div class="field">
                     <label>Gaceta Oficial de Designación</label>
-                    <input type="text" name="gaceta_designacion_presidente" placeholder="Ej: N° 41.823" required>
+                    <input type="text" name="gaceta_designacion_presidente" value="N° 41.823" placeholder="Ej: N° 41.823" required>
                 </div>
 
                 <button type="submit" name="registrar_contrato" class="btn-guardar">Registrar Contrato</button>
             </form>
         </div>
 
+        <!-- TABLA DE CONTRATOS -->
         <div style="width: 100%; display: block; box-sizing: border-box;">
             <div class="glass tabla-container" style="width: 100% !important; max-width: 100% !important; box-sizing: border-box; margin: 0 !important;">
                 <h2 style="text-align:center; color:white;">Lista de Contratos</h2>
@@ -134,13 +127,15 @@ $contratos = $controladorContrato->mostrarContratos();
                                     <td><?php echo htmlspecialchars($con['tipo_contrato'] ?? ''); ?></td>
                                     <td><?php echo htmlspecialchars($con['fecha_contrato'] ?? ''); ?></td>
                                     <td class="acciones">
-                                        <a class="btn-editar" href="ver_contrato.php?id=<?php echo urlencode($con['id_contrato'] ?? ''); ?>">Ver</a>
-                                        <a class="btn-editar" href="editar_contrato.php?id=<?php echo urlencode($con['id_contrato'] ?? ''); ?>">Editar</a>
+                                        <a class="btn-editar" href="ver_contrato.php?id=<?php echo urlencode($con['id_contrato'] ?? ''); ?>"><i class="bi bi-eye"></i>  Ver</a>
+                                        <a class="btn-editar" href="editar_contrato.php?id=<?php echo urlencode($con['id_contrato'] ?? ''); ?>">
+                                            <i class="bi bi-pencil-square"></i>  Editar
+                                        </a>
                                         <a href="../controladores/ctrl_contrato.php?action=eliminar&id=<?php echo urlencode($con['id_contrato'] ?? ''); ?>" 
                                            class="btn-eliminar" 
                                            style="text-decoration: none; display: inline-block;" 
                                            onclick="return confirm('¿Seguro que deseas eliminar este contrato?');">
-                                            Eliminar
+                                            <i class="bi bi-trash"></i>  Eliminar
                                         </a>
                                     </td>
                                 </tr>
@@ -161,5 +156,62 @@ $contratos = $controladorContrato->mostrarContratos();
 
     <script src="/FUNDACITE/vistas/js/validar_contrato.js"></script>
     <script src="/FUNDACITE/vistas/js/ajax_contrato.js"></script>
+
+   <!-- SCRIPT DE MODAL CON SWEETALERT2 AJUSTADO -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    let title = '';
+
+    <?php if ($mensajeExito): ?>
+        title = '<?php echo addslashes($mensajeExito); ?>';
+    <?php elseif ($mensajeError): ?>
+        title = '<?php echo addslashes($mensajeError); ?>';
+    <?php elseif ($status === 'success'): ?>
+        title = '¡Contrato registrado correctamente!';
+    <?php elseif ($status === 'updated'): ?>
+        title = 'Contrato actualizado correctamente.';
+    <?php elseif ($status === 'deleted'): ?>
+        title = '¡Contrato eliminado correctamente!';
+    <?php elseif ($status === 'error'): ?>
+        title = 'Hubo un error al procesar la solicitud.';
+    <?php endif; ?>
+
+    if (title !== '') {
+        Swal.fire({
+            title: title,
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#007bff',
+            width: '380px', /* Ancho compacto igual al de cargos */
+            padding: '1.25rem',
+            customClass: {
+                popup: 'modal-compacto',
+                title: 'titulo-modal-compacto',
+                confirmButton: 'btn-modal-compacto'
+            }
+        }).then(() => {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        });
+    }
+});
+</script>
+
+<style>
+/* Estilos para igualar el tamaño compacto de la vista de Cargos */
+.modal-compacto {
+    font-family: inherit !important;
+    border-radius: 12px !important;
+}
+.titulo-modal-compacto {
+    font-size: 15px !important;
+    font-weight: normal !important;
+    color: #444 !important;
+    margin: 10px 0 15px 0 !important;
+}
+.btn-modal-compacto {
+    font-size: 13px !important;
+    padding: 6px 18px !important;
+    border-radius: 6px !important;
+}
+</style>
 </body>
 </html>

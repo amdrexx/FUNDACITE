@@ -8,27 +8,27 @@ require_once '../modelos/clase_constancia.php';
 $constanciaObj = new clase_constancia($conexion);
 $trabajadores = $constanciaObj->listarTrabajadoresActivos();
 
-$old = $_SESSION['old'] ?? null;
-$errores = $_SESSION['errores'] ?? [];
-$exito = $_SESSION['exito'] ?? '';
+$old = $_SESSION['old_constancia'] ?? null;
+$errores = $_SESSION['errores_constancia'] ?? [];
+$exito = $_SESSION['exito_constancia'] ?? '';
 
-unset($_SESSION['errores'], $_SESSION['exito']);
+unset($_SESSION['errores_constancia'], $_SESSION['exito_constancia']);
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Dias de Disfrute</title>
+    <title>Registrar Constancia de Trabajo</title>
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.scss">
     <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
     <style>
-        #formdisfrute .contenedor-botones {
+        #formconstancia .contenedor-botones {
             justify-content: center;
         }
-        #formdisfrute .btn-accion {
+        #formconstancia .btn-accion {
             flex: 0 0 auto;
             width: 180px;
         }
@@ -48,10 +48,10 @@ unset($_SESSION['errores'], $_SESSION['exito']);
 <div class="main">
     <div class="form-card">
 
-        <form id="formdisfrute" method="POST" action="../controladores/ctrl_dias_disfrute.php">
+        <form id="formconstancia" method="POST" action="../controladores/ctrl_constancia.php">
 
             <div class="form-grid full-width">
-                <h2>DIAS DE DISFRUTE</h2>
+                <h2>CONSTANCIA DE TRABAJO</h2>
 
                 <!-- 1. SELECT de trabajadores -->
                 <div class="field full-width">
@@ -67,23 +67,23 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                     </select>
                 </div>
 
-                <!-- 2. Fecha actual -->
+                <!-- 2. Fecha emisión -->
                 <div class="field">
-                    <label>2. Fecha</label>
-                    <input type="text" value="<?= date('d/m/Y') ?>" readonly>
+                    <label>2. Fecha de Emisión</label>
+                    <input type="date" name="fecha" value="<?= date('Y-m-d') ?>" required>
                 </div>
 
                 <!-- 3. Nombre completo (auto-rellenado) -->
                 <div class="field full-width">
                     <label>3. Apellido y Nombres del Trabajador(a)</label>
-                    <input type="text" id="nombre_completo" name="nombre_completo" class="campo-auto"
+                    <input type="text" id="nombre_completo" class="campo-auto"
                            value="<?= $old ? htmlspecialchars($old['nombre_completo'] ?? '') : '' ?>"
                            readonly placeholder="Se auto-rellena al seleccionar trabajador...">
                 </div>
 
-                <!-- 4. Cedula (auto-rellenado) -->
+                <!-- 4. Cédula (auto-rellenado) -->
                 <div class="field">
-                    <label>4. N° Cedula de Identidad</label>
+                    <label>4. N° Cédula de Identidad</label>
                     <input type="text" id="cedula_display" class="campo-auto"
                            value="<?= $old ? htmlspecialchars($old['cedula'] ?? '') : '' ?>"
                            readonly placeholder="---">
@@ -91,105 +91,58 @@ unset($_SESSION['errores'], $_SESSION['exito']);
 
                 <!-- 5. Cargo (auto-rellenado) -->
                 <div class="field">
-                    <label>5. Cargo del Solicitante</label>
-                    <input type="text" id="cargo_display" name="cargo_display" class="campo-auto"
+                    <label>5. Cargo Actual</label>
+                    <input type="text" id="cargo_display" class="campo-auto"
                            value="<?= $old ? htmlspecialchars($old['cargo'] ?? '') : '' ?>"
                            readonly placeholder="---">
                 </div>
 
-                <!-- 6. Fecha de Inicio -->
+                <!-- 6. Fecha de ingreso (auto-rellenado) -->
                 <div class="field">
-                    <label>6. Fecha de Inicio</label>
-                    <input type="date" name="fecha_inicio" required>
+                    <label>6. Fecha de Ingreso</label>
+                    <input type="text" id="fecha_ingreso_display" class="campo-auto"
+                           value="<?= $old ? htmlspecialchars($old['fecha_ingreso'] ?? '') : '' ?>"
+                           readonly placeholder="---">
                 </div>
 
-                <!-- 7. Fecha de Finalizacion -->
+                <!-- 7. Salario (auto-rellenado) -->
                 <div class="field">
-                    <label>7. Fecha de Finalizacion</label>
-                    <input type="date" name="fecha_finalizacion">
+                    <label>7. Salario Mensual (Bs.)</label>
+                    <input type="text" id="salario_display" class="campo-auto"
+                           value="<?= $old && isset($old['salario_monto']) ? number_format($old['salario_monto'], 2, ',', '.') : '' ?>"
+                           readonly placeholder="---">
                 </div>
 
-                <!-- 8. Descripcion / Motivo -->
+                <!-- 8. Tipo de personal -->
+                <div class="field">
+                    <label>8. Tipo de Personal</label>
+                    <select name="tipo_personal" required>
+                        <option value="" disabled selected>Seleccione...</option>
+                        <option value="Fijo">Empleado Fijo</option>
+                        <option value="Contratado">Contratado</option>
+                        <option value="Obrero">Obrero</option>
+                        <option value="Empleado">Empleado</option>
+                    </select>
+                </div>
+
+                <!-- 9. Nombre Director -->
                 <div class="field full-width">
-                    <label>8. Descripcion / Motivo</label>
-                    <textarea name="descripcion" rows="3" required
-                              placeholder="Detalle del motivo de los dias de disfrute..."><?= htmlspecialchars($old['descripcion'] ?? '') ?></textarea>
+                    <label>9. Nombre del Director de Departamento (quien firma)</label>
+                    <input type="text" name="nombre_director"
+                           value="<?= htmlspecialchars($_POST['nombre_director'] ?? '') ?>"
+                           required placeholder="Ej: MSc. KARLA Y. MONTANEZ O">
                 </div>
 
-                <!-- 9. Desde -->
-                <div class="field">
-                    <label>9. Desde</label>
-                    <input type="date" name="desde" required>
+                <!-- 10. Motivo -->
+                <div class="field full-width">
+                    <label>10. Motivo de la Solicitud</label>
+                    <textarea name="motivo" rows="3" required
+                              placeholder="Ej: A solicitud de la parte interesada..."><?= htmlspecialchars($_POST['motivo'] ?? '') ?></textarea>
                 </div>
 
-                <!-- 10. Hasta -->
-                <div class="field">
-                    <label>10. Hasta</label>
-                    <input type="date" name="hasta" required>
-                </div>
-
-                <!-- 11. Firma del trabajador -->
+                <!-- 11. Firma trabajador -->
                 <div class="field">
                     <label>11. Firma del Trabajador(a)</label>
-                    <input type="text" readonly class="campo-auto">
-                </div>
-
-                <center>APROBACION Y AUTORIZACION (PARA SER LLENADO POR EL SUPERVISOR INMEDIATO)</center>
-
-                <!-- 12. Permiso remunerado -->
-                <div class="field">
-                    <label>12. Permiso</label>
-                    <div class="radio-group">
-                        <label class="radio-option">
-                            <input type="radio" name="tipo_remuneracion" value="remunerado">
-                            Remunerado
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="tipo_remuneracion" value="no_remunerado">
-                            No Remunerado
-                        </label>
-                    </div>
-                </div>
-
-                <!-- 13. Se requiere suplente -->
-                <div class="field">
-                    <label>13. Se requiere suplente</label>
-                    <div class="radio-group">
-                        <label class="radio-option">
-                            <input type="radio" name="requiere_suplente" value="si">
-                            Si
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="requiere_suplente" value="no">
-                            No
-                        </label>
-                    </div>
-                    <small>De ser afirmativo, favor anexar perfil requerido</small>
-                </div>
-
-                <!-- 14. Firma del supervisor -->
-                <div class="field">
-                    <label>14. Firma del Supervisor Inmediato</label>
-                    <input type="text" readonly class="campo-auto">
-                </div>
-
-                <!-- 15. Observaciones -->
-                <div class="field full-width">
-                    <label>15. Observaciones</label>
-                    <textarea name="observaciones" rows="3"><?= htmlspecialchars($old['observaciones'] ?? '') ?></textarea>
-                </div>
-
-                <center>COORDINACION DE RECURSOS HUMANOS</center>
-
-                <!-- 16. Recibido por -->
-                <div class="field">
-                    <label>16. Recibido por</label>
-                    <input type="text" readonly class="campo-auto">
-                </div>
-
-                <!-- 17. Procesado por -->
-                <div class="field">
-                    <label>17. Procesado por</label>
                     <input type="text" readonly class="campo-auto">
                 </div>
 
@@ -222,6 +175,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var nombreCompleto   = document.getElementById('nombre_completo');
     var cedulaDisplay    = document.getElementById('cedula_display');
     var cargoDisplay     = document.getElementById('cargo_display');
+    var fechaIngresoDisp = document.getElementById('fecha_ingreso_display');
+    var salarioDisplay   = document.getElementById('salario_display');
 
     selectTrabajador.addEventListener('change', function() {
         var id = this.value;
@@ -230,6 +185,8 @@ document.addEventListener('DOMContentLoaded', function() {
             nombreCompleto.value = '';
             cedulaDisplay.value  = '';
             cargoDisplay.value   = '';
+            fechaIngresoDisp.value = '';
+            salarioDisplay.value = '';
             return;
         }
 
@@ -237,9 +194,13 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(function(resp) { return resp.json(); })
             .then(function(data) {
                 if (data.success) {
-                    nombreCompleto.value = data.nombre_completo;
-                    cedulaDisplay.value  = data.cedula;
-                    cargoDisplay.value   = data.cargo;
+                    nombreCompleto.value   = data.nombre_completo;
+                    cedulaDisplay.value    = data.cedula;
+                    cargoDisplay.value     = data.cargo;
+                    fechaIngresoDisp.value = data.fecha_ingreso;
+                    salarioDisplay.value   = data.salario_monto
+                        ? parseFloat(data.salario_monto).toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+                        : 'No registrado';
 
                     nombreCompleto.classList.add('campo-ok');
                     setTimeout(function() { nombreCompleto.classList.remove('campo-ok'); }, 1500);

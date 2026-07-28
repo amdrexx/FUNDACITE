@@ -9,6 +9,11 @@ require_once("../controladores/ctrl_salario.php");
 
 $salarios = listarSalarios($conexion);
 
+$editar = null;
+if (isset($_GET['editar'])) {
+    $editar = buscarSalario($conexion, intval($_GET['editar']));
+}
+
 $errores = $_SESSION['errores'] ?? [];
 $exito = $_SESSION['exito'] ?? '';
 
@@ -27,6 +32,36 @@ unset($_SESSION['exito']);
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
 
     <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
+
+    <style>
+/* Sufijo "Bs" dentro del campo Monto */
+.campo-monto {
+    position: relative;
+}
+.campo-monto input {
+    padding-right: 45px;
+}
+
+/* Ocultamos las flechitas nativas del input number para que no choquen con "Bs" */
+.campo-monto input::-webkit-outer-spin-button,
+.campo-monto input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.campo-monto input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.campo-monto .sufijo-bs {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(calc(-50% + 12px)); /* +12px para compensar el label de arriba */
+    font-weight: 600;
+    color: #444;
+    pointer-events: none;
+}
+    </style>
 </head>
 
 <body>
@@ -57,8 +92,12 @@ unset($_SESSION['exito']);
             <div class="form-grid">
 
                 <h2 style="text-align:center;">
-                    Registro de Salario
+                    <?= $editar ? "Editar Salario" : "Registro de Salario"; ?>
                 </h2>
+
+                <?php if ($editar) { ?>
+                    <input type="hidden" name="id_salario" value="<?= $editar['id_salario']; ?>">
+                <?php } ?>
 
                 <div class="field">
                     <label>Fecha de ingreso</label>
@@ -67,10 +106,10 @@ unset($_SESSION['exito']);
                         type="date"
                         name="fecha"
                         id="fecha"
-                        value="<?= $_SESSION['old']['fecha'] ?? '' ?>">
+                        value="<?= $editar['fecha'] ?? ($_SESSION['old']['fecha'] ?? '') ?>">
                 </div>
 
-                <div class="field">
+                <div class="field campo-monto">
 
                     <label>Monto</label>
 
@@ -79,23 +118,25 @@ unset($_SESSION['exito']);
                         name="monto"
                         id="monto"
                         step="0.01"
-                        value="<?= $_SESSION['old']['monto'] ?? '' ?>">
+                        value="<?= $editar['monto'] ?? ($_SESSION['old']['monto'] ?? '') ?>">
+
+                    <span class="sufijo-bs">Bs</span>
 
                 </div>
 
                 <button
                     type="submit"
                     name="accion"
-                    value="guardar"
+                    value="<?= $editar ? 'actualizar' : 'guardar'; ?>"
                     class="btn-guardar">
 
-                    Guardar
+                    <?= $editar ? "Actualizar" : "Guardar"; ?>
 
                 </button>
 
                 <button
                     type="reset"
-                    class="btn-limpiar">
+                    class="btn-guardar">
 
                     Limpiar
 
@@ -104,6 +145,7 @@ unset($_SESSION['exito']);
             </div>
 
         </form>
+
         <!-- ================= CATÁLOGO ================= -->
 
         <div class="form-card">
@@ -119,6 +161,7 @@ unset($_SESSION['exito']);
                         <th>Fecha</th>
                         <th>Monto</th>
                         <th>Estado</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
 
@@ -135,11 +178,36 @@ unset($_SESSION['exito']);
                             </td>
 
                             <td>
-                                <?= number_format($fila['monto'], 2, ',', '.') ?>
+                                Bs <?= number_format($fila['monto'], 2, ',', '.') ?>
                             </td>
 
                             <td>
-                               <?= htmlspecialchars($fila['estado']) ?>
+                                <?php if ($fila['estado'] === 'Vigente') { ?>
+                                    <span class="badge-vigente">Vigente</span>
+                                <?php } else { ?>
+                                    <span class="badge-deshabilitado"><?= htmlspecialchars($fila['estado']) ?></span>
+                                <?php } ?>
+                            </td>
+
+                               <td class="acciones">
+
+                                <a
+                                    href="registrar_salario.php?editar=<?= $fila['id_salario']; ?>"
+                                    class="btn-editar"
+                                    style="text-decoration:none;">
+                                    <i class="bi bi-pencil-square"></i>
+                                    Editar
+                                </a>
+
+                                <a
+                                    href="../controladores/ctrl_salario.php?eliminar=<?= $fila['id_salario']; ?>"
+                                    class="btn-eliminar"
+                                    style="text-decoration:none;"
+                                    onclick="return confirm('¿Desea eliminar este salario?');">
+                                    <i class="bi bi-trash"></i>
+                                    Eliminar
+                                </a>
+
                             </td>
 
                         </tr>
@@ -149,11 +217,9 @@ unset($_SESSION['exito']);
                 <?php else: ?>
 
                     <tr>
-
-                        <td colspan="3" style="text-align:center;">
+                        <td colspan="4" style="text-align:center;">
                             No hay salarios registrados.
                         </td>
-
                     </tr>
 
                 <?php endif; ?>
@@ -169,52 +235,30 @@ unset($_SESSION['exito']);
 </div>
 
 <script>
-
 function closeAlert() {
-
     document.getElementById("customAlert").classList.add("hidden");
-
 }
-
 </script>
-
-<!-- ================= MENSAJES DE ERROR ================= -->
 
 <?php if (!empty($errores)): ?>
-
 <script>
-
 document.addEventListener("DOMContentLoaded", function(){
-
     document.getElementById("alertMessage").textContent =
         <?= json_encode(implode("\n", $errores)); ?>;
-
     document.getElementById("customAlert").classList.remove("hidden");
-
 });
-
 </script>
-
 <?php endif; ?>
 
-<!-- ================= MENSAJE DE ÉXITO ================= -->
-
 <?php if (!empty($exito)): ?>
-
 <script>
-
 document.addEventListener("DOMContentLoaded", function(){
-
     document.getElementById("alertMessage").textContent =
         <?= json_encode($exito); ?>;
-
     document.getElementById("customAlert").classList.remove("hidden");
-
 });
-
 </script>
-
 <?php endif; ?>
 
 </body>
-</html>        
+</html>

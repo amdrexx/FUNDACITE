@@ -1,8 +1,4 @@
 <?php
-// ======================================================
-// ARCHIVO: controladores/ctrl_salario.php
-// ======================================================
-
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
@@ -28,39 +24,61 @@ if (isset($_POST['accion']) && $_POST['accion'] == "guardar") {
 
     if (empty($monto)) {
         $errores[] = "Debe ingresar un monto.";
-    }
-
-    if (!is_numeric($monto) || $monto <= 0) {
+    } elseif (!is_numeric($monto) || $monto <= 0) {
         $errores[] = "El monto debe ser mayor que cero.";
     }
 
     if (!empty($errores)) {
-
         $_SESSION['errores'] = $errores;
-
-        $_SESSION['old'] = [
-            'fecha' => $fecha,
-            'monto' => $monto
-        ];
-
+        $_SESSION['old'] = ['fecha' => $fecha, 'monto' => $monto];
         header("Location: ../vistas/registrar_salario.php");
         exit();
     }
 
     if ($modelo->registrarSalario($fecha, $monto)) {
-
-        $_SESSION['exito'] = "Salario registrado correctamente.";
-
+        $_SESSION['exito'] = "Salario registrado correctamente y marcado como Vigente.";
         unset($_SESSION['old']);
-
     } else {
-
         $_SESSION['errores'] = ["Ocurrió un error al registrar el salario."];
+        $_SESSION['old'] = ['fecha' => $fecha, 'monto' => $monto];
+    }
 
-        $_SESSION['old'] = [
-            'fecha' => $fecha,
-            'monto' => $monto
-        ];
+    header("Location: ../vistas/registrar_salario.php");
+    exit();
+}
+
+// =====================================
+// ACTUALIZAR
+// =====================================
+if (isset($_POST['accion']) && $_POST['accion'] == "actualizar") {
+
+    $id    = intval($_POST['id_salario']);
+    $fecha = trim($_POST['fecha']);
+    $monto = trim($_POST['monto']);
+
+    $errores = [];
+
+    if (empty($fecha)) {
+        $errores[] = "Debe seleccionar una fecha.";
+    }
+    if (empty($monto) || !is_numeric($monto) || $monto <= 0) {
+        $errores[] = "El monto debe ser mayor que cero.";
+    }
+
+    if (!empty($errores)) {
+        $_SESSION['errores'] = $errores;
+        header("Location: ../vistas/registrar_salario.php?editar=" . $id);
+        exit();
+    }
+
+    // Se respeta el estado actual (Vigente/Deshabilitado) del registro que se edita
+    $actual = $modelo->obtenerPorId($id);
+    $estado = $actual ? $actual['estado'] : 'Deshabilitado';
+
+    if ($modelo->actualizarSalario($id, $fecha, $monto, $estado)) {
+        $_SESSION['exito'] = "Salario actualizado correctamente.";
+    } else {
+        $_SESSION['errores'] = ["No fue posible actualizar el salario."];
     }
 
     header("Location: ../vistas/registrar_salario.php");
@@ -73,39 +91,30 @@ if (isset($_POST['accion']) && $_POST['accion'] == "guardar") {
 if (isset($_GET['eliminar'])) {
 
     $id = intval($_GET['eliminar']);
+    $resultado = $modelo->eliminarSalario($id);
 
-    $modelo->eliminarSalario($id);
-
-    header("Location: ../vistas/lista_salario.php");
-    exit();
-}
-
-// =====================================
-// ACTUALIZAR
-// =====================================
-if (isset($_POST['accion']) && $_POST['accion'] == "actualizar") {
-
-    $id = intval($_POST['id_salario']);
-    $fecha = trim($_POST['fecha']);
-    $monto = trim($_POST['monto']);
-
-    if ($modelo->actualizarSalario($id, $fecha, $monto)) {
-
-        $_SESSION['exito'] = "Salario actualizado correctamente.";
-
+    if ($resultado === "RESTRICT") {
+        $_SESSION['errores'] = ["No se puede eliminar: este salario está referenciado en otro registro."];
+    } elseif ($resultado === false) {
+        $_SESSION['errores'] = ["Ocurrió un error al eliminar el salario."];
     } else {
-
-        $_SESSION['errores'] = ["No fue posible actualizar el salario."];
+        $_SESSION['exito'] = "Salario eliminado correctamente.";
     }
 
-    header("Location: ../vistas/lista_salario.php");
+    header("Location: ../vistas/registrar_salario.php");
     exit();
 }
-// LISTAR
+
 // =====================================
-function listarSalarios($conexion)
-{
+// LISTAR / BUSCAR (funciones auxiliares usadas por la vista)
+// =====================================
+function listarSalarios($conexion) {
     $modelo = new clase_salario($conexion);
     return $modelo->listarSalarios();
+}
+
+function buscarSalario($conexion, $id) {
+    $modelo = new clase_salario($conexion);
+    return $modelo->obtenerPorId($id);
 }
 ?>

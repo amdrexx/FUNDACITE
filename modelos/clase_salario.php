@@ -20,7 +20,6 @@ class clase_salario {
         return ($r && $r['cnt'] > 0);
     }
 
-    // Compatibilidad con nombres usados en otros archivos
     public function listarSalarios($buscar = '') {
         return $this->mostrarSalarios($buscar);
     }
@@ -49,7 +48,8 @@ class clase_salario {
             }
         } else {
             $sql = "SELECT id_salario, fecha, monto, estado, NULL AS cedula, NULL AS nombre_cargo, NULL AS contrato
-                    FROM SALARIO";
+                    FROM SALARIO
+                    ORDER BY fecha DESC, id_salario DESC";
             $stmt = $this->conexion->prepare($sql);
         }
 
@@ -69,24 +69,47 @@ class clase_salario {
         return $res->fetch_assoc();
     }
 
-    // Nombre usado por el controlador: registrarSalario
-    public function registrarSalario($fecha, $monto, $estado = 'Activo', $id_trabajador = null) {
-        if ($this->columnaExiste('SALARIO', 'id_trabajador') && $id_trabajador !== null) {
-            $sql = "INSERT INTO SALARIO (fecha, monto, estado, id_trabajador) VALUES (?, ?, ?, ?)";
-            $stmt = $this->conexion->prepare($sql);
-            if (!$stmt) return false;
-            $stmt->bind_param("sdsi", $fecha, $monto, $estado, $id_trabajador);
-        } else {
-            $sql = "INSERT INTO SALARIO (fecha, monto, estado) VALUES (?, ?, ?)";
-            $stmt = $this->conexion->prepare($sql);
-            if (!$stmt) return false;
-            $stmt->bind_param("sds", $fecha, $monto, $estado);
+    // =========================================================
+    // REGISTRAR — ahora deja "Vigente" solo al último registrado
+    // =========================================================
+    public function registrarSalario($fecha, $monto, $id_trabajador = null) {
+
+        $this->conexion->begin_transaction();
+
+        try {
+
+            // 1) Cualquier salario que esté Vigente pasa a Deshabilitado
+            $this->conexion->query(
+                "UPDATE SALARIO SET estado = 'Deshabilitado' WHERE estado = 'Vigente'"
+            );
+
+            // 2) Insertamos el nuevo como Vigente
+            if ($this->columnaExiste('SALARIO', 'id_trabajador') && $id_trabajador !== null) {
+                $sql = "INSERT INTO SALARIO (fecha, monto, estado, id_trabajador) VALUES (?, ?, 'Vigente', ?)";
+                $stmt = $this->conexion->prepare($sql);
+                if (!$stmt) throw new Exception("Error al preparar el INSERT");
+                $stmt->bind_param("sdi", $fecha, $monto, $id_trabajador);
+            } else {
+                $sql = "INSERT INTO SALARIO (fecha, monto, estado) VALUES (?, ?, 'Vigente')";
+                $stmt = $this->conexion->prepare($sql);
+                if (!$stmt) throw new Exception("Error al preparar el INSERT");
+                $stmt->bind_param("sd", $fecha, $monto);
+            }
+
+            $stmt->execute();
+
+            $this->conexion->commit();
+            return true;
+
+        } catch (\Throwable $e) {
+            $this->conexion->rollback();
+            error_log("Error registrarSalario: " . $e->getMessage());
+            return false;
         }
-        return $stmt->execute();
     }
 
-    // Nombre usado por el controlador: actualizarSalario
-    public function actualizarSalario($id, $fecha, $monto, $estado = 'Activo') {
+    // Al editar, se respeta el estado actual del registro (no se toca Vigente/Deshabilitado)
+    public function actualizarSalario($id, $fecha, $monto, $estado) {
         $sql = "UPDATE SALARIO SET fecha = ?, monto = ?, estado = ? WHERE id_salario = ?";
         $stmt = $this->conexion->prepare($sql);
         if (!$stmt) return false;
@@ -94,12 +117,21 @@ class clase_salario {
         return $stmt->execute();
     }
 
-    // Nombre usado por el controlador: eliminarSalario
     public function eliminarSalario($id) {
         $sql = "DELETE FROM SALARIO WHERE id_salario = ?";
         $stmt = $this->conexion->prepare($sql);
         if (!$stmt) return false;
         $stmt->bind_param("i", $id);
-        return $stmt->execute();
+
+        try {
+            $stmt->execute();
+            return true;
+        } catch (mysqli_sql_exception $e) {
+            error_log("Eliminar SALARIO id={$id} excepcion: " . $e->getMessage());
+            if ($e->getCode() == 1451) {
+                return "RESTRICT";
+            }
+            return false;
+        }
     }
 }

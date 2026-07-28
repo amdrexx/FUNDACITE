@@ -55,7 +55,7 @@ $estados = $controlador->listar();
     <div class="main">
         <div class="contenedor-estados">
 
-            <!-- FORMULARIO -->
+
 <!-- FORMULARIO -->
 <div class="form-card">
 
@@ -190,7 +190,25 @@ $estados = $controlador->listar();
     <script src="/FUNDACITE/vistas/js/boton_desplegable.js"></script>
     <script src="/FUNDACITE/vistas/js/valid_trabajadores.js"></script>
     <script src="/FUNDACITE/vistas/js/parroquia.js"></script>
+    
+<?php if (isset($_GET['msg'])): ?>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const mensajes = {
+        restrict: "No se puede eliminar: este estado tiene municipios registrados.",
+        notfound: "El registro que intentaste eliminar ya no existe.",
+        error: "Ocurrió un error al eliminar el registro.",
+        ok: "Estado eliminado correctamente."
+    };
 
+    const tipo = "<?= htmlspecialchars($_GET['msg']) ?>";
+    if (mensajes[tipo]) {
+        document.getElementById("alertMessage").innerText = mensajes[tipo];
+        document.getElementById("customAlert").classList.remove("hidden");
+    }
+});
+</script>
+<?php endif; ?>
 </body>
 
 </html>

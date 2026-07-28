@@ -40,9 +40,19 @@ if (isset($_POST['actualizar'])) {
 // Eliminar
 if (isset($_GET['eliminar'])) {
 
-    $controlador->eliminar($_GET['eliminar']);
+    $resultado = $controlador->eliminar($_GET['eliminar']);
 
-    header("Location: registro_municipios.php");
+    $mensaje = "ok";
+
+    if ($resultado === "RESTRICT") {
+        $mensaje = "restrict";
+    } elseif ($resultado === "NOT_FOUND") {
+        $mensaje = "notfound";
+    } elseif ($resultado === false) {
+        $mensaje = "error";
+    }
+
+    header("Location: registro_municipios.php?msg=" . $mensaje);
     exit();
 }
 
@@ -289,7 +299,7 @@ $municipios = $controlador->listar();
     <script src="/FUNDACITE/vistas/js/boton_desplegable.js"></script>
     <script src="/FUNDACITE/vistas/js/valid_trabajadores.js"></script>
     <script src="/FUNDACITE/vistas/js/parroquia.js"></script>
-
+    
 </body>
 
 </html>

@@ -12,16 +12,26 @@ unset($_SESSION['error_edicion'], $_SESSION['exito_edicion']);
 
 require_once '../conexion.php';
 require_once '../modelos/clase_trabajador.php';
+require_once '../modelos/clase_direccion.php';
 
 $idTrabajador = intval($_GET['id'] ?? 0);
 
 $trabajador = new Trabajador($conexion);
 $dato = $trabajador->obtenerTrabajadorPorId($idTrabajador);
-$direcciones = $trabajador->listarDirecciones();
 
 if (!$dato) {
     die("Trabajador no encontrado.");
 }
+
+// ── Precarga de Estado/Municipio/Parroquia YA SELECCIONADOS ──
+// Se resuelve del lado del servidor (no depende de que el AJAX
+// termine a tiempo en el navegador) para evitar que los combos
+// se vean "en blanco" al entrar a editar un trabajador.
+$direccionModelo = new Direccion();
+
+$estados    = $direccionModelo->listarEstados();
+$municipios = !empty($dato['cod_est'])  ? $direccionModelo->listarMunicipios($dato['cod_est'])   : [];
+$parroquias = !empty($dato['cod_muni']) ? $direccionModelo->listarParroquias($dato['cod_muni']) : [];
 
 $errores = $_SESSION['errores'] ?? [];
 $exito   = $_SESSION['exito'] ?? '';
@@ -36,11 +46,21 @@ unset($_SESSION['errores'], $_SESSION['exito']);
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
-    <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
+    <script src="/FUNDACITE/vistas/js/jquery.min.js?v=20260727"></script>
+    <script src="/FUNDACITE/vistas/js/bootstrap.min.js?v=20260727"></script>
+    <script src="/FUNDACITE/vistas/js/editar_direccion.js?v=20260727d"></script>
 </head>
 <body>
 
 <?php include "includes/layout.php"; ?>
+
+<?php if (isset($_GET['debug'])): ?>
+<div style="background:#222;color:#0f0;padding:12px;margin:10px auto;max-width:900px;font-family:monospace;font-size:13px;border-radius:6px;">
+    <strong>DEBUG — datos crudos devueltos por obtenerTrabajadorPorId():</strong>
+    <pre style="white-space:pre-wrap;"><?php echo htmlspecialchars(print_r($dato, true)); ?></pre>
+</div>
+<?php endif; ?>
+
 <div id="customAlert" class="custom-alert hidden">
     <div class="alert-box">
         <p id="alertMessage"></p>
@@ -61,6 +81,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
 
             <input type="hidden" name="editar_trabajador" value="1">
             <input type="hidden" name="id_trabajador" value="<?php echo htmlspecialchars($dato['id_trabajador']); ?>">
+            <input type="hidden" name="id_dir" value="<?php echo htmlspecialchars($dato['id_dir'] ?? ''); ?>">
 
             <!-- NO EDITABLES -->
             <div class="field">
@@ -152,17 +173,53 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                 </select>
             </div>
 
+            <!-- Dirección: Estado -->
             <div class="field">
-                <label>Dirección (¿De dónde es?)</label>
-                <select name="id_dir">
-                    <option value="" disabled selected>Seleccione una dirección</option>
-                    <?php foreach ($direcciones as $dir): ?>
-                        <option value="<?php echo $dir['id_dir']; ?>"
-                            <?php echo (($dato['id_dir'] ?? '') == $dir['id_dir']) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($dir['direccion'] . ' - ' . $dir['parroquia'] . ', ' . $dir['municipio'] . ', ' . $dir['estado']); ?>
+                <label>Estado</label>
+                <select name="cod_est" id="selectEstado">
+                    <option value="">Seleccione un Estado</option>
+                    <?php foreach ($estados as $e): ?>
+                        <option value="<?php echo htmlspecialchars($e['cod_est']); ?>"
+                            <?php echo ((string)($dato['cod_est'] ?? '') === (string)$e['cod_est']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($e['nombre']); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
+            </div>
+
+            <!-- Dirección: Municipio -->
+            <div class="field">
+                <label>Municipio</label>
+                <select name="cod_muni" id="selectMunicipio" <?php echo empty($municipios) ? 'disabled' : ''; ?>>
+                    <option value="">Seleccione un Municipio</option>
+                    <?php foreach ($municipios as $m): ?>
+                        <option value="<?php echo htmlspecialchars($m['cod_muni']); ?>"
+                            <?php echo ((string)($dato['cod_muni'] ?? '') === (string)$m['cod_muni']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($m['nombre']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- Dirección: Parroquia -->
+            <div class="field">
+                <label>Parroquia</label>
+                <select name="cod_par" id="selectParroquia" <?php echo empty($parroquias) ? 'disabled' : ''; ?>>
+                    <option value="">Seleccione una Parroquia</option>
+                    <?php foreach ($parroquias as $p): ?>
+                        <option value="<?php echo htmlspecialchars($p['cod_par']); ?>"
+                            <?php echo ((string)($dato['cod_par'] ?? '') === (string)$p['cod_par']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($p['nombre']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- Dirección exacta -->
+            <div class="field full-width">
+                <label>Dirección</label>
+                <textarea name="direccion_texto" id="direccion_texto" maxlength="255"
+                    placeholder="Ingrese dirección exacta (calle, avenida, casa, referencia, etc.)"><?php echo htmlspecialchars($dato['direccion'] ?? ''); ?></textarea>
             </div>
 
             <div class="contenedor-botones full-width">

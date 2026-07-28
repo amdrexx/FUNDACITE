@@ -83,15 +83,34 @@ class MunicipioModel
     }
 
     // Eliminar municipio
-    public function eliminar($cod_muni)
-    {
-        $sql = "DELETE FROM MUNICIPIO
-                WHERE cod_muni = ?";
+public function eliminar($cod_muni)
+{
+    $sql = "DELETE FROM MUNICIPIO
+            WHERE cod_muni = ?";
 
-        $stmt = $this->conexion->prepare($sql);
-        $stmt->bind_param("i", $cod_muni);
+    $stmt = $this->conexion->prepare($sql);
+    $stmt->bind_param("i", $cod_muni);
 
-        return $stmt->execute();
+    try {
+
+        $stmt->execute();
+
+        if ($stmt->affected_rows === 0) {
+            return "NOT_FOUND";
+        }
+
+        return true;
+
+    } catch (mysqli_sql_exception $e) {
+
+        error_log("Eliminar MUNICIPIO cod_muni={$cod_muni} excepcion: " . $e->getMessage() . " (code " . $e->getCode() . ")");
+
+        if ($e->getCode() == 1451) {
+            return "RESTRICT";
+        }
+
+        return false;
     }
+}
 }
 ?>

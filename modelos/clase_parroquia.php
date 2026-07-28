@@ -148,14 +148,33 @@ class Parroquia
     /*=========================
       ELIMINAR
     =========================*/
-    public function eliminar($cod_par)
-    {
-        $cod_par = mysqli_real_escape_string($this->conexion,$cod_par);
+public function eliminar($cod_par)
+{
+    $cod_par = mysqli_real_escape_string($this->conexion, $cod_par);
 
-        $sql = "DELETE FROM PARROQUIA
-                WHERE cod_par='$cod_par'";
+    $sql = "DELETE FROM PARROQUIA
+            WHERE cod_par='$cod_par'";
 
-        return mysqli_query($this->conexion,$sql);
+    try {
+
+        $resultado = mysqli_query($this->conexion, $sql);
+
+        if (mysqli_affected_rows($this->conexion) === 0) {
+            return "NOT_FOUND";
+        }
+
+        return true;
+
+    } catch (mysqli_sql_exception $e) {
+
+        error_log("Eliminar PARROQUIA cod_par={$cod_par} excepcion: " . $e->getMessage() . " (code " . $e->getCode() . ")");
+
+        if ($e->getCode() == 1451) {
+            return "RESTRICT";
+        }
+
+        return false;
     }
+}
 }
 ?>

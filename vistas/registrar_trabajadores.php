@@ -1,5 +1,6 @@
 <?php
 include_once "includes/guardian.php";
+
 session_start();
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -30,7 +31,9 @@ $direcciones = $trabajador->listarDirecciones();
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.scss">
+    <script src="/FUNDACITE/vistas/js/jquery.min.js"></script>
     <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
+    <script src="/FUNDACITE/vistas/js/ajax_direccion.js"></script>
 </head>
 <body>
 
@@ -151,19 +154,36 @@ $direcciones = $trabajador->listarDirecciones();
                 </select>
             </div>
 
-            <!-- Dirección: de dónde es el trabajador (elige una ya registrada en el maestro) -->
-            <div class="field">
-                <label>¿De dónde es? (Dirección)</label>
-                <select name="id_dir" id="id_dir">
-                    <option value="" disabled selected>Seleccione una dirección</option>
-                    <?php foreach ($direcciones as $dir): ?>
-                        <option value="<?php echo $dir['id_dir']; ?>"
-                            <?php echo (isset($old['id_dir']) && $old['id_dir'] == $dir['id_dir']) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($dir['direccion'] . ' - ' . $dir['parroquia'] . ', ' . $dir['municipio'] . ', ' . $dir['estado']); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
+          <!-- Dirección: Estado -->
+<div class="field">
+    <label>Estado</label>
+    <select name="cod_est" id="selectEstado">
+        <option value="" disabled selected>Seleccione un estado</option>
+    </select>
+</div>
+
+<!-- Dirección: Municipio -->
+<div class="field">
+    <label>Municipio</label>
+    <select name="cod_muni" id="selectMunicipio">
+        <option value="" disabled selected>Seleccione un municipio</option>
+    </select>
+</div>
+
+<!-- Dirección: Parroquia -->
+<div class="field">
+    <label>Parroquia</label>
+    <select name="cod_par" id="selectParroquia">
+        <option value="" disabled selected>Seleccione una parroquia</option>
+    </select>
+</div>
+
+<!-- Dirección exacta (va a DIRECCION.nombre) -->
+<div class="field full-width">
+    <label>Dirección</label>
+    <textarea name="direccion_texto" id="direccion_texto" maxlength="255"
+        placeholder="Ingrese dirección exacta (calle, avenida, casa, referencia, etc.)"><?php echo htmlspecialchars($old['direccion_texto'] ?? ''); ?></textarea>
+</div>
 
             <button type="submit" class="btn-guardar full-width">Registrar</button>
         </div>

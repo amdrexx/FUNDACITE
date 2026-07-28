@@ -56,6 +56,68 @@ class Trabajador
         return $direcciones;
     }
 
+    /**
+     * Crea (o reutiliza si ya existe una idéntica) un registro en DIRECCION
+     * para la parroquia indicada, y devuelve el id_dir correspondiente.
+     *
+     * @param int    $codPar           Código de la parroquia (cod_par)
+     * @param string $nombreDireccion  Texto libre de la dirección exacta
+     * @return int|false  id_dir generado/existente, o false si falla
+     */
+    public function crearDireccion($codPar, $nombreDireccion)
+    {
+        // 1. Buscar si ya existe una dirección idéntica en esa parroquia
+        $sqlBuscar = "SELECT id_dir
+                      FROM DIRECCION
+                      WHERE cod_par = ? AND nombre = ?
+                      LIMIT 1";
+
+        $stmtBuscar = $this->conexion->prepare($sqlBuscar);
+        $stmtBuscar->bind_param("is", $codPar, $nombreDireccion);
+        $stmtBuscar->execute();
+
+        $resultadoBuscar = $stmtBuscar->get_result();
+
+        if ($resultadoBuscar && $resultadoBuscar->num_rows > 0) {
+            $fila = $resultadoBuscar->fetch_assoc();
+            return $fila['id_dir'];
+        }
+
+        // 2. No existe, se crea un nuevo registro
+        $sqlInsert = "INSERT INTO DIRECCION (cod_par, nombre)
+                      VALUES (?, ?)";
+
+        $stmtInsert = $this->conexion->prepare($sqlInsert);
+        $stmtInsert->bind_param("is", $codPar, $nombreDireccion);
+
+        if ($stmtInsert->execute()) {
+            return $this->conexion->insert_id;
+        }
+
+        return false;
+    }
+
+    /**
+     * Actualiza una dirección ya existente (usada al editar un trabajador
+     * que ya tenía una dirección asignada desde su registro).
+     *
+     * @param int    $idDir            id_dir a actualizar
+     * @param int    $codPar           Nueva parroquia
+     * @param string $nombreDireccion  Nuevo texto de dirección exacta
+     * @return bool
+     */
+    public function actualizarDireccion($idDir, $codPar, $nombreDireccion)
+    {
+        $sql = "UPDATE DIRECCION
+                SET cod_par = ?, nombre = ?
+                WHERE id_dir = ?";
+
+        $stmt = $this->conexion->prepare($sql);
+        $stmt->bind_param("isi", $codPar, $nombreDireccion, $idDir);
+
+        return $stmt->execute();
+    }
+
     public function registrarTrabajador(
         $tipoDocumento,
         $cedula,
@@ -177,8 +239,11 @@ class Trabajador
                     t.status AS estatus_laboral,
                     t.id_dir,
                     d.nombre AS direccion,
+                    p.cod_par,
                     p.nombre AS parroquia,
+                    m.cod_muni,
                     m.nombre AS municipio,
+                    e.cod_est,
                     e.nombre AS estado
                 FROM TRABAJADOR t
                 LEFT JOIN DIRECCION d ON t.id_dir = d.id_dir
