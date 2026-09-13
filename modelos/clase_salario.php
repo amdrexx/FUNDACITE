@@ -25,29 +25,35 @@ class clase_salario {
     }
 
     public function mostrarSalarios($buscar = '') {
-        if ($this->columnaExiste('SALARIO', 'id_trabajador')) {
+        $tieneTipo  = $this->columnaExiste('SALARIO', 'tipo_salario');
+        $tieneCargo = $this->columnaExiste('SALARIO', 'id_cargo');
+
+        if ($tieneTipo && $tieneCargo) {
             $sql = "SELECT 
                         s.id_salario,
                         s.fecha,
                         s.monto,
                         s.estado,
-                        t.cedula,
-                        c.nombre_cargo,
-                        ctr.tipo_contrato AS contrato
+                        s.tipo_salario,
+                        s.id_cargo,
+                        c.nombre_cargo
                     FROM SALARIO s
-                    LEFT JOIN TRABAJADOR t ON s.id_trabajador = t.id_trabajador
-                    LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo
-                    LEFT JOIN CONTRATO ctr ON ctr.id_trabajador = t.id_trabajador";
+                    LEFT JOIN CARGO c ON s.id_cargo = c.id_cargo";
+
             if ($buscar !== '') {
-                $sql .= " WHERE t.cedula LIKE ? OR c.nombre_cargo LIKE ? OR ctr.tipo_contrato LIKE ?";
+                $sql .= " WHERE c.nombre_cargo LIKE ? OR s.estado LIKE ? OR s.tipo_salario LIKE ?
+                          ORDER BY s.fecha DESC, s.id_salario DESC";
                 $param = "%{$buscar}%";
                 $stmt = $this->conexion->prepare($sql);
-                $stmt->bind_param("sss", $param, $param, $param);
+                if ($stmt) $stmt->bind_param("sss", $param, $param, $param);
             } else {
+                $sql .= " ORDER BY s.fecha DESC, s.id_salario DESC";
                 $stmt = $this->conexion->prepare($sql);
             }
         } else {
-            $sql = "SELECT id_salario, fecha, monto, estado, NULL AS cedula, NULL AS nombre_cargo, NULL AS contrato
+            // Compatibilidad si aún no se ha ejecutado el ALTER TABLE
+            $sql = "SELECT id_salario, fecha, monto, estado,
+                           'base' AS tipo_salario, NULL AS id_cargo, NULL AS nombre_cargo
                     FROM SALARIO
                     ORDER BY fecha DESC, id_salario DESC";
             $stmt = $this->conexion->prepare($sql);
@@ -70,25 +76,60 @@ class clase_salario {
     }
 
     // =========================================================
-    // REGISTRAR — ahora deja "Vigente" solo al último registrado
+    // REGISTRAR — deja "Vigente" solo al último registrado,
+    // dentro de su propio grupo:
+    //   - tipo_salario = 'base'  -> un único vigente global
+    //   - tipo_salario = 'cargo' -> un único vigente por cada id_cargo
     // =========================================================
-    public function registrarSalario($fecha, $monto, $id_trabajador = null) {
+    public function registrarSalario($fecha, $monto, $tipo_salario = 'base', $id_cargo = null) {
+
+        $tipo_salario = ($tipo_salario === 'cargo') ? 'cargo' : 'base';
+        if ($tipo_salario === 'base') {
+            $id_cargo = null;
+        }
+
+        $tieneTipo  = $this->columnaExiste('SALARIO', 'tipo_salario');
+        $tieneCargo = $this->columnaExiste('SALARIO', 'id_cargo');
+
+        if ($tipo_salario === 'cargo' && $id_cargo === null) {
+            error_log("registrarSalario: se requiere id_cargo cuando tipo_salario = 'cargo'");
+            return false;
+        }
 
         $this->conexion->begin_transaction();
 
         try {
 
-            // 1) Cualquier salario que esté Vigente pasa a Deshabilitado
-            $this->conexion->query(
-                "UPDATE SALARIO SET estado = 'Deshabilitado' WHERE estado = 'Vigente'"
-            );
+            // 1) Deshabilitar el/los salario(s) Vigente(s) del mismo grupo
+            if ($tieneTipo && $tieneCargo) {
+                if ($tipo_salario === 'cargo') {
+                    $sqlUpd = "UPDATE SALARIO 
+                               SET estado = 'Deshabilitado' 
+                               WHERE estado = 'Vigente' AND tipo_salario = 'cargo' AND id_cargo = ?";
+                    $stmtUpd = $this->conexion->prepare($sqlUpd);
+                    if (!$stmtUpd) throw new Exception("Error al preparar el UPDATE de deshabilitación");
+                    $stmtUpd->bind_param("i", $id_cargo);
+                } else {
+                    $sqlUpd = "UPDATE SALARIO 
+                               SET estado = 'Deshabilitado' 
+                               WHERE estado = 'Vigente' AND tipo_salario = 'base'";
+                    $stmtUpd = $this->conexion->prepare($sqlUpd);
+                    if (!$stmtUpd) throw new Exception("Error al preparar el UPDATE de deshabilitación");
+                }
+                $stmtUpd->execute();
+            } else {
+                $this->conexion->query(
+                    "UPDATE SALARIO SET estado = 'Deshabilitado' WHERE estado = 'Vigente'"
+                );
+            }
 
-            // 2) Insertamos el nuevo como Vigente
-            if ($this->columnaExiste('SALARIO', 'id_trabajador') && $id_trabajador !== null) {
-                $sql = "INSERT INTO SALARIO (fecha, monto, estado, id_trabajador) VALUES (?, ?, 'Vigente', ?)";
+            // 2) Insertar el nuevo como Vigente
+            if ($tieneTipo && $tieneCargo) {
+                $sql = "INSERT INTO SALARIO (fecha, monto, estado, tipo_salario, id_cargo) 
+                        VALUES (?, ?, 'Vigente', ?, ?)";
                 $stmt = $this->conexion->prepare($sql);
                 if (!$stmt) throw new Exception("Error al preparar el INSERT");
-                $stmt->bind_param("sdi", $fecha, $monto, $id_trabajador);
+                $stmt->bind_param("sdsi", $fecha, $monto, $tipo_salario, $id_cargo);
             } else {
                 $sql = "INSERT INTO SALARIO (fecha, monto, estado) VALUES (?, ?, 'Vigente')";
                 $stmt = $this->conexion->prepare($sql);
@@ -109,11 +150,25 @@ class clase_salario {
     }
 
     // Al editar, se respeta el estado actual del registro (no se toca Vigente/Deshabilitado)
-    public function actualizarSalario($id, $fecha, $monto, $estado) {
-        $sql = "UPDATE SALARIO SET fecha = ?, monto = ?, estado = ? WHERE id_salario = ?";
-        $stmt = $this->conexion->prepare($sql);
-        if (!$stmt) return false;
-        $stmt->bind_param("sdsi", $fecha, $monto, $estado, $id);
+    public function actualizarSalario($id, $fecha, $monto, $estado, $tipo_salario = 'base', $id_cargo = null) {
+        $tipo_salario = ($tipo_salario === 'cargo') ? 'cargo' : 'base';
+        if ($tipo_salario === 'base') {
+            $id_cargo = null;
+        }
+
+        if ($this->columnaExiste('SALARIO', 'tipo_salario') && $this->columnaExiste('SALARIO', 'id_cargo')) {
+            $sql = "UPDATE SALARIO 
+                    SET fecha = ?, monto = ?, estado = ?, tipo_salario = ?, id_cargo = ? 
+                    WHERE id_salario = ?";
+            $stmt = $this->conexion->prepare($sql);
+            if (!$stmt) return false;
+            $stmt->bind_param("sdssii", $fecha, $monto, $estado, $tipo_salario, $id_cargo, $id);
+        } else {
+            $sql = "UPDATE SALARIO SET fecha = ?, monto = ?, estado = ? WHERE id_salario = ?";
+            $stmt = $this->conexion->prepare($sql);
+            if (!$stmt) return false;
+            $stmt->bind_param("sdsi", $fecha, $monto, $estado, $id);
+        }
         return $stmt->execute();
     }
 

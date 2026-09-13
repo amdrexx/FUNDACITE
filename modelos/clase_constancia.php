@@ -3,6 +3,7 @@
 
 class clase_constancia {
     private $db;
+    public $ultimoError = '';
 
     public function __construct($conexion = null) {
         if ($conexion !== null) {
@@ -45,7 +46,7 @@ class clase_constancia {
                     sa.monto AS salario_monto
                 FROM TRABAJADOR t
                 LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo
-                LEFT JOIN SALARIO sa ON sa.id_trabajador = t.id_trabajador AND sa.estado = 'Vigente'
+                LEFT JOIN SALARIO sa ON sa.id_cargo = t.id_cargo AND sa.estado = 'Vigente'
                 WHERE t.id_trabajador = ?
                 LIMIT 1";
 
@@ -70,25 +71,28 @@ class clase_constancia {
                        (id_trabajador, codigo_solicitud, tipo_solicitud, motivo_solicitud, fecha_inicio)
                        VALUES (?, ?, 'Constancia de trabajo', ?, ?)";
             $stmtSol = $this->db->prepare($sqlSol);
-            if (!$stmtSol) throw new Exception("Error al preparar SOLICITUD");
+            if (!$stmtSol) throw new Exception("Error al preparar SOLICITUD: " . $this->db->error);
             $stmtSol->bind_param("isss", $id_trabajador, $codigo_solicitud, $motivo, $fecha_inicio);
-            $stmtSol->execute();
+            if (!$stmtSol->execute()) throw new Exception("Error al ejecutar SOLICITUD: " . $stmtSol->error);
             $id_solicitud = $this->db->insert_id;
 
             $sqlConst = "INSERT INTO CONSTANCIA_DE_TRABAJO
                          (id_solicitud, nombre_director_departamento, tipo_personal, fecha)
                          VALUES (?, ?, ?, ?)";
             $stmtConst = $this->db->prepare($sqlConst);
-            if (!$stmtConst) throw new Exception("Error al preparar CONSTANCIA_DE_TRABAJO");
+            if (!$stmtConst) throw new Exception("Error al preparar CONSTANCIA_DE_TRABAJO: " . $this->db->error);
             $stmtConst->bind_param("isss", $id_solicitud, $nombre_director, $tipo_personal, $fecha);
-            $stmtConst->execute();
+            if (!$stmtConst->execute()) throw new Exception("Error al ejecutar CONSTANCIA_DE_TRABAJO: " . $stmtConst->error);
+
+            $id_constancia = $this->db->insert_id;
 
             $this->db->commit();
-            return $this->db->insert_id;
+            return $id_constancia;
 
         } catch (\Throwable $e) {
             $this->db->rollback();
             error_log("Error registrar constancia: " . $e->getMessage());
+            $this->ultimoError = $e->getMessage();
             return false;
         }
     }
@@ -116,7 +120,7 @@ class clase_constancia {
                 INNER JOIN SOLICITUD s ON ct.id_solicitud = s.id_solicitud
                 INNER JOIN TRABAJADOR t ON s.id_trabajador = t.id_trabajador
                 LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo
-                LEFT JOIN SALARIO sa ON sa.id_trabajador = t.id_trabajador AND sa.estado = 'Vigente'
+                LEFT JOIN SALARIO sa ON sa.id_cargo = t.id_cargo AND sa.estado = 'Vigente'
                 WHERE ct.id_constancia = ?";
 
         $stmt = $this->db->prepare($sql);

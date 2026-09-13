@@ -13,10 +13,20 @@ $modelo = new clase_salario($conexion);
 // =====================================
 if (isset($_POST['accion']) && $_POST['accion'] == "guardar") {
 
-    $fecha = trim($_POST['fecha'] ?? '');
-    $monto = trim($_POST['monto'] ?? '');
+    $tipo_salario = trim($_POST['tipo_salario'] ?? '');
+    $id_cargo     = trim($_POST['id_cargo'] ?? '');
+    $fecha        = trim($_POST['fecha'] ?? '');
+    $monto        = trim($_POST['monto'] ?? '');
 
     $errores = [];
+
+    if (!in_array($tipo_salario, ['base', 'cargo'], true)) {
+        $errores[] = "Debe seleccionar un tipo de salario válido.";
+    }
+
+    if ($tipo_salario === 'cargo' && ($id_cargo === '' || !ctype_digit($id_cargo))) {
+        $errores[] = "Debe seleccionar un cargo.";
+    }
 
     if (empty($fecha)) {
         $errores[] = "Debe seleccionar una fecha.";
@@ -30,17 +40,29 @@ if (isset($_POST['accion']) && $_POST['accion'] == "guardar") {
 
     if (!empty($errores)) {
         $_SESSION['errores'] = $errores;
-        $_SESSION['old'] = ['fecha' => $fecha, 'monto' => $monto];
+        $_SESSION['old'] = [
+            'fecha'        => $fecha,
+            'monto'        => $monto,
+            'tipo_salario' => $tipo_salario,
+            'id_cargo'     => $id_cargo,
+        ];
         header("Location: ../vistas/registrar_salario.php");
         exit();
     }
 
-    if ($modelo->registrarSalario($fecha, $monto)) {
+    $id_cargo_final = ($tipo_salario === 'cargo') ? intval($id_cargo) : null;
+
+    if ($modelo->registrarSalario($fecha, $monto, $tipo_salario, $id_cargo_final)) {
         $_SESSION['exito'] = "Salario registrado correctamente y marcado como Vigente.";
         unset($_SESSION['old']);
     } else {
         $_SESSION['errores'] = ["Ocurrió un error al registrar el salario."];
-        $_SESSION['old'] = ['fecha' => $fecha, 'monto' => $monto];
+        $_SESSION['old'] = [
+            'fecha'        => $fecha,
+            'monto'        => $monto,
+            'tipo_salario' => $tipo_salario,
+            'id_cargo'     => $id_cargo,
+        ];
     }
 
     header("Location: ../vistas/registrar_salario.php");
@@ -52,11 +74,25 @@ if (isset($_POST['accion']) && $_POST['accion'] == "guardar") {
 // =====================================
 if (isset($_POST['accion']) && $_POST['accion'] == "actualizar") {
 
-    $id    = intval($_POST['id_salario']);
-    $fecha = trim($_POST['fecha']);
-    $monto = trim($_POST['monto']);
+    $id           = intval($_POST['id_salario'] ?? 0);
+    $tipo_salario = trim($_POST['tipo_salario'] ?? '');
+    $id_cargo     = trim($_POST['id_cargo'] ?? '');
+    $fecha        = trim($_POST['fecha'] ?? '');
+    $monto        = trim($_POST['monto'] ?? '');
 
     $errores = [];
+
+    if ($id <= 0) {
+        $errores[] = "Registro de salario no válido.";
+    }
+
+    if (!in_array($tipo_salario, ['base', 'cargo'], true)) {
+        $errores[] = "Debe seleccionar un tipo de salario válido.";
+    }
+
+    if ($tipo_salario === 'cargo' && ($id_cargo === '' || !ctype_digit($id_cargo))) {
+        $errores[] = "Debe seleccionar un cargo.";
+    }
 
     if (empty($fecha)) {
         $errores[] = "Debe seleccionar una fecha.";
@@ -74,8 +110,9 @@ if (isset($_POST['accion']) && $_POST['accion'] == "actualizar") {
     // Se respeta el estado actual (Vigente/Deshabilitado) del registro que se edita
     $actual = $modelo->obtenerPorId($id);
     $estado = $actual ? $actual['estado'] : 'Deshabilitado';
+    $id_cargo_final = ($tipo_salario === 'cargo') ? intval($id_cargo) : null;
 
-    if ($modelo->actualizarSalario($id, $fecha, $monto, $estado)) {
+    if ($modelo->actualizarSalario($id, $fecha, $monto, $estado, $tipo_salario, $id_cargo_final)) {
         $_SESSION['exito'] = "Salario actualizado correctamente.";
     } else {
         $_SESSION['errores'] = ["No fue posible actualizar el salario."];

@@ -1,47 +1,100 @@
 <?php
-// ARCHIVO: /FUNDACITE/controladores/buscar_trabajador.php
-header('Content-Type: application/json');
+// ARCHIVO: controladores/buscar_trabajador.php
 
-// Desactivamos visualización de errores temporalmente para que no rompan el JSON que espera JS
-ini_set('display_errors', 0); 
-error_reporting(E_ALL);
+ob_start();
+header('Content-Type: application/json; charset=utf-8');
 
-require_once __DIR__ . '/../conexion.php';
+set_exception_handler(function ($e) {
+    if (ob_get_length()) ob_clean();
+    echo json_encode([
+        "success" => false,
+        "message" => "Error PHP: " . $e->getMessage()
+    ]);
+    exit;
+});
 
-$response = ['success' => false, 'message' => 'Trabajador no encontrado'];
+set_error_handler(function ($severity, $message, $file, $line) {
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
 
-if (isset($_GET['cedula'])) {
-    $cedula = trim($_GET['cedula']);
-
-    if (!empty($cedula)) {
-        // Usamos nombres y apellidos en plural tal como los tienes en tu base de datos
-        $sql = "SELECT id_trabajador, nombres, apellidos FROM TRABAJADOR WHERE cedula = ? LIMIT 1";
-        
-        if (isset($conexion)) {
-            $stmt = $conexion->prepare($sql);
-            if ($stmt) {
-                $stmt->bind_param("s", $cedula);
-                $stmt->execute();
-                $resultado = $stmt->get_result();
-
-                if ($resultado->num_rows > 0) {
-                    $trabajador = $resultado->fetch_assoc();
-                    $response = [
-                        'success' => true,
-                        'id_trabajador' => $trabajador['id_trabajador'],
-                        'nombre_completo' => $trabajador['nombres'] . ' ' . $trabajador['apellidos']
-                    ];
-                }
-                $stmt->close();
-            } else {
-                $response = ['success' => false, 'message' => 'Error al preparar la consulta SQL'];
-            }
-        } else {
-            $response = ['success' => false, 'message' => 'No se detectó la variable $conexion'];
-        }
-    }
+// 1. Incluir conexion.php
+$rutaConexion = __DIR__ . "/../conexion.php";
+if (!file_exists($rutaConexion)) {
+    $rutaConexion = $_SERVER['DOCUMENT_ROOT'] . "/FUNDACITE/conexion.php";
 }
 
-echo json_encode($response);
-exit;
-?>
+if (!file_exists($rutaConexion)) {
+    throw new Exception("No se encontró el archivo conexion.php");
+}
+
+require_once $rutaConexion;
+
+if (!isset($conexion) || !($conexion instanceof mysqli)) {
+    throw new Exception("La conexión no es un objeto MySQLi válido.");
+}
+
+$cedulaRecibida = $_GET['cedula'] ?? '';
+$soloNumeros = preg_replace('/[^0-9]/', '', $cedulaRecibida);
+
+if (empty($soloNumeros)) {
+    if (ob_get_length()) ob_clean();
+    echo json_encode([
+        "success" => false,
+        "message" => "Por favor ingresa una cédula válida."
+    ]);
+    exit;
+}
+
+// 2. Consulta de TRABAJADOR unida con CARGO
+$sql = "SELECT 
+            t.id_trabajador, 
+            t.nombres, 
+            t.apellidos, 
+            t.id_cargo,
+            c.nombre_cargo
+        FROM TRABAJADOR t
+        LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo
+        WHERE t.cedula = ? OR t.cedula LIKE ?
+        LIMIT 1";
+
+$stmt = $conexion->prepare($sql);
+if (!$stmt) {
+    throw new Exception("Error en la consulta SQL: " . $conexion->error);
+}
+
+$paramLike = '%' . $soloNumeros . '%';
+$stmt->bind_param("ss", $cedulaRecibida, $paramLike);
+$stmt->execute();
+$stmt->bind_result($id_trabajador, $nombres, $apellidos, $id_cargo, $nombre_cargo);
+
+if ($stmt->fetch()) {
+    $stmt->close();
+
+    if (!empty($nombre_cargo)) {
+        $cargoFinal = $nombre_cargo;
+    } elseif (!empty($id_cargo)) {
+        $cargoFinal = "ID Cargo (" . $id_cargo . ") sin nombre asociado";
+    } else {
+        $cargoFinal = "Sin cargo asignado";
+    }
+
+    if (ob_get_length()) ob_clean();
+
+    echo json_encode([
+        "success" => true,
+        "id_trabajador" => $id_trabajador,
+        "nombre_completo" => trim($nombres . ' ' . $apellidos),
+        "cargo" => $cargoFinal
+    ]);
+    exit;
+
+} else {
+    $stmt->close();
+    if (ob_get_length()) ob_clean();
+
+    echo json_encode([
+        "success" => false,
+        "message" => "Cédula no encontrada."
+    ]);
+    exit;
+}

@@ -98,10 +98,20 @@ if ($accion === 'guardar') {
         );
 
         if ($resultado) {
-            $_SESSION['exito_constancia'] = 'Constancia registrada correctamente.';
+
+            // Mensaje de éxito para mostrar en la lista de constancias
+            $_SESSION['exito_edicion'] = 'Constancia registrada correctamente.';
+
             unset($_SESSION['old_constancia']);
+
+            // Redirige a la lista de constancias
+            header('Location: ../vistas/lista_constancias.php');
+            exit;
+
         } else {
-            $_SESSION['errores_constancia'] = ['No se pudo registrar la constancia.'];
+            $_SESSION['errores_constancia'] = [
+                'No se pudo registrar la constancia.' . ($constanciaModelo->ultimoError ? ' Detalle: ' . $constanciaModelo->ultimoError : '')
+            ];
         }
     } catch (mysqli_sql_exception $e) {
         $_SESSION['errores_constancia'] = ['Error de BD al guardar: ' . $e->getMessage()];

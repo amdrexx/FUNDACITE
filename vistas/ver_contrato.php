@@ -10,8 +10,8 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-require_once "../conexion.php";
-require_once "../modelos/clase_contrato.php";
+// Incluir el controlador para mantener la arquitectura MVC
+require_once __DIR__ . "/../controladores/ctrl_contrato.php";
 
 $id_contrato = intval($_GET['id'] ?? 0);
 
@@ -20,8 +20,8 @@ if ($id_contrato <= 0) {
     exit;
 }
 
-$contratoObj = new clase_contrato($conexion);
-$contratoActual = $contratoObj->buscarPorId($id_contrato);
+// Consultar datos actuales del contrato usando el controlador
+$contratoActual = $controladorContrato->buscarPorId($id_contrato);
 
 if (!$contratoActual) {
     header("Location: registrar_contrato.php?status=error");
@@ -69,15 +69,17 @@ if (!$contratoActual) {
                 <!-- DATOS DEL TRABAJADOR -->
                 <div style="border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; margin-bottom: 15px;">
                     <h3 style="font-size: 16px; color: #007bff; margin-bottom: 10px;">Información del Trabajador</h3>
-                    <p><strong>Cédula:</strong> <?php echo htmlspecialchars($contratoActual['cedula'] ?? 'N/A'); ?></p>
-                    <p><strong>Nombres y Apellidos:</strong> <?php echo htmlspecialchars(($contratoActual['nombres'] ?? '') . ' ' . ($contratoActual['apellidos'] ?? '')); ?></p>
+                    <p><strong>Cédula:</strong> <?php echo htmlspecialchars($contratoActual['cedula_trabajador'] ?? $contratoActual['cedula'] ?? 'N/A'); ?></p>
+                    <p><strong>Nombres y Apellidos:</strong> <?php echo htmlspecialchars(($contratoActual['nombre_trabajador'] ?? (($contratoActual['nombres'] ?? '') . ' ' . ($contratoActual['apellidos'] ?? '')))); ?></p>
+                    <p><strong>Cargo:</strong> <?php echo htmlspecialchars($contratoActual['nombre_cargo'] ?? $contratoActual['cargo'] ?? 'Sin cargo asignado'); ?></p>
                 </div>
 
                 <!-- DATOS DEL CONTRATO -->
                 <div style="border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; margin-bottom: 15px;">
                     <h3 style="font-size: 16px; color: #007bff; margin-bottom: 10px;">Especificaciones del Contrato</h3>
                     <p><strong>Tipo de Contrato:</strong> <?php echo htmlspecialchars($contratoActual['tipo_contrato']); ?></p>
-                    <p><strong>Fecha de Emisión/Inicio:</strong> <?php echo date("d/m/Y", strtotime($contratoActual['fecha_contrato'])); ?></p>
+                    <p><strong>Fecha de Inicio:</strong> <?php echo !empty($contratoActual['fecha_contrato']) ? date("d/m/Y", strtotime($contratoActual['fecha_contrato'])) : 'N/A'; ?></p>
+                    <p><strong>Fecha de Finalización:</strong> <?php echo (!empty($contratoActual['fecha_fin']) && $contratoActual['fecha_fin'] !== '0000-00-00') ? date("d/m/Y", strtotime($contratoActual['fecha_fin'])) : 'Indefinido'; ?></p>
                     <p><strong>Lugar de Trabajo:</strong> <?php echo htmlspecialchars($contratoActual['lugar_trabajo']); ?></p>
                 </div>
 
@@ -91,9 +93,12 @@ if (!$contratoActual) {
 
                 <!-- BOTONES DE ACCIÓN (Se ocultan al imprimir) -->
                 <div class="no-print" style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button onclick="window.print();" class="btn-guardar full-width" style="background-color: #28a745; border: none; cursor: pointer;">
-                        Imprimir / Guardar PDF
-                    </button>
+                    <a href="../pdf/contrato.php?id_contrato=<?php echo urlencode($contratoActual['id_contrato']); ?>"
+                       target="_blank"
+                       class="btn-guardar full-width"
+                       style="background-color: #28a745; border: none; cursor: pointer; text-align:center; text-decoration:none; display: inline-block; line-height: 2.2;">
+                        <i class="bi bi-printer"></i> Imprimir / Guardar PDF
+                    </a>
                     <a href="editar_contrato.php?id=<?php echo $contratoActual['id_contrato']; ?>" class="btn-guardar full-width" style="text-align:center; text-decoration:none; display: inline-block; line-height: 2.2;">
                     <i class="bi bi-pencil-square"></i>    
                     Editar

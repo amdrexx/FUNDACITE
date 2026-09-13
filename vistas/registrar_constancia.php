@@ -140,12 +140,6 @@ unset($_SESSION['errores_constancia'], $_SESSION['exito_constancia']);
                               placeholder="Ej: A solicitud de la parte interesada..."><?= htmlspecialchars($_POST['motivo'] ?? '') ?></textarea>
                 </div>
 
-                <!-- 11. Firma trabajador -->
-                <div class="field">
-                    <label>11. Firma del Trabajador(a)</label>
-                    <input type="text" readonly class="campo-auto">
-                </div>
-
             </div>
 
             <div class="contenedor-botones full-width">

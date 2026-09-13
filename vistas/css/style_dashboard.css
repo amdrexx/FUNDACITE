@@ -117,9 +117,12 @@ body::before {
 .main {
     padding: 120px 20px;
     display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
-    margin-left: 260px;          
-    transition: none;            
+    margin-left: 260px;
+    transition: none;
+    gap: 30px;
 }
 
 /* SUBMENU (solo aplica al <li class="submenu"> de DIRECCIÓN) */
@@ -361,7 +364,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 /* Título centrado también ocupa ambas columnas si está dentro del grid */
 .form-grid h2,
-.form-grid center {
+.form-grid center,
+.form-card form > center {
     grid-column: span 2;
     text-align: center;
 }
@@ -409,35 +413,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     border-color: #3282B8;
     box-shadow: 0 0 0 3px rgba(50,130,184,0.25);
     background: #fff;
-}
-/* ==========================================
-   DIFERENCIAR CAMPOS EDITABLES Y SOLO LECTURA
-   ========================================== */
-
-/* Campos de solo lectura */
-.field input[readonly],
-.field textarea[readonly]{
-    background: #b8b8b8 !important;
-    color: #555;
-    border: 1px solid #9a9a9a;
-    cursor: default;
-}
-
-/* Campos editables */
-.field input:not([readonly]),
-.field select,
-.field textarea:not([readonly]){
-    background: #ffffff;
-    color: #000;
-}
-
-/* Cuando el usuario haga clic en un campo editable */
-.field input:not([readonly]):focus,
-.field select:focus,
-.field textarea:not([readonly]):focus{
-    background: #ffffff;
-    border-color: #3282B8;
-    box-shadow: 0 0 0 3px rgba(50,130,184,.25);
 }
 .radio-group {
     display: flex;
@@ -857,4 +832,31 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     .tabla{
         font-size: 12px;
     }
+}
+/* Sufijo "Bs" dentro del campo Monto */
+.campo-monto {
+    position: relative;
+}
+.campo-monto input {
+    padding-right: 45px;
+}
+
+/* Ocultamos las flechitas nativas del input number para que no choquen con "Bs" */
+.campo-monto input::-webkit-outer-spin-button,
+.campo-monto input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.campo-monto input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.campo-monto .sufijo-bs {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(calc(-50% + 12px)); /* +12px para compensar el label de arriba */
+    font-weight: 600;
+    color: #444;
+    pointer-events: none;
 }

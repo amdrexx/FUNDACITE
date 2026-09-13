@@ -28,12 +28,10 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Gestión de Contratos</title>
+    <title>Contratos</title>
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
     <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
-    <!-- Librería SweetAlert2 para la ventana modal -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -42,12 +40,16 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
 
 <div class="main" style="display: block !important; clear: both !important;">
 
-    <div style="max-width: 600px; width: 100%; margin: 0 auto; display: block; box-sizing: border-box;">
+    <div style="max-width: 700px; width: 100%; margin: 0 auto; display: block; box-sizing: border-box;">
 
         <!-- FORMULARIO DE REGISTRO -->
         <div style="width: 100%; display: block; margin-bottom: 30px; box-sizing: border-box;">
             <form class="form-card" id="formContratos" action="../controladores/ctrl_contrato.php" method="POST" style="width: 100% !important; max-width: 100% !important; box-sizing: border-box; margin: 0 !important;">
-                <center><h2>Registrar Nuevo Contrato</h2></center>
+                
+                <!-- Campo oculto para indicar la acción al controlador -->
+                <input type="hidden" name="accion" value="guardar">
+
+                <center><h2>Nuevo Contrato</h2></center>
 
                 <div class="field">
                     <label>Cédula del Trabajador</label>
@@ -64,6 +66,12 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                     <input type="text" id="nombre_trabajador" placeholder="Busca un trabajador primero..." readonly style="background-color: rgba(255, 255, 255, 0.1); cursor: not-allowed;">
                 </div>
 
+                <!-- CAMPO CARGO DEL TRABAJADOR -->
+                <div class="field">
+                    <label>Cargo Registrado</label>
+                    <input type="text" id="cargo_trabajador" name="cargo_trabajador" placeholder="Cargo asignado al trabajador..." readonly style="background-color: rgba(255, 255, 255, 0.1); cursor: not-allowed;">
+                </div>
+
                 <div class="field">
                     <label>Tipo de Contrato</label>
                     <select name="tipo_contrato" required>
@@ -76,8 +84,14 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                 </div>
 
                 <div class="field">
-                    <label>Fecha del Contrato</label>
+                    <label>Fecha de Inicio del Contrato</label>
                     <input type="date" name="fecha_contrato" required>
+                </div>
+
+                <!-- CAMPO: FECHA FIN -->
+                <div class="field">
+                    <label>Fecha de Finalización</label>
+                    <input type="date" name="fecha_fin" id="fecha_fin">
                 </div>
 
                 <div class="field">
@@ -105,7 +119,7 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
             </form>
         </div>
 
-        <!-- TABLA DE CONTRATOS -->
+        <!-- TABLA DE CONTRATOS CON COLUMNA DE CARGO -->
         <div style="width: 100%; display: block; box-sizing: border-box;">
             <div class="glass tabla-container" style="width: 100% !important; max-width: 100% !important; box-sizing: border-box; margin: 0 !important;">
                 <h2 style="text-align:center; color:white;">Lista de Contratos</h2>
@@ -114,8 +128,10 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                     <thead>
                         <tr>
                             <th>Trabajador</th>
+                            <th>Cargo</th>
                             <th>Tipo</th>
-                            <th>Fecha</th>
+                            <th>Fecha Inicio</th>
+                            <th>Fecha Fin</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -124,25 +140,35 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                             <?php foreach ($contratos as $con): ?>
                                 <tr>
                                     <td><?php echo htmlspecialchars($con['nombre_trabajador'] ?? ''); ?></td>
+                                    <td><?php echo htmlspecialchars($con['nombre_cargo'] ?? $con['cargo'] ?? 'Sin asignar'); ?></td>
                                     <td><?php echo htmlspecialchars($con['tipo_contrato'] ?? ''); ?></td>
-                                    <td><?php echo htmlspecialchars($con['fecha_contrato'] ?? ''); ?></td>
+                                    <td><?php echo !empty($con['fecha_contrato']) ? date("d/m/Y", strtotime($con['fecha_contrato'])) : ''; ?></td>
+                                    <td>
+                                        <?php 
+                                        if (!empty($con['fecha_fin']) && $con['fecha_fin'] !== '0000-00-00') {
+                                            echo date("d/m/Y", strtotime($con['fecha_fin']));
+                                        } else {
+                                            echo '<span style="opacity: 0.8; font-style: italic;">Indefinido</span>';
+                                        }
+                                        ?>
+                                    </td>
                                     <td class="acciones">
-                                        <a class="btn-editar" href="ver_contrato.php?id=<?php echo urlencode($con['id_contrato'] ?? ''); ?>"><i class="bi bi-eye"></i>  Ver</a>
+                                        <a class="btn-editar" href="ver_contrato.php?id=<?php echo urlencode($con['id_contrato'] ?? ''); ?>"><i class="bi bi-eye"></i> Ver</a>
                                         <a class="btn-editar" href="editar_contrato.php?id=<?php echo urlencode($con['id_contrato'] ?? ''); ?>">
-                                            <i class="bi bi-pencil-square"></i>  Editar
+                                            <i class="bi bi-pencil-square"></i> Editar
                                         </a>
-                                        <a href="../controladores/ctrl_contrato.php?action=eliminar&id=<?php echo urlencode($con['id_contrato'] ?? ''); ?>" 
+                                        <a href="../controladores/ctrl_contrato.php?accion=eliminar&id=<?php echo urlencode($con['id_contrato'] ?? ''); ?>" 
                                            class="btn-eliminar" 
                                            style="text-decoration: none; display: inline-block;" 
                                            onclick="return confirm('¿Seguro que deseas eliminar este contrato?');">
-                                            <i class="bi bi-trash"></i>  Eliminar
+                                            <i class="bi bi-trash"></i> Eliminar
                                         </a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="4" style="text-align:center;">No se encontraron contratos registrados.</td>
+                                <td colspan="6" style="text-align:center;">No se encontraron contratos registrados.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -154,64 +180,102 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
 
 </div>
 
-    <script src="/FUNDACITE/vistas/js/validar_contrato.js"></script>
-    <script src="/FUNDACITE/vistas/js/ajax_contrato.js"></script>
+<!-- MODAL DE ALERTA PERSONALIZADO -->
+<div id="customAlert" class="custom-alert-overlay" style="display: none;">
+    <div class="custom-alert-box">
+        <p id="customAlertText"></p>
+        <button type="button" class="btn-modal-compacto" onclick="cerrarCustomAlert()">Aceptar</button>
+    </div>
+</div>
 
-   <!-- SCRIPT DE MODAL CON SWEETALERT2 AJUSTADO -->
+<!-- Carga de los scripts JS -->
+<script src="/FUNDACITE/vistas/js/valid_contrato.js"></script>
+<script src="/FUNDACITE/vistas/js/ajax_contrato.js"></script>
+
+<!-- SCRIPT DE MANEJO DE ALERTA -->
 <script>
+function mostrarCustomAlert(mensaje) {
+    document.getElementById('customAlertText').innerHTML = mensaje;
+    document.getElementById('customAlert').style.display = 'flex';
+}
+
+function cerrarCustomAlert() {
+    document.getElementById('customAlert').style.display = 'none';
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
+
 document.addEventListener("DOMContentLoaded", function() {
-    let title = '';
+    let mensaje = '';
 
     <?php if ($mensajeExito): ?>
-        title = '<?php echo addslashes($mensajeExito); ?>';
+        mensaje = '<?php echo addslashes($mensajeExito); ?>';
     <?php elseif ($mensajeError): ?>
-        title = '<?php echo addslashes($mensajeError); ?>';
+        mensaje = '<?php echo addslashes($mensajeError); ?>';
     <?php elseif ($status === 'success'): ?>
-        title = '¡Contrato registrado correctamente!';
+        mensaje = '¡Contrato registrado correctamente!';
     <?php elseif ($status === 'updated'): ?>
-        title = 'Contrato actualizado correctamente.';
+        mensaje = 'Contrato actualizado correctamente.';
     <?php elseif ($status === 'deleted'): ?>
-        title = '¡Contrato eliminado correctamente!';
+        mensaje = '¡Contrato eliminado correctamente!';
     <?php elseif ($status === 'error'): ?>
-        title = 'Hubo un error al procesar la solicitud.';
+        mensaje = 'Hubo un error al procesar la solicitud.';
     <?php endif; ?>
 
-    if (title !== '') {
-        Swal.fire({
-            title: title,
-            confirmButtonText: 'Aceptar',
-            confirmButtonColor: '#007bff',
-            width: '380px', /* Ancho compacto igual al de cargos */
-            padding: '1.25rem',
-            customClass: {
-                popup: 'modal-compacto',
-                title: 'titulo-modal-compacto',
-                confirmButton: 'btn-modal-compacto'
-            }
-        }).then(() => {
-            window.history.replaceState({}, document.title, window.location.pathname);
-        });
+    if (mensaje !== '') {
+        mostrarCustomAlert(mensaje);
     }
 });
 </script>
 
 <style>
-/* Estilos para igualar el tamaño compacto de la vista de Cargos */
-.modal-compacto {
-    font-family: inherit !important;
-    border-radius: 12px !important;
+/* Estilos para el Modal de Alerta Personalizado (#customAlert) */
+.custom-alert-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
 }
-.titulo-modal-compacto {
-    font-size: 15px !important;
-    font-weight: normal !important;
-    color: #444 !important;
-    margin: 10px 0 15px 0 !important;
+
+.custom-alert-box {
+    background: #ffffff;
+    padding: 20px 25px;
+    border-radius: 12px;
+    max-width: 380px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    font-family: inherit;
 }
+
+.custom-alert-box p {
+    font-size: 15px;
+    font-weight: normal;
+    color: #444;
+    margin: 10px 0 20px 0;
+    line-height: 1.4;
+}
+
 .btn-modal-compacto {
-    font-size: 13px !important;
-    padding: 6px 18px !important;
-    border-radius: 6px !important;
+    font-size: 13px;
+    padding: 6px 18px;
+    border-radius: 6px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn-modal-compacto:hover {
+    background-color: #0056b3;
 }
 </style>
+
 </body>
 </html>

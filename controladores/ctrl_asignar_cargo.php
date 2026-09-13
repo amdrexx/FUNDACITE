@@ -8,10 +8,10 @@ require_once __DIR__ . "/../modelos/clase_asignar_cargo.php";
 
 $controladorAsignarCargo = new clase_asignar_cargo($conexion);
 
-// BÚSQUEDA VÍA AJAX POR CÉDULA
+// BÚSQUEDA VÍA AJAX POR CÉDULA (SI AÚN SE USA EN OTRAS VISTAS)
 if (isset($_GET['action']) && $_GET['action'] === 'buscar_trabajador') {
     header('Content-Type: application/json');
-    $cedula = $_GET['cedula'] ?? '';
+    $cedula = filter_input(INPUT_GET, 'cedula', FILTER_SANITIZE_SPECIAL_CHARS) ?? '';
     
     if (empty($cedula)) {
         echo json_encode(['success' => false, 'message' => 'Por favor ingrese una cédula.']);
@@ -34,13 +34,19 @@ if (isset($_GET['action']) && $_GET['action'] === 'buscar_trabajador') {
     exit;
 }
 
-// PROCESAR ASIGNACIÓN DE CARGO
+// PROCESAR ASIGNACIÓN DE CARGO (ACTUALIZA TRABAJADOR.id_cargo)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['asignar_cargo'])) {
-    $id_trabajador = $_POST['id_trabajador'] ?? 0;
-    $id_cargo = $_POST['id_cargo'] ?? null;
+    $id_trabajador = filter_input(INPUT_POST, 'id_trabajador', FILTER_VALIDATE_INT);
+    $id_cargo = filter_input(INPUT_POST, 'id_cargo', FILTER_VALIDATE_INT);
 
     if (empty($id_trabajador)) {
         $_SESSION['error_asignacion'] = ["Debe seleccionar un trabajador válido."];
+        header("Location: ../vistas/asignar_cargo.php?status=error");
+        exit;
+    }
+
+    if (empty($id_cargo)) {
+        $_SESSION['error_asignacion'] = ["Debe seleccionar un cargo válido a asignar."];
         header("Location: ../vistas/asignar_cargo.php?status=error");
         exit;
     }
@@ -57,13 +63,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['asignar_cargo'])) {
     exit;
 }
 
-// DESVINCULAR CARGO (DESDE LA TABLA)
+// DESVINCULAR CARGO (PONE TRABAJADOR.id_cargo EN NULL)
 if (isset($_GET['action']) && $_GET['action'] === 'desvincular' && isset($_GET['id_trabajador'])) {
-    $id_trabajador = intval($_GET['id_trabajador']);
-    $resultado = $controladorAsignarCargo->asignarCargo($id_trabajador, null);
+    $id_trabajador = filter_input(INPUT_GET, 'id_trabajador', FILTER_VALIDATE_INT);
 
-    if ($resultado) {
-        header("Location: ../vistas/asignar_cargo.php?status=unlinked");
+    if ($id_trabajador) {
+        $resultado = $controladorAsignarCargo->asignarCargo($id_trabajador, null);
+
+        if ($resultado) {
+            header("Location: ../vistas/asignar_cargo.php?status=unlinked");
+        } else {
+            header("Location: ../vistas/asignar_cargo.php?status=error");
+        }
     } else {
         header("Location: ../vistas/asignar_cargo.php?status=error");
     }

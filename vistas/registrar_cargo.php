@@ -80,7 +80,7 @@ if (isset($_GET['status'])) {
 
         <div style="width: 100%; display: block; margin-bottom: 30px; box-sizing: border-box;">
             <form class="form-card" id="formCargos" action="../controladores/ctrl_cargo.php" method="POST" style="width: 100% !important; max-width: 100% !important; box-sizing: border-box; margin: 0 !important;">
-                <center><h2>Registrar Nuevo Cargo</h2></center>
+                <center><h2>Nuevo Cargo</h2></center>
 
                 <div class="field">
                     <label>Nombre del Cargo</label>
@@ -93,7 +93,7 @@ if (isset($_GET['status'])) {
 
         <div style="width: 100%; display: block; box-sizing: border-box;">
             <div class="glass tabla-container" style="width: 100% !important; max-width: 100% !important; box-sizing: border-box; margin: 0 !important;">
-                <h2 style="text-align:center; color:white;">Lista de Cargos Registrados</h2>
+                <h2 style="text-align:center; color:white;">Lista de Cargos</h2>
 
                 <table class="tabla">
                     <thead>

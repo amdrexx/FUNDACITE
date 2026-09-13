@@ -52,17 +52,30 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
     <div style="max-width: 600px; width: 100%; margin: 0 auto; display: block; box-sizing: border-box;">
 
         <div style="width: 100%; display: block; margin-bottom: 30px; box-sizing: border-box;">
-            <form class="form-card" action="../controladores/ctrl_contrato.php" method="POST" style="width: 100% !important; max-width: 100% !important; box-sizing: border-box; margin: 0 !important;">
+            <form class="form-card" id="formContratos" action="../controladores/ctrl_contrato.php" method="POST" style="width: 100% !important; max-width: 100% !important; box-sizing: border-box; margin: 0 !important;">
+                
+                <!-- Campo oculto para enrutar la acción en el controlador -->
+                <input type="hidden" name="accion" value="actualizar">
+
                 <center><h2>Modificar Contrato</h2></center>
 
                 <input type="hidden" name="id_contrato" value="<?php echo htmlspecialchars($contrato['id_contrato']); ?>">
-                <input type="hidden" name="id_trabajador" value="<?php echo htmlspecialchars($contrato['id_trabajador']); ?>">
+                <input type="hidden" name="id_trabajador" id="id_trabajador" value="<?php echo htmlspecialchars($contrato['id_trabajador']); ?>">
 
                 <!-- TRABAJADOR (INFORMATIVO) -->
                 <div class="field">
                     <label>Trabajador Asignado</label>
                     <input type="text" 
                            value="<?php echo htmlspecialchars(($contrato['cedula_trabajador'] ?? $contrato['cedula'] ?? '') . ' - ' . ($contrato['nombre_trabajador'] ?? ($contrato['nombres'] ?? '') . ' ' . ($contrato['apellidos'] ?? ''))); ?>" 
+                           readonly 
+                           style="background-color: rgba(255, 255, 255, 0.15); cursor: not-allowed; color: #e0e0e0; font-weight: bold;">
+                </div>
+
+                <!-- CARGO DEL TRABAJADOR (INFORMATIVO) -->
+                <div class="field">
+                    <label>Cargo del Trabajador</label>
+                    <input type="text" 
+                           value="<?php echo htmlspecialchars($contrato['nombre_cargo'] ?? $contrato['cargo'] ?? 'Sin cargo asignado'); ?>" 
                            readonly 
                            style="background-color: rgba(255, 255, 255, 0.15); cursor: not-allowed; color: #e0e0e0; font-weight: bold;">
                 </div>
@@ -83,8 +96,14 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                 </div>
 
                 <div class="field">
-                    <label>Fecha del Contrato</label>
+                    <label>Fecha de Inicio del Contrato</label>
                     <input type="date" name="fecha_contrato" value="<?php echo htmlspecialchars($contrato['fecha_contrato'] ?? ''); ?>" required>
+                </div>
+
+                <!-- NUEVO CAMPO: FECHA FIN -->
+                <div class="field">
+                    <label>Fecha de Finalización</label>
+                    <input type="date" name="fecha_fin" id="fecha_fin" value="<?php echo htmlspecialchars($contrato['fecha_fin'] ?? ''); ?>">
                 </div>
 
                 <div class="field">
@@ -120,7 +139,7 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                            style="background-color: rgba(255, 255, 255, 0.15); cursor: not-allowed; color: #e0e0e0;">
                 </div>
 
-                <!-- BOTONES DE ACCIÓN (ESTILO EXACTO A TU IMAGEN) -->
+                <!-- BOTONES DE ACCIÓN -->
                 <div style="display: flex; gap: 10px; width: 100%; margin-top: 25px;">
                     <button type="submit" 
                             name="editar_contrato" 
@@ -139,6 +158,9 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
 
     </div>
 </div>
+
+<!-- Script JS para manejar dinámicamente habilitar/deshabilitar fecha_fin y validar -->
+<script src="/FUNDACITE/vistas/js/validar_contrato.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {

@@ -91,18 +91,20 @@ CREATE TABLE TRABAJADOR (
 CREATE TABLE CONTRATO (
     id_contrato INT UNSIGNED NOT NULL AUTO_INCREMENT,
     id_trabajador INT UNSIGNED NOT NULL,
+    id_cargo INT UNSIGNED NOT NULL,
     tipo_contrato VARCHAR(50) NOT NULL,
     fecha_contrato DATE NOT NULL,
-    lugar_trabajo VARCHAR(150) NOT NULL,
+    fecha_fin DATE NULL,
+    lugar_trabajo VARCHAR(255) NOT NULL,
     nombre_presidente VARCHAR(150) NOT NULL,
     cedula_presidente VARCHAR(20) NOT NULL,
     gaceta_designacion_presidente VARCHAR(100) NOT NULL,
     PRIMARY KEY (id_contrato),
-    CONSTRAINT fk_contrato_trabajador 
-        FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR(id_trabajador) 
-        ON DELETE CASCADE 
-        ON UPDATE RESTRICT,
-    CONSTRAINT chk_tipo_contrato CHECK (tipo_contrato IN ('Indefinido', 'Tiempo determinado', 'Obra determinada', 'Pasantía', 'Suplencia'))
+    INDEX idx_contrato_trabajador (id_trabajador),
+    INDEX idx_contrato_cargo (id_cargo),
+    CONSTRAINT fk_contrato_trabajador FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR(id_trabajador) ON DELETE CASCADE,
+    CONSTRAINT fk_contrato_cargo FOREIGN KEY (id_cargo) REFERENCES CARGO(id_cargo) ON DELETE RESTRICT,
+    CONSTRAINT chk_periodo_contrato CHECK (fecha_fin IS NULL OR fecha_fin >= fecha_contrato)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE SOLICITUD (
@@ -171,16 +173,26 @@ CREATE TABLE USUARIO (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ================================================================================
--- 6. TABLA DE SALARIO
+-- 5. TABLAS DE SALARIO Y PRIMAS
 -- ================================================================================
+
 CREATE TABLE SALARIO (
     id_salario INT UNSIGNED NOT NULL AUTO_INCREMENT,
     id_trabajador INT UNSIGNED,
     fecha DATE NOT NULL,
     monto DECIMAL(10,2) NOT NULL,
-    estado VARCHAR(20) NOT NULL DEFAULT 'Activo',
+    estado VARCHAR(20) NOT NULL DEFAULT 'Vigente',
+    tipo_salario VARCHAR(20) NOT NULL DEFAULT 'base',
+    id_cargo INT UNSIGNED NULL,
     PRIMARY KEY (id_salario),
-    FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR(id_trabajador) ON DELETE SET NULL ON UPDATE CASCADE
+    INDEX idx_salario_trabajador (id_trabajador),
+    INDEX idx_salario_cargo (id_cargo),
+    FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR(id_trabajador) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_salario_cargo FOREIGN KEY (id_cargo) REFERENCES CARGO(id_cargo) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT chk_salario_estado CHECK (estado IN ('Vigente', 'Deshabilitado')),
+    CONSTRAINT chk_salario_tipo CHECK (tipo_salario IN ('base', 'cargo')),
+    CONSTRAINT chk_salario_tipo_cargo_consistente CHECK (tipo_salario <> 'cargo' OR id_cargo IS NOT NULL),
+    CONSTRAINT chk_salario_monto CHECK (monto >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE PRIMA (
@@ -190,11 +202,13 @@ CREATE TABLE PRIMA (
     estado VARCHAR(20) NOT NULL DEFAULT 'Activo',
     fecha DATE NOT NULL,
     PRIMARY KEY (id_prima),
-    UNIQUE KEY uq_prima_tipo_prima (tipo_prima)
+    UNIQUE KEY uq_prima_tipo_prima (tipo_prima),
+    CONSTRAINT chk_prima_estado CHECK (estado IN ('Activo', 'Inactivo')),
+    CONSTRAINT chk_prima_porcentaje CHECK (porcentaje >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ================================================================================
--- 5. VISTAS
+-- 6. VISTAS
 -- ================================================================================
 
 CREATE OR REPLACE VIEW V_TRABAJADOR_DETALLE AS
@@ -242,6 +256,10 @@ LEFT JOIN DIRECCION d ON t.id_dir = d.id_dir
 LEFT JOIN PARROQUIA p ON d.cod_par = p.cod_par
 LEFT JOIN MUNICIPIO m ON p.cod_muni = m.cod_muni
 LEFT JOIN ESTADO e ON m.cod_est = e.cod_est;
+
+-- ================================================================================
+-- 7. DATOS INICIALES
+-- ================================================================================
 
 INSERT INTO CARGO (nombre_cargo) VALUES
 ('Administrador'),

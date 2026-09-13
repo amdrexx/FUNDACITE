@@ -68,7 +68,7 @@ $constancias = $constanciaObj->listarConstancias($buscar);
                                 <a class="btn-ver" href="ver_constancia.php?id=<?= urlencode($fila['id_constancia']) ?>">
                                     <i class="bi bi-eye"></i> Ver
                                 </a>
-                                <a class="btn-editar" href="ver_constancia.php?id=<?= urlencode($fila['id_constancia']) ?>&print=1">
+                                <a class="btn-editar" href="/FUNDACITE/pdf/constancia_trabajo.php?id=<?= urlencode($fila['id_constancia']) ?>&print=1">
                                     <i class="bi bi-printer"></i> Imprimir
                                 </a>
                                 <?php if (esAdministradorODirector()): ?>

@@ -13,8 +13,8 @@ error_reporting(E_ALL);
 require_once __DIR__ . "/../controladores/ctrl_asignar_cargo.php";
 
 $cargos = $controladorAsignarCargo->obtenerCargos();
-$todosTrabajadores = $controladorAsignarCargo->obtenerTodosLosTrabajadores(); // Para el selector
-$trabajadoresConCargo = $controladorAsignarCargo->listarTrabajadoresConCargo(); // Para la tabla inferior
+$todosTrabajadores = $controladorAsignarCargo->obtenerTodosLosTrabajadores(); 
+$trabajadoresConCargo = $controladorAsignarCargo->listarTrabajadoresConCargo(); 
 
 $cedulaPreseleccionada = $_GET['cedula'] ?? '';
 
@@ -33,6 +33,23 @@ unset($_SESSION['exito_asignacion'], $_SESSION['error_asignacion']);
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
     <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .modal-compacto {
+            font-family: inherit !important;
+            border-radius: 12px !important;
+        }
+        .titulo-modal-compacto {
+            font-size: 15px !important;
+            font-weight: normal !important;
+            color: #444 !important;
+            margin: 10px 0 15px 0 !important;
+        }
+        .btn-modal-compacto {
+            font-size: 13px !important;
+            padding: 6px 18px !important;
+            border-radius: 6px !important;
+        }
+    </style>
 </head>
 <body>
 
@@ -44,9 +61,9 @@ unset($_SESSION['exito_asignacion'], $_SESSION['error_asignacion']);
         <!-- FORMULARIO DE ASIGNACIÓN CON SELECT -->
         <div style="width: 100%; display: block; margin-bottom: 30px; box-sizing: border-box;">
             <form class="form-card" id="formAsignarCargo" action="../controladores/ctrl_asignar_cargo.php" method="POST" style="width: 100% !important; max-width: 100% !important; box-sizing: border-box; margin: 0 !important;">
-                <center><h2>Asignar Cargo a Trabajador</h2></center>
+                <center><h2>Cargo a Trabajador</h2></center>
 
-                <!-- SELECTOR DE TRABAJADOR (TODOS LOS ACTIVOS) -->
+                <!-- SELECTOR DE TRABAJADOR -->
                 <div class="field">
                     <label>Seleccionar Trabajador</label>
                     <select name="id_trabajador" id="id_trabajador" required onchange="cargarCargoActual(this)">
@@ -56,7 +73,7 @@ unset($_SESSION['exito_asignacion'], $_SESSION['error_asignacion']);
                                     data-idcargo="<?php echo $t['id_cargo'] ?? ''; ?>" 
                                     style="color: black;"
                                     <?php echo ($cedulaPreseleccionada === $t['cedula']) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($t['cedula'] . ' - ' . $t['nombre_completo']); ?>
+                                <?php echo htmlspecialchars($t['cedula'] . ' - ' . $t['nombres'] . ' ' . $t['apellidos']); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -79,18 +96,18 @@ unset($_SESSION['exito_asignacion'], $_SESSION['error_asignacion']);
             </form>
         </div>
 
-        <!-- TABLA DE TRABAJADORES Y SUS CARGOS (SOLO LOS QUE TIENEN CARGO) -->
+        <!-- TABLA DE TRABAJADORES Y SUS CARGOS -->
         <div style="width: 100%; display: block; box-sizing: border-box;">
             <div class="glass tabla-container" style="width: 100% !important; max-width: 100% !important; box-sizing: border-box; margin: 0 !important;">
                 <h2 style="text-align:center; color:white;">Cargos Asignados</h2>
 
-                <table class="tabla">
+                <table class="tabla" style="width: 100% !important;">
                     <thead>
                         <tr>
                             <th>Cédula</th>
                             <th>Trabajador</th>
                             <th>Cargo Actual</th>
-                            <th>Acciones</th>
+                            <th style="text-align: center;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -98,9 +115,9 @@ unset($_SESSION['exito_asignacion'], $_SESSION['error_asignacion']);
                             <?php foreach ($trabajadoresConCargo as $t): ?>
                                 <tr>
                                     <td><?php echo htmlspecialchars($t['cedula']); ?></td>
-                                    <td><?php echo htmlspecialchars($t['nombre_completo']); ?></td>
+                                    <td><?php echo htmlspecialchars($t['nombres'] . ' ' . $t['apellidos']); ?></td>
                                     <td><?php echo htmlspecialchars($t['nombre_cargo']); ?></td>
-                                    <td class="acciones">
+                                    <td class="acciones" style="text-align: center;">
                                         <a href="../controladores/ctrl_asignar_cargo.php?action=desvincular&id_trabajador=<?php echo $t['id_trabajador']; ?>" 
                                            class="btn-eliminar" 
                                            style="text-decoration: none; display: inline-block;" 
@@ -174,24 +191,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 </script>
-
-<style>
-.modal-compacto {
-    font-family: inherit !important;
-    border-radius: 12px !important;
-}
-.titulo-modal-compacto {
-    font-size: 15px !important;
-    font-weight: normal !important;
-    color: #444 !important;
-    margin: 10px 0 15px 0 !important;
-}
-.btn-modal-compacto {
-    font-size: 13px !important;
-    padding: 6px 18px !important;
-    border-radius: 6px !important;
-}
-</style>
 
 </body>
 </html>
