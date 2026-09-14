@@ -8,6 +8,9 @@ require_once(__DIR__ . '/../vistas/includes/guardian.php');
 requireAdministradorODirector();
 
 require_once(__DIR__ . '/../conexion.php');
+require_once(__DIR__ . '/../modelos/clase_solicitud.php');
+
+$solicitudModelo = new Solicitud($conexion);
 
 function puedeGozarVacaciones(string $tipoContrato): bool
 {
@@ -78,16 +81,7 @@ if (isset($_POST['accion'])) {
             }
 
             // Obtener datos del trabajador para validar tipo de contrato
-            $sql = "SELECT t.cedula, co.tipo_contrato
-                    FROM TRABAJADOR t
-                    LEFT JOIN CONTRATO co ON co.id_trabajador = t.id_trabajador
-                    WHERE t.id_trabajador = ?
-                    ORDER BY co.id_contrato DESC
-                    LIMIT 1";
-            $stmt = $conexion->prepare($sql);
-            $stmt->bind_param("i", $id_trabajador);
-            $stmt->execute();
-            $trab = $stmt->get_result()->fetch_assoc();
+            $trab = $solicitudModelo->obtenerContratoTrabajador($id_trabajador);
 
             if (!$trab) {
                 $_SESSION['errores'] = ['No se encontro el trabajador.'];
@@ -101,38 +95,27 @@ if (isset($_POST['accion'])) {
                 exit;
             }
 
-            // Generar codigo de solicitud
-            $codigo_solicitud = 'SOL-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(2)), 0, 4));
+            // Generar codigo de solicitud (solo números: fecha + 4 dígitos aleatorios)
+            $codigo_solicitud = date('Ymd') . '-' . str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
 
-            $conexion->begin_transaction();
+            $resultado = $solicitudModelo->registrarDiasDisfrute(
+                $id_trabajador,
+                $codigo_solicitud,
+                $descripcion,
+                $fecha_inicio,
+                $fecha_final,
+                $cargo_display,
+                $desde,
+                $hasta
+            );
 
-            try {
-                // 1) Insertar en SOLICITUD
-                $sqlSol = "INSERT INTO SOLICITUD
-                           (id_trabajador, codigo_solicitud, tipo_solicitud, motivo_solicitud, fecha_inicio, fecha_finalizacion)
-                           VALUES (?, ?, 'Vacaciones', ?, ?, ?)";
-                $stmtSol = $conexion->prepare($sqlSol);
-                $fecha_final_val = $fecha_final !== '' ? $fecha_final : null;
-                $stmtSol->bind_param("issss", $id_trabajador, $codigo_solicitud, $descripcion, $fecha_inicio, $fecha_final_val);
-                $stmtSol->execute();
-                $id_solicitud = $conexion->insert_id;
-
-                // 2) Insertar en DISFRUTE_DE_VACACIONES
-                $sqlDis = "INSERT INTO DISFRUTE_DE_VACACIONES
-                           (id_solicitud, nombre_cargo, descripcion, desde, hasta)
-                           VALUES (?, ?, ?, ?, ?)";
-                $stmtDis = $conexion->prepare($sqlDis);
-                $stmtDis->bind_param("issss", $id_solicitud, $cargo_display, $descripcion, $desde, $hasta);
-                $stmtDis->execute();
-
-                $conexion->commit();
-
+            if ($resultado) {
                 $_SESSION['exito'] = 'Dias de disfrute registrados correctamente.';
                 unset($_SESSION['old']);
-
-            } catch (\Throwable $e) {
-                $conexion->rollback();
-                $_SESSION['errores'] = ['Error al guardar: ' . $e->getMessage()];
+            } else {
+                $_SESSION['errores'] = [
+                    'Error al guardar.' . ($solicitudModelo->ultimoError ? ' Detalle: ' . $solicitudModelo->ultimoError : '')
+                ];
             }
 
             header("Location: /FUNDACITE/vistas/registrar_dias_disfrute.php");

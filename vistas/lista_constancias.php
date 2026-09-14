@@ -7,10 +7,10 @@ $exito_edicion = $_SESSION['exito_edicion'] ?? '';
 unset($_SESSION['error_edicion'], $_SESSION['exito_edicion']);
 
 require_once '../conexion.php';
-require_once '../modelos/clase_constancia.php';
+require_once '../modelos/clase_solicitud.php';
 
 $buscar = trim($_GET['buscar'] ?? '');
-$constanciaObj = new clase_constancia($conexion);
+$constanciaObj = new Solicitud($conexion);
 $constancias = $constanciaObj->listarConstancias($buscar);
 ?>
 <!DOCTYPE html>
@@ -68,7 +68,7 @@ $constancias = $constanciaObj->listarConstancias($buscar);
                                 <a class="btn-ver" href="ver_constancia.php?id=<?= urlencode($fila['id_constancia']) ?>">
                                     <i class="bi bi-eye"></i> Ver
                                 </a>
-                                <a class="btn-editar" href="/FUNDACITE/pdf/constancia_trabajo.php?id=<?= urlencode($fila['id_constancia']) ?>&print=1">
+                                <a class="btn-editar" target="_blank" href="/FUNDACITE/pdf/constancia_trabajo.php?id=<?= urlencode($fila['id_constancia']) ?>&print=1">
                                     <i class="bi bi-printer"></i> Imprimir
                                 </a>
                                 <?php if (esAdministradorODirector()): ?>

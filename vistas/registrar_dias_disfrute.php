@@ -3,10 +3,10 @@ session_start();
 include_once "includes/guardian.php";
 
 require_once '../conexion.php';
-require_once '../modelos/clase_constancia.php';
+require_once '../modelos/clase_solicitud.php';
 
-$constanciaObj = new clase_constancia($conexion);
-$trabajadores = $constanciaObj->listarTrabajadoresActivos();
+$solicitudObj = new Solicitud($conexion);
+$trabajadores = $solicitudObj->listarTrabajadoresActivos();
 
 $old = $_SESSION['old'] ?? null;
 $errores = $_SESSION['errores'] ?? [];

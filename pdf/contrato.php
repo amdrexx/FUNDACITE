@@ -16,104 +16,148 @@ declare(strict_types=1);
  * =============================================================================
  */
 
-require __DIR__ . '/vendor/autoload.php'; // Ruta al autoload de Composer
+require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/../modelos/clase_contrato.php';
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
-/* -----------------------------------------------------------------------------
- * 1) OBTENCIÓN DE DATOS -> EN PRODUCCIÓN ESTO VIENE DE LA BASE DE DATOS
- * ---------------------------------------------------------------------------
- *  Ejemplo real de integración (descomentar y adaptar a tu conexión):
- *
- *  $idContrato = $_GET['id'] ?? null;
- *
- *  $stmt = $pdo->prepare("
- *      SELECT c.numero_contrato, c.fecha_inicio, c.fecha_fin, c.dependencia,
- *             c.cargo, c.salario, c.salario_letras, c.dia_firma, c.mes_firma,
- *             c.anio_firma,
- *             t.nombre AS trabajador_nombre, t.cedula AS trabajador_cedula,
- *             t.nacionalidad AS trabajador_nacionalidad,
- *             t.direccion AS trabajador_direccion,
- *             r.tratamiento, r.nombre AS representante_nombre,
- *             r.cedula AS representante_cedula, r.cargo AS representante_cargo,
- *             r.resolucion_numero, r.resolucion_fecha, r.gaceta_numero
- *      FROM contratos c
- *      INNER JOIN trabajadores t   ON t.id = c.trabajador_id
- *      INNER JOIN representantes r ON r.id = c.representante_id
- *      WHERE c.id = :id
- *  ");
- *  $stmt->execute(['id' => $idContrato]);
- *  $row = $stmt->fetch(PDO::FETCH_ASSOC);
- *
- *  // Las actividades del cargo también podrían venir de una tabla
- *  // "cargos_actividades" relacionada al cargo del trabajador.
- *  $stmtAct = $pdo->prepare("SELECT verbo, descripcion FROM cargo_actividades WHERE cargo_id = :cid ORDER BY orden");
- *  ...
- *
- * ---------------------------------------------------------------------------
- *  Mientras tanto, se deja un arreglo de ejemplo con los datos del
- *  contrato Nº 003-26 tal como venían en el documento original.
- * ---------------------------------------------------------------------------*/
+/** Convierte una fecha de la base de datos a una fecha escrita en español. */
+function fechaEnLetras(?string $fecha): string
+{
+    if (!$fecha || $fecha === '0000-00-00') {
+        return 'no especificada';
+    }
+
+    $marcaTiempo = strtotime($fecha);
+    if ($marcaTiempo === false) {
+        return $fecha;
+    }
+
+    $meses = [
+        1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril',
+        5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto',
+        9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre',
+    ];
+
+    return (int) date('d', $marcaTiempo) . ' de '
+        . $meses[(int) date('n', $marcaTiempo)] . ' de ' . date('Y', $marcaTiempo);
+}
+
+function nombreMes(int $mes): string
+{
+    $meses = [
+        1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril',
+        5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto',
+        9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre',
+    ];
+
+    return $meses[$mes] ?? '';
+}
+
+/** Devuelve una duración legible para la cláusula de vigencia. */
+function duracionContrato(string $inicio, ?string $fin): string
+{
+    if (!$fin || $fin === '0000-00-00') {
+        return 'tiempo indeterminado';
+    }
+
+    try {
+        $intervalo = (new DateTimeImmutable($inicio))->diff(new DateTimeImmutable($fin));
+        $meses = ($intervalo->y * 12) + $intervalo->m;
+        if ($intervalo->d > 0) {
+            $meses++;
+        }
+        return (string) max(1, $meses);
+    } catch (Exception) {
+        return 'no especificada';
+    }
+}
+
+$idContrato = filter_input(INPUT_GET, 'id_contrato', FILTER_VALIDATE_INT)
+    ?: filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+
+if (!$idContrato || $idContrato <= 0) {
+    http_response_code(400);
+    exit('Debe indicar un contrato válido.');
+}
+
+$modeloContrato = new clase_contrato($conexion);
+$contrato = $modeloContrato->obtenerPorId((int) $idContrato);
+
+if (!$contrato) {
+    http_response_code(404);
+    exit('No se encontró el contrato solicitado.');
+}
+
+$salario = null;
+$consultaSalario = $conexion->prepare(
+    "SELECT monto FROM SALARIO
+     WHERE (id_trabajador = ? OR id_cargo = ?)
+       AND estado = 'Vigente'
+     ORDER BY fecha DESC, id_salario DESC
+     LIMIT 1"
+);
+if ($consultaSalario) {
+    $consultaSalario->bind_param('ii', $contrato['id_trabajador'], $contrato['id_cargo']);
+    $consultaSalario->execute();
+    $resultadoSalario = $consultaSalario->get_result()->fetch_assoc();
+    $salario = $resultadoSalario['monto'] ?? null;
+    $consultaSalario->close();
+}
+
+$fechaInicio = $contrato['fecha_contrato'];
+$fechaFin = $contrato['fecha_fin'] ?? null;
+$marcaFirma = strtotime($fechaInicio) ?: time();
+$esIndefinido = stripos($contrato['tipo_contrato'], 'indefinido') !== false
+    || stripos($contrato['tipo_contrato'], 'indeterminado') !== false;
 
 $datos = [
+    'numero_contrato'            => str_pad((string) $contrato['id_contrato'], 3, '0', STR_PAD_LEFT) . '-' . date('y', $marcaFirma),
+    'tipo_contrato'              => $contrato['tipo_contrato'],
 
-    // ---- Número / identificador del contrato ----
-    'numero_contrato'            => '003-26',
-
-    // ---- Datos del Ente (Fundacite Yaracuy) ----
+    // ---- Datos institucionales fijos ----
     'ente_nombre_largo'          => 'LA FUNDACIÓN PARA EL DESARROLLO DE LA CIENCIA Y TECNOLOGÍA EN EL ESTADO YARACUY (FUNDACITE YARACUY)',
     'ente_siglas'                => 'FUNDACITE YARACUY',
     'ente_direccion'             => 'Zona Industrial Agustín Rivero, Calle 1 con Avenida 4, Edificio FUNDACITE, de los Municipio Independencia Estado Yaracuy',
     'ente_rif'                   => 'G200099330',
 
-    // ---- Representante legal del Ente (Presidente/a) ----
+    // ---- Representante legal registrado en el contrato ----
     'representante_tratamiento'  => 'Ing.',
-    'representante_nombre'       => 'MIGUEL ÁNGEL SOLORZANO BELIZARIO',
-    'representante_cedula'       => '19.817.987',
+    'representante_nombre'       => $contrato['nombre_presidente'],
+    'representante_cedula'       => $contrato['cedula_presidente'],
     'representante_cargo'        => 'PRESIDENTE (A)',
     'representante_cargo_firma'  => 'Presidente de la Fundación para el Desarrollo de Ciencia y Tecnología del Estado Yaracuy',
     'resolucion_numero'          => '077',
     'resolucion_fecha'           => '06 de Febrero de 2020',
-    'gaceta_numero'              => '41.823',
+    'gaceta_numero'              => $contrato['gaceta_designacion_presidente'],
 
     // ---- Datos del trabajador (EL/LA CONTRATADO(A)) ----
-    'trabajador_nombre'          => 'ARIANNI CAROLINA QUINTERO GOMEZ',
-    'trabajador_cedula'          => '22.309.474',
-    'trabajador_nacionalidad'    => 'venezolana',
-    'trabajador_direccion'       => 'Las Mercedes, Calle Principal Vía Bernabo Municipio San Felipe Estado Yaracuy',
+    'trabajador_nombre'          => trim($contrato['nombre_trabajador']),
+    'trabajador_cedula'          => $contrato['cedula_trabajador'],
+    'trabajador_nacionalidad'    => $contrato['nacionalidad'] ?: 'venezolano(a)',
+    'trabajador_direccion'       => 'este domicilio',
 
     // ---- Cargo / dependencia ----
-    'dependencia_adscripcion'    => 'DIRECCIÓN DE GESTIÓN DE SERVICIOS GENERALES',
-    'cargo_necesidad'            => 'OBRERO DE MANTENIMIENTO',
+    'dependencia_adscripcion'    => $contrato['lugar_trabajo'],
+    'cargo_necesidad'            => $contrato['nombre_cargo'] ?: 'las funciones propias del cargo asignado',
 
     // ---- Actividades asociadas al cargo (dinámicas según el puesto) ----
     'actividades'                => [
         [
             'verbo' => 'Realizar',
             'items' => [
-                'Limpieza de pasillos',
-                'Limpieza de oficinas (incluyendo limpieza de paredes y techos.)',
-                'Limpieza de baños y sanitarios los días',
-                'Limpieza de los vidrios de las oficinas (parte interna)',
-                'Limpieza de papeleras cada 15 días (con la ayuda de un obrero de mantenimiento general)',
-                'Realizar mantenimiento a los dispensadores de agua potable cada 15 días',
-                'Limpieza de pasamanos y vidrios de las barandas de las escaleras y los vidrios de la puerta principal y de la salida de emergencia una vez a la semana',
-                'Apoyar en caso de ser necesario en cualquier otra actividad que el jefe inmediato de su departamento considere.',
-            ],
-        ],
-        [
-            'verbo' => 'Elaborar',
-            'items' => [
-                'Elaboración del café.',
+                'Las funciones inherentes al cargo de ' . ($contrato['nombre_cargo'] ?: 'trabajador'),
+                'Las actividades que instruya su supervisor inmediato dentro de las necesidades del servicio',
             ],
         ],
     ],
 
     // ---- Duración del contrato ----
-    'duracion_letras'            => 'Doce (12)',
-    'fecha_inicio_letras'        => 'Primero (01) de Enero de 2026',
-    'fecha_fin_letras'           => 'treinta y uno (31) de Diciembre de 2026',
+    'duracion_letras'            => $esIndefinido ? 'indeterminada' : duracionContrato($fechaInicio, $fechaFin),
+    'fecha_inicio_letras'        => fechaEnLetras($fechaInicio),
+    'fecha_fin_letras'           => $esIndefinido ? 'sin fecha de finalización' : fechaEnLetras($fechaFin),
 
     // ---- Jornada de trabajo ----
     'jornada_manana_inicio'      => '8:00 a.m.',
@@ -122,24 +166,41 @@ $datos = [
     'jornada_tarde_fin'          => '4:00 p.m.',
 
     // ---- Salario ----
-    'salario_letras'             => 'CIENTO TREINTA BOLÍVARES SIN CÉNTIMOS',
-    'salario_numero'             => '130,00',
+    'salario_letras'             => $salario === null ? 'NO REGISTRADO' : 'SEGÚN TABULADOR VIGENTE',
+    'salario_numero'             => $salario === null ? 'No registrado' : number_format((float) $salario, 2, ',', '.'),
 
     // ---- Otorgamiento / firma ----
     'lugar_firma'                => 'San Felipe',
-    'dia_firma_letras'           => 'Primeros (01)',
-    'dia_firma_numero'           => '01',
-    'mes_firma'                  => 'Enero',
-    'anio_firma_letras'          => 'dos mil veintiséis (2026)',
-    'anio_firma_numero'          => '2026',
+    'dia_firma_letras'           => date('d', $marcaFirma),
+    'dia_firma_numero'           => date('d', $marcaFirma),
+    'mes_firma'                  => nombreMes((int) date('n', $marcaFirma)),
+    'anio_firma_letras'          => date('Y', $marcaFirma),
+    'anio_firma_numero'          => date('Y', $marcaFirma),
 ];
 
 /* -----------------------------------------------------------------------------
  * 2) LOGO INSTITUCIONAL EMBEBIDO EN BASE64
  *    (evita problemas de rutas relativas dentro de DOMPDF)
  * ---------------------------------------------------------------------------*/
-$logoPath   = __DIR__ . '/assets/logo_fundacite.png';
-$logoSrc    = 'data:image/png;base64,' . base64_encode((string) file_get_contents($logoPath));
+// Banner con el escudo, "Gobierno Bolivariano de Venezuela", el nombre del
+// Ministerio y el sello "2022-2030". Debe colocarse en ../vistas/img/
+// (misma carpeta donde ya vive logo_ministerio.png).
+$logoPath = __DIR__ . '/../vistas/img/logo_contrato.png';
+$logoSrc = is_readable($logoPath)
+    ? 'data:image/png;base64,' . base64_encode((string) file_get_contents($logoPath))
+    : '';
+
+// Proporción real (alto/ancho) del banner, en porcentaje. Se usa con la
+// técnica de "caja de proporción" (padding-bottom en %) para que la imagen
+// llene el ancho del encabezado sin deformarse, ya que "height: auto" en
+// dompdf no siempre calcula bien el alto de imágenes muy anchas y bajas.
+$logoProporcion = 0.0;
+if (is_readable($logoPath)) {
+    $infoLogo = @getimagesize($logoPath);
+    if ($infoLogo !== false && $infoLogo[0] > 0) {
+        $logoProporcion = round(($infoLogo[1] / $infoLogo[0]) * 100, 4);
+    }
+}
 
 /* -----------------------------------------------------------------------------
  * 3) FUNCIONES AUXILIARES DE LA PLANTILLA
@@ -188,7 +249,7 @@ ob_start();
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Contrato <?= h($datos['numero_contrato']) ?> - <?= h($datos['trabajador_nombre']) ?></title>
+<title>Contrato - <?= h($datos['trabajador_nombre']) ?></title>
 <style>
     @page {
         margin-top: 145px;
@@ -211,13 +272,22 @@ ob_start();
         top: -125px;
         left: 0;
         right: 0;
-        height: 90px;
         text-align: left;
     }
 
-    .header img {
+    .header-caja {
+        position: relative;
         width: 100%;
-        height: auto;
+        height: 0;
+        overflow: hidden;
+    }
+
+    .header-caja img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
     }
 
     .numero-contrato {
@@ -288,10 +358,14 @@ ob_start();
 <body>
 
 <div class="header">
-    <img src="<?= $logoSrc ?>" alt="Gobierno Bolivariano de Venezuela - Ministerio del Poder Popular para Ciencia y Tecnología">
+    <div class="header-caja" style="padding-bottom: <?= $logoProporcion ?>%;">
+        <img src="<?= $logoSrc ?>" alt="Gobierno Bolivariano de Venezuela - Ministerio del Poder Popular para Ciencia y Tecnología - 2022-2030">
+    </div>
 </div>
 
 <div class="numero-contrato"><?= h($datos['numero_contrato']) ?></div>
+
+<p class="parrafo center"><strong>TIPO DE CONTRATO: <?= h($datos['tipo_contrato']) ?></strong></p>
 
 <p class="parrafo">
     Entre la República Bolivariana de Venezuela por órgano del
@@ -314,7 +388,7 @@ ob_start();
     cédula de identidad N&deg; V.- <strong><?= h($datos['trabajador_cedula']) ?></strong>,
     de este domicilio, quien en lo adelante se denominará &#8220;EL CONTRATADO (A)&#8221;,
     quienes han convenido suscribir el presente Contrato Individual de Trabajo
-    a Tiempo Determinado, conforme a lo dispuesto en los artículos 62 y 64 de
+    bajo la modalidad de <strong><?= h($datos['tipo_contrato']) ?></strong>, conforme a lo dispuesto en los artículos 62 y 64 de
     la Ley Orgánica del Trabajo, las Trabajadoras y los Trabajadores, y que se
     regirá por las cláusulas siguientes:
 </p>
@@ -364,34 +438,29 @@ ob_start();
 <?= $actividadesHtml ?>
 
 <p class="parrafo">
-    <span class="clau">SEGUNDA.</span> <strong>NATURALEZA DEL TIEMPO DETERMINADO:</strong>.
+    <span class="clau">SEGUNDA.</span> <strong>NATURALEZA DEL CONTRATO:</strong>.
     Las partes convienen en que la causa y naturaleza del presente contrato,
     así como de los servicios que prestará <strong>&#8220;EL (LA) CONTRATADO (A)&#8221;,</strong>
     se basan en la necesidad que tiene <strong>(<?= h($datos['ente_siglas']) ?>),</strong>
-    de: <?= h($datos['cargo_necesidad']) ?>, y en todo caso, por tratarse de un
-    órgano de la Administración Pública, no puede comprometer recursos
-    presupuestarios de ejercicios fiscales o años futuros, lo que implica que,
-    por mandato legal, el contrato no puede exceder del 31 de Diciembre del
-    mismo año en que se firma el Contrato, lo cual encuadra dentro del
-    supuesto legal establecido en el literal &#8220;a&#8221; del artículo 64 de la Ley
-    Orgánica del Trabajo, las Trabajadoras y los Trabajadores, debido a que
-    por exigencia de la naturaleza del servicio, necesariamente tiene un
-    tiempo finito, razón por la cual el presente contrato se celebra de una
-    manera circunstancial y, en consecuencia, queda entendido que las
-    obligaciones asumidas por <strong>&#8220;EL (LA) CONTRATADO (A)&#8221;,</strong> también
-    participan de una naturaleza de tiempo determinado.
+    de: <?= h($datos['cargo_necesidad']) ?>. El presente vínculo se celebra bajo
+    la modalidad de <strong><?= h($datos['tipo_contrato']) ?></strong>, conforme a
+    las condiciones, fechas y demás datos registrados en este documento.
 </p>
 
 <p class="parrafo">
     <span class="clau">TERCERA:</span> <strong>DURACIÓN DEL CONTRATO</strong>.
-    El presente contrato tendrá una vigencia de <?= h($datos['duracion_letras']) ?>
-    meses contado a partir del <?= h($datos['fecha_inicio_letras']) ?>
-    <strong>hasta el día <?= h($datos['fecha_fin_letras']) ?>, fecha en la que el
-    mismo dejará de surtir sus efectos, sin necesidad de notificación.</strong>
+    El presente contrato tendrá una vigencia <?= h($datos['duracion_letras']) ?><?= $esIndefinido ? '' : ' meses' ?>,
+    contado a partir del <?= h($datos['fecha_inicio_letras']) ?>.
+    <?php if ($esIndefinido): ?>
+        <strong>Se celebra sin fecha de finalización.</strong>
+    <?php else: ?>
+        <strong>Finaliza el <?= h($datos['fecha_fin_letras']) ?>, fecha en la que el
+        mismo dejará de surtir sus efectos, sin necesidad de notificación.</strong>
+    <?php endif; ?>
     Las partes dejan constancia de común acuerdo, en forma expresa e
     inequívoca que en virtud de la naturaleza del servicio y de la
     Administración Pública Nacional, que su vínculo laboral se mantendrá a
-    tiempo determinado, independientemente si al vencimiento, aún persiste la
+    <?= h($datos['tipo_contrato']) ?>, independientemente si al vencimiento, aún persiste la
     causa que dio nacimiento a la contratación o existan razones especiales y
     justificables para prorrogarlo, siempre que excluyan la presunta
     intención de transformarla en una relación a tiempo indeterminado. El
@@ -667,7 +736,7 @@ ob_start();
     de edad y titular de la Cédula de Identidad N&deg; V.-_________, en mi
     condición de <strong>&#8220;EL (LA) CONTRATADO (A)&#8221;</strong>, doy acuse de
     recibo de un (1) ejemplar original del documento contentivo de mi
-    contrato individual de trabajo a tiempo determinado, que he suscrito con
+    contrato individual de trabajo bajo la modalidad de <?= h($datos['tipo_contrato']) ?>, que he suscrito con
     <strong>(<?= h($datos['ente_siglas']) ?></strong> y que recibo el día ___ del
     mes de _____________ del año <?= h($datos['anio_firma_numero']) ?> siendo la
     hora __________.
@@ -693,14 +762,7 @@ $dompdf->loadHtml($html, 'UTF-8');
 $dompdf->setPaper('letter', 'portrait');
 $dompdf->render();
 
-/* -----------------------------------------------------------------------------
- * 6) SALIDA DEL PDF
- * ---------------------------------------------------------------------------
- *  'I' -> abre el PDF en el navegador (visualización / impresión)
- *  'D' -> fuerza la descarga
- *  'F' -> guarda el archivo en el servidor (útil para adjuntarlo a un correo,
- *         guardarlo en el expediente digital del trabajador, etc.)
- * ---------------------------------------------------------------------------*/
+
 $nombreArchivo = 'Contrato_' . str_replace(['/', ' '], '-', $datos['numero_contrato'])
     . '_' . str_replace(' ', '_', $datos['trabajador_nombre']) . '.pdf';
 

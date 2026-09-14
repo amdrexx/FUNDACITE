@@ -37,6 +37,184 @@ if (!$contratoActual) {
     <link rel="stylesheet" href="css/bootstrap-icons.css">
     <script src="js/bootstrap.min.js"></script>
     <style>
+        .contract-page {
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .contract-card {
+            width: 100%;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 16px;
+            background: rgba(9, 62, 97, 0.9);
+            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+        }
+
+        .contract-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 28px 30px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(15, 76, 117, 0.72);
+        }
+
+        .contract-kicker {
+            margin: 0 0 7px;
+            color: #b8dcf5;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .contract-header h2 {
+            margin: 0;
+            color: #fff;
+            font-size: clamp(22px, 3vw, 28px);
+            line-height: 1.2;
+        }
+
+        .contract-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            flex-shrink: 0;
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.26);
+            border-radius: 999px;
+            color: #fff;
+            background: rgba(50, 130, 184, 0.36);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .contract-content {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            padding: 24px 30px 28px;
+        }
+
+        .contract-section {
+            padding: 19px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .contract-section--full {
+            grid-column: 1 / -1;
+        }
+
+        .contract-section h3 {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin: 0 0 15px;
+            color: #8ecdf5;
+            font-size: 15px;
+        }
+
+        .contract-details {
+            display: grid;
+            gap: 11px;
+            margin: 0;
+        }
+
+        .contract-detail {
+            display: grid;
+            grid-template-columns: minmax(120px, 0.8fr) minmax(0, 1.3fr);
+            gap: 12px;
+            align-items: start;
+            margin: 0;
+            color: #fff;
+            line-height: 1.45;
+        }
+
+        .contract-detail dt {
+            color: #b8dcf5;
+            font-weight: 600;
+        }
+
+        .contract-detail dd {
+            margin: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .contract-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 0 30px 30px;
+        }
+
+        .contract-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 42px;
+            padding: 10px 16px;
+            border: 1px solid transparent;
+            border-radius: 9px;
+            color: #fff;
+            font-weight: 600;
+            line-height: 1.2;
+            text-align: center;
+            text-decoration: none;
+            transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .contract-action:hover {
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .contract-action:active {
+            transform: translateY(0);
+        }
+
+        .contract-action--pdf { background: #28a745; }
+        .contract-action--edit { background: #007bff; }
+        .contract-action--back {
+            border-color: rgba(255, 255, 255, 0.55);
+            background: transparent;
+        }
+
+        @media (max-width: 720px) {
+            .contract-header,
+            .contract-content,
+            .contract-actions {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            .contract-header {
+                flex-direction: column;
+            }
+
+            .contract-content {
+                grid-template-columns: 1fr;
+            }
+
+            .contract-section--full {
+                grid-column: auto;
+            }
+
+            .contract-detail {
+                grid-template-columns: 1fr;
+                gap: 2px;
+            }
+
+            .contract-action {
+                width: 100%;
+            }
+        }
+
         @media print {
             .no-print {
                 display: none !important;
@@ -45,9 +223,19 @@ if (!$contratoActual) {
                 background: white !important;
                 color: black !important;
             }
-            .form-card {
+            .contract-card {
                 box-shadow: none !important;
                 border: 1px solid #ccc !important;
+                background: white !important;
+            }
+            .contract-header,
+            .contract-section {
+                background: white !important;
+            }
+            .contract-header h2,
+            .contract-detail,
+            .contract-detail dd {
+                color: black !important;
             }
         }
     </style>
@@ -56,61 +244,60 @@ if (!$contratoActual) {
 
 <?php include "includes/layout.php"; ?>
 
-<div class="main" style="display: block !important; clear: both !important;">
-    <div style="max-width: 650px; width: 100%; margin: 0 auto; display: block; box-sizing: border-box;">
-
-        <div style="width: 100%; display: block; margin-bottom: 30px; box-sizing: border-box;">
-            <div class="form-card" style="width: 100% !important; max-width: 100% !important; box-sizing: border-box; margin: 0 !important;">
-                
-                <center>
-                    <h2>Detalle del Contrato N° #<?php echo str_pad($contratoActual['id_contrato'], 5, '0', STR_PAD_LEFT); ?></h2>
-                </center>
-
-                <!-- DATOS DEL TRABAJADOR -->
-                <div style="border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; margin-bottom: 15px;">
-                    <h3 style="font-size: 16px; color: #007bff; margin-bottom: 10px;">Información del Trabajador</h3>
-                    <p><strong>Cédula:</strong> <?php echo htmlspecialchars($contratoActual['cedula_trabajador'] ?? $contratoActual['cedula'] ?? 'N/A'); ?></p>
-                    <p><strong>Nombres y Apellidos:</strong> <?php echo htmlspecialchars(($contratoActual['nombre_trabajador'] ?? (($contratoActual['nombres'] ?? '') . ' ' . ($contratoActual['apellidos'] ?? '')))); ?></p>
-                    <p><strong>Cargo:</strong> <?php echo htmlspecialchars($contratoActual['nombre_cargo'] ?? $contratoActual['cargo'] ?? 'Sin cargo asignado'); ?></p>
+<div class="main">
+    <div class="contract-page">
+        <article class="contract-card">
+            <header class="contract-header">
+                <div>
+                    <p class="contract-kicker">Información registrada</p>
+                    <h2>Contrato N° #<?php echo str_pad($contratoActual['id_contrato'], 5, '0', STR_PAD_LEFT); ?></h2>
                 </div>
+                <span class="contract-status"><i class="bi bi-file-earmark-text"></i> <?php echo htmlspecialchars($contratoActual['tipo_contrato']); ?></span>
+            </header>
 
-                <!-- DATOS DEL CONTRATO -->
-                <div style="border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; margin-bottom: 15px;">
-                    <h3 style="font-size: 16px; color: #007bff; margin-bottom: 10px;">Especificaciones del Contrato</h3>
-                    <p><strong>Tipo de Contrato:</strong> <?php echo htmlspecialchars($contratoActual['tipo_contrato']); ?></p>
-                    <p><strong>Fecha de Inicio:</strong> <?php echo !empty($contratoActual['fecha_contrato']) ? date("d/m/Y", strtotime($contratoActual['fecha_contrato'])) : 'N/A'; ?></p>
-                    <p><strong>Fecha de Finalización:</strong> <?php echo (!empty($contratoActual['fecha_fin']) && $contratoActual['fecha_fin'] !== '0000-00-00') ? date("d/m/Y", strtotime($contratoActual['fecha_fin'])) : 'Indefinido'; ?></p>
-                    <p><strong>Lugar de Trabajo:</strong> <?php echo htmlspecialchars($contratoActual['lugar_trabajo']); ?></p>
-                </div>
+            <div class="contract-content">
+                <section class="contract-section">
+                    <h3><i class="bi bi-person"></i> Información del trabajador</h3>
+                    <dl class="contract-details">
+                        <div class="contract-detail"><dt>Cédula</dt><dd><?php echo htmlspecialchars($contratoActual['cedula_trabajador'] ?? $contratoActual['cedula'] ?? 'N/A'); ?></dd></div>
+                        <div class="contract-detail"><dt>Nombre completo</dt><dd><?php echo htmlspecialchars($contratoActual['nombre_trabajador'] ?? (($contratoActual['nombres'] ?? '') . ' ' . ($contratoActual['apellidos'] ?? ''))); ?></dd></div>
+                        <div class="contract-detail"><dt>Cargo</dt><dd><?php echo htmlspecialchars($contratoActual['nombre_cargo'] ?? $contratoActual['cargo'] ?? 'Sin cargo asignado'); ?></dd></div>
+                    </dl>
+                </section>
 
-                <!-- DATOS INSTITUCIONALES / PRESIDENTE -->
-                <div style="margin-bottom: 20px;">
-                    <h3 style="font-size: 16px; color: #007bff; margin-bottom: 10px;">Representación Institucional</h3>
-                    <p><strong>Presidente:</strong> <?php echo htmlspecialchars($contratoActual['nombre_presidente']); ?></p>
-                    <p><strong>Cédula Presidente:</strong> <?php echo htmlspecialchars($contratoActual['cedula_presidente']); ?></p>
-                    <p><strong>Gaceta Oficial:</strong> <?php echo htmlspecialchars($contratoActual['gaceta_designacion_presidente']); ?></p>
-                </div>
+                <section class="contract-section">
+                    <h3><i class="bi bi-calendar3"></i> Vigencia del contrato</h3>
+                    <dl class="contract-details">
+                        <div class="contract-detail"><dt>Tipo</dt><dd><?php echo htmlspecialchars($contratoActual['tipo_contrato']); ?></dd></div>
+                        <div class="contract-detail"><dt>Fecha de inicio</dt><dd><?php echo !empty($contratoActual['fecha_contrato']) ? date("d/m/Y", strtotime($contratoActual['fecha_contrato'])) : 'N/A'; ?></dd></div>
+                        <div class="contract-detail"><dt>Fecha de finalización</dt><dd><?php echo (!empty($contratoActual['fecha_fin']) && $contratoActual['fecha_fin'] !== '0000-00-00') ? date("d/m/Y", strtotime($contratoActual['fecha_fin'])) : 'Indefinido'; ?></dd></div>
+                    </dl>
+                </section>
 
-                <!-- BOTONES DE ACCIÓN (Se ocultan al imprimir) -->
-                <div class="no-print" style="display: flex; gap: 10px; margin-top: 20px;">
-                    <a href="../pdf/contrato.php?id_contrato=<?php echo urlencode($contratoActual['id_contrato']); ?>"
-                       target="_blank"
-                       class="btn-guardar full-width"
-                       style="background-color: #28a745; border: none; cursor: pointer; text-align:center; text-decoration:none; display: inline-block; line-height: 2.2;">
-                        <i class="bi bi-printer"></i> Imprimir / Guardar PDF
-                    </a>
-                    <a href="editar_contrato.php?id=<?php echo $contratoActual['id_contrato']; ?>" class="btn-guardar full-width" style="text-align:center; text-decoration:none; display: inline-block; line-height: 2.2;">
-                    <i class="bi bi-pencil-square"></i>    
-                    Editar
-                    </a>
-                    <a href="registrar_contrato.php" class="btn-persona full-width" style="text-align:center; text-decoration:none; display: inline-block; line-height: 2.2;">
-                        Volver
-                    </a>
-                </div>
+                <section class="contract-section contract-section--full">
+                    <h3><i class="bi bi-geo-alt"></i> Lugar de trabajo</h3>
+                    <dl class="contract-details">
+                        <div class="contract-detail"><dt>Ubicación</dt><dd><?php echo htmlspecialchars($contratoActual['lugar_trabajo']); ?></dd></div>
+                    </dl>
+                </section>
 
+                <section class="contract-section contract-section--full">
+                    <h3><i class="bi bi-building"></i> Representación institucional</h3>
+                    <dl class="contract-details">
+                        <div class="contract-detail"><dt>Presidente</dt><dd><?php echo htmlspecialchars($contratoActual['nombre_presidente']); ?></dd></div>
+                        <div class="contract-detail"><dt>Cédula</dt><dd><?php echo htmlspecialchars($contratoActual['cedula_presidente']); ?></dd></div>
+                        <div class="contract-detail"><dt>Gaceta oficial</dt><dd><?php echo htmlspecialchars($contratoActual['gaceta_designacion_presidente']); ?></dd></div>
+                    </dl>
+                </section>
             </div>
-        </div>
 
+            <footer class="contract-actions no-print">
+                <a href="registrar_contrato.php" class="contract-action contract-action--back"><i class="bi bi-arrow-left"></i> Volver</a>
+                <a href="../pdf/contrato.php?id_contrato=<?php echo urlencode($contratoActual['id_contrato']); ?>" target="_blank" class="contract-action contract-action--pdf"><i class="bi bi-printer"></i> Imprimir / Guardar PDF</a>
+                <a href="editar_contrato.php?id=<?php echo urlencode($contratoActual['id_contrato']); ?>" class="contract-action contract-action--edit"><i class="bi bi-pencil-square"></i> Editar</a>
+
+            </footer>
+        </article>
     </div>
 </div>
 

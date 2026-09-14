@@ -6,7 +6,7 @@ ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
 require_once __DIR__ . '/../conexion.php';
-require_once __DIR__ . '/../modelos/clase_constancia.php';
+require_once __DIR__ . '/../modelos/clase_solicitud.php';
 
 $response = ['success' => false, 'message' => 'Trabajador no encontrado'];
 
@@ -14,8 +14,8 @@ if (isset($_GET['id_trabajador'])) {
     $id = (int) $_GET['id_trabajador'];
 
     if ($id > 0) {
-        $constancia = new clase_constancia($conexion);
-        $trabajador = $constancia->obtenerTrabajadorCompleto($id);
+        $solicitudObj = new Solicitud($conexion);
+        $trabajador = $solicitudObj->obtenerTrabajadorCompleto($id);
 
         if ($trabajador) {
             $response = [

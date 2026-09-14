@@ -3,7 +3,7 @@ session_start();
 include_once "includes/guardian.php";
 
 require_once '../conexion.php';
-require_once '../modelos/clase_constancia.php';
+require_once '../modelos/clase_solicitud.php';
 require_once '../vendor/autoload.php';
 
 use Dompdf\Dompdf;
@@ -17,7 +17,7 @@ if ($id_constancia <= 0) {
     die('Constancia no válida.');
 }
 
-$constanciaObj = new clase_constancia($conexion);
+$constanciaObj = new Solicitud($conexion);
 $constancia = $constanciaObj->obtenerPorId($id_constancia);
 
 if (!$constancia) {

@@ -20,24 +20,9 @@ $buscar = trim($_GET['buscar'] ?? '');
 
 $solicitud = new Solicitud($conexion);
 
-// El modelo no filtra en la consulta (mostrarSolicitudes no recibe parámetros),
-// así que traemos todo y filtramos aquí si el usuario buscó algo.
-$resultado = $solicitud->mostrarSolicitudes();
-
-$solicitudes = [];
-if ($resultado) {
-    while ($fila = $resultado->fetch_assoc()) {
-        $solicitudes[] = $fila;
-    }
-}
-
-if ($buscar !== '') {
-    $buscarLower = mb_strtolower($buscar);
-    $solicitudes = array_filter($solicitudes, function ($fila) use ($buscarLower) {
-        return str_contains(mb_strtolower($fila['trabajador'] ?? ''), $buscarLower)
-            || str_contains(mb_strtolower($fila['codigo_solicitud'] ?? ''), $buscarLower);
-    });
-}
+// mostrarDiasDisfrute() ya filtra por SQL (trabajador o código de solicitud)
+// y devuelve un array asociativo, no un resultado mysqli.
+$solicitudes = $solicitud->mostrarDiasDisfrute($buscar);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -99,9 +84,8 @@ if ($buscar !== '') {
                             <td><?php echo htmlspecialchars($fila['fecha_finalizacion'] ?? ''); ?></td>
                             <td class="acciones">
 
-                                <a class="btn-ver" href="ver_solicitud.php?id=<?php echo urlencode($fila['id_solicitud'] ?? ''); ?>">
-                                    <i class="bi bi-eye"></i>
-                                    Ver
+                                   <a class="btn-editar" target="_blank" href="/FUNDACITE/pdf/solicitud_dias_disfrute.php?id=<?= urlencode($fila['id_solicitud']) ?>&print=1">
+                                    <i class="bi bi-printer"></i> Imprimir
                                 </a>
                                 <a class="btn-editar" href="editar_solicitud.php?id=<?php echo urlencode($fila['id_solicitud'] ?? ''); ?>">
                                     <i class="bi bi-pencil-square"></i>
@@ -109,7 +93,7 @@ if ($buscar !== '') {
                                 </a>
 
                                 <?php if (esAdministradorODirector()): ?>
-                                <form action="../controladores/ctrl_solicitud.php" method="POST" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas eliminar esta solicitud?');">
+                                <form action="../controladores/ctrl_dias_disfrute.php" method="POST" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas eliminar esta solicitud?');">
                                     <input type="hidden" name="id_solicitud" value="<?php echo htmlspecialchars($fila['id_solicitud'] ?? ''); ?>">
                                     <button type="submit" name="eliminar_solicitud" class="btn-eliminar" style="border:none; cursor:pointer;">
                                         <i class="bi bi-trash"></i>
