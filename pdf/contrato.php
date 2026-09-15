@@ -19,6 +19,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../conexion.php';
 require_once __DIR__ . '/../modelos/clase_contrato.php';
+require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -90,6 +91,8 @@ if (!$contrato) {
     http_response_code(404);
     exit('No se encontró el contrato solicitado.');
 }
+
+registrarBitacora($conexion, 'Contratos', 'Generar PDF', "Generó el PDF del contrato ID $idContrato.");
 
 $salario = null;
 $consultaSalario = $conexion->prepare(

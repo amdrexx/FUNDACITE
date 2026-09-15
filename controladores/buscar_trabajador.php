@@ -33,6 +33,8 @@ if (!isset($conexion) || !($conexion instanceof mysqli)) {
     throw new Exception("La conexión no es un objeto MySQLi válido.");
 }
 
+require_once __DIR__ . '/helpers/bitacora_helper.php';
+
 $cedulaRecibida = $_GET['cedula'] ?? '';
 $soloNumeros = preg_replace('/[^0-9]/', '', $cedulaRecibida);
 
@@ -77,6 +79,8 @@ if ($stmt->fetch()) {
     } else {
         $cargoFinal = "Sin cargo asignado";
     }
+
+    registrarBitacora($conexion, 'Trabajadores', 'Consultar', "Buscó al trabajador con cédula \"$cedulaRecibida\".");
 
     if (ob_get_length()) ob_clean();
 

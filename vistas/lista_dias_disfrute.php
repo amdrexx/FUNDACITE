@@ -15,6 +15,7 @@ unset(
 
 require_once '../conexion.php';
 require_once '../modelos/clase_solicitud.php';
+require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
 $buscar = trim($_GET['buscar'] ?? '');
 
@@ -23,6 +24,7 @@ $solicitud = new Solicitud($conexion);
 // mostrarDiasDisfrute() ya filtra por SQL (trabajador o código de solicitud)
 // y devuelve un array asociativo, no un resultado mysqli.
 $solicitudes = $solicitud->mostrarDiasDisfrute($buscar);
+registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', $buscar !== '' ? "Consultó el listado de días de disfrute (búsqueda: \"$buscar\")." : 'Consultó el listado de días de disfrute.');
 ?>
 <!DOCTYPE html>
 <html lang="es">

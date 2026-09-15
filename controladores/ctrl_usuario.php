@@ -11,6 +11,7 @@ error_reporting(E_ALL);
 require_once __DIR__ . '/../vistas/includes/roles.php';
 require_once "../conexion.php";
 require_once "../modelos/clase_usuario.php";
+require_once __DIR__ . "/helpers/bitacora_helper.php";
 
 $usuario = new Usuario($conexion);
 
@@ -96,6 +97,7 @@ if (isset($_POST['registrar_usuario'])) {
         $tipo_usuario
     )) {
         unset($_SESSION['old_input']);
+        registrarBitacora($conexion, 'Usuarios', 'Crear', "Registró el usuario \"$nombre\" (rol: $tipo_usuario).");
         $_SESSION['exito_registro'] = "Usuario registrado correctamente.";
     } else {
         $_SESSION['error_registro'][] = "No fue posible registrar el usuario.";
@@ -172,6 +174,7 @@ if (isset($_POST['editar_usuario'])) {
         if (!empty($contrasena)) {
             $usuario->actualizarPassword($id_usuario, $contrasena);
         }
+        registrarBitacora($conexion, 'Usuarios', 'Editar', "Actualizó el usuario ID $id_usuario (\"$nombre\").");
         $_SESSION['exito_registro'] = "Usuario actualizado correctamente.";
     } else {
         $_SESSION['error_registro'][] = "No fue posible actualizar el usuario.";
@@ -195,6 +198,7 @@ if (isset($_GET['eliminar'])) {
     $id_usuario = intval($_GET['eliminar']);
 
     if ($usuario->eliminar($id_usuario)) {
+        registrarBitacora($conexion, 'Usuarios', 'Eliminar', "Desactivó el usuario ID $id_usuario.");
         $_SESSION['exito_registro'] = "Usuario desactivado correctamente.";
     } else {
         $_SESSION['error_registro'][] = "No fue posible desactivar el usuario.";
@@ -218,6 +222,7 @@ if (isset($_GET['activar'])) {
     $id_usuario = intval($_GET['activar']);
 
     if ($usuario->activar($id_usuario)) {
+        registrarBitacora($conexion, 'Usuarios', 'Editar', "Activó el usuario ID $id_usuario.");
         $_SESSION['exito_registro'] = "Usuario activado correctamente.";
     } else {
         $_SESSION['error_registro'][] = "No fue posible activar el usuario.";
@@ -237,6 +242,7 @@ if (isset($_GET['buscar'])) {
     $datos = $usuario->buscarPorId($id_usuario);
 
     if ($datos) {
+        registrarBitacora($conexion, 'Usuarios', 'Consultar', "Consultó el usuario ID $id_usuario.");
         $_SESSION['usuario_editar'] = $datos;
     } else {
         $_SESSION['error_registro'][] = "Usuario no encontrado.";

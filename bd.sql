@@ -311,3 +311,30 @@ INSERT INTO USUARIO (
     'Administrador',
     'Activo'
 );
+-- ================================================================================
+-- 6. BITÁCORA DE AUDITORÍA DEL SISTEMA
+-- ================================================================================
+-- Registra las acciones relevantes que realizan los usuarios dentro del
+-- sistema (creación, edición, eliminación, inicio/cierre de sesión, consultas
+-- de listados y generación de reportes/PDF), para fines de trazabilidad y
+-- auditoría.
+-- ================================================================================
+
+CREATE TABLE BITACORA (
+    id_bitacora INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    id_usuario INT UNSIGNED NULL,
+    usuario VARCHAR(100) NULL,
+    modulo VARCHAR(100) NOT NULL,
+    accion VARCHAR(50) NOT NULL,
+    descripcion VARCHAR(500) NULL,
+    fecha_hora DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_bitacora),
+    INDEX idx_bitacora_usuario (id_usuario),
+    INDEX idx_bitacora_modulo (modulo),
+    INDEX idx_bitacora_fecha (fecha_hora),
+    CONSTRAINT fk_bitacora_usuario
+        FOREIGN KEY (id_usuario)
+        REFERENCES USUARIO(id_usuario)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

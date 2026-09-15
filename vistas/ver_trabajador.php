@@ -7,6 +7,7 @@ error_reporting(E_ALL);
 
 require_once '../conexion.php';
 require_once '../modelos/clase_trabajador.php';
+require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
 $idTrabajador = intval($_GET['id'] ?? 0);
 
@@ -16,6 +17,8 @@ $dato = $trabajador->obtenerTrabajadorPorId($idTrabajador);
 if (!$dato) {
     die("Trabajador no encontrado.");
 }
+
+registrarBitacora($conexion, 'Trabajadores', 'Consultar', "Consultó la ficha del trabajador ID $idTrabajador.");
 
 // Arma el texto completo de la dirección (Dirección - Parroquia, Municipio, Estado)
 $direccionCompleta = '';

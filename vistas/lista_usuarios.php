@@ -4,10 +4,12 @@ session_start();
 requireAdministrador();
 require_once '../conexion.php';
 require_once '../modelos/clase_usuario.php';
+require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
 $usuarioObj = new Usuario($conexion);
 $buscar = trim($_GET['buscar'] ?? '');
 $usuarios = $usuarioObj->listar($buscar);
+registrarBitacora($conexion, 'Usuarios', 'Consultar', $buscar !== '' ? "Consultó el listado de usuarios (búsqueda: \"$buscar\")." : 'Consultó el listado de usuarios.');
 
 $errores = $_SESSION['error_registro'] ?? [];
 $exito = $_SESSION['exito_registro'] ?? '';

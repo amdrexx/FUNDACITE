@@ -5,6 +5,7 @@ include_once "includes/guardian.php";
 require_once '../conexion.php';
 require_once '../modelos/clase_solicitud.php';
 require_once '../vendor/autoload.php';
+require_once '../controladores/helpers/bitacora_helper.php';
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -23,6 +24,8 @@ $constancia = $constanciaObj->obtenerPorId($id_constancia);
 if (!$constancia) {
     die('No se encontró la constancia solicitada.');
 }
+
+registrarBitacora($conexion, 'Constancias', 'Generar PDF', "Generó el PDF de la constancia ID $id_constancia.");
 
 $nombreTrabajador = trim(
     $constancia['apellidos'] . ' ' . $constancia['nombres']

@@ -13,6 +13,7 @@ unset($_SESSION['error_edicion'], $_SESSION['exito_edicion']);
 require_once '../conexion.php';
 require_once '../modelos/clase_trabajador.php';
 require_once '../modelos/clase_direccion.php';
+require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
 $idTrabajador = intval($_GET['id'] ?? 0);
 
@@ -22,6 +23,8 @@ $dato = $trabajador->obtenerTrabajadorPorId($idTrabajador);
 if (!$dato) {
     die("Trabajador no encontrado.");
 }
+
+registrarBitacora($conexion, 'Trabajadores', 'Consultar', "Consultó al trabajador ID $idTrabajador para edición.");
 
 // ── Precarga de Estado/Municipio/Parroquia YA SELECCIONADOS ──
 // Se resuelve del lado del servidor (no depende de que el AJAX

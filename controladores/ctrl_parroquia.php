@@ -1,6 +1,7 @@
 <?php
 
 require_once("../modelos/clase_parroquia.php");
+require_once __DIR__ . "/helpers/bitacora_helper.php";
 
 class ParroquiaController
 {
@@ -32,7 +33,10 @@ class ParroquiaController
     =========================*/
     public function listar()
     {
-        return $this->modelo->listar();
+        $resultado = $this->modelo->listar();
+        global $conexion;
+        registrarBitacora($conexion, 'Parroquias', 'Consultar', 'Consultó el listado de parroquias.');
+        return $resultado;
     }
 
     /*=========================
@@ -40,7 +44,10 @@ class ParroquiaController
     =========================*/
     public function buscar($cod_par)
     {
-        return $this->modelo->buscar($cod_par);
+        $resultado = $this->modelo->buscar($cod_par);
+        global $conexion;
+        registrarBitacora($conexion, 'Parroquias', 'Consultar', "Consultó la parroquia ID $cod_par.");
+        return $resultado;
     }
 
     /*=========================
@@ -64,6 +71,9 @@ class ParroquiaController
 
             $this->modelo->registrar($cod_muni, $parroquias);
 
+            global $conexion;
+            registrarBitacora($conexion, 'Parroquias', 'Crear', "Registró parroquia(s) en el municipio ID $cod_muni: " . implode(', ', (array) $parroquias) . ".");
+
             header("Location: ../vistas/registro_parroquia.php");
             exit();
         }
@@ -82,6 +92,9 @@ class ParroquiaController
 
             $this->modelo->editar($cod_par, $cod_muni, $nombre);
 
+            global $conexion;
+            registrarBitacora($conexion, 'Parroquias', 'Editar', "Actualizó la parroquia ID $cod_par a \"$nombre\".");
+
             header("Location: ../vistas/registro_parroquia.php");
             exit();
         }
@@ -94,7 +107,8 @@ public function eliminar()
 {
     if (isset($_GET["eliminar"])) {
 
-        $resultado = $this->modelo->eliminar($_GET["eliminar"]);
+        $codPar = $_GET["eliminar"];
+        $resultado = $this->modelo->eliminar($codPar);
 
         $mensaje = "ok";
 
@@ -104,6 +118,9 @@ public function eliminar()
             $mensaje = "notfound";
         } elseif ($resultado === false) {
             $mensaje = "error";
+        } else {
+            global $conexion;
+            registrarBitacora($conexion, 'Parroquias', 'Eliminar', "Eliminó la parroquia ID $codPar.");
         }
 
         header("Location: ../vistas/registro_parroquia.php?msg=" . $mensaje);

@@ -5,6 +5,7 @@ session_start();
 require_once __DIR__ . '/../vistas/includes/guardian.php';
 require_once __DIR__ . '/../conexion.php';
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -90,6 +91,8 @@ if (!$solicitud) {
     http_response_code(404);
     exit('No se encontró la solicitud de días de disfrute.');
 }
+
+registrarBitacora($conexion, 'Días de Disfrute', 'Generar PDF', "Generó el PDF de la solicitud de días de disfrute ID $idSolicitud.");
 
 [$diaSolicitud, $mesSolicitud, $anoSolicitud] = fechaPdf($solicitud['fecha_inicio']);
 [$diaInicio, $mesInicio, $anoInicio] = fechaPdf($solicitud['desde']);

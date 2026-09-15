@@ -4,6 +4,7 @@
 // Incluimos la conexión y el modelo obligatoriamente
 require_once __DIR__ . '/../conexion.php'; 
 require_once __DIR__ . '/../modelos/clase_cargo.php';
+require_once __DIR__ . '/helpers/bitacora_helper.php';
 
 class CargoControlador {
     private $modelo;
@@ -14,7 +15,10 @@ class CargoControlador {
 
     // Controlador para listar
     public function mostrarCargos() {
-        return $this->modelo->listarCargos();
+        $resultado = $this->modelo->listarCargos();
+        global $conexion;
+        registrarBitacora($conexion, 'Cargos', 'Consultar', 'Consultó el listado de cargos.');
+        return $resultado;
     }
 
     // Controlador para registrar
@@ -30,6 +34,8 @@ class CargoControlador {
 
             // 2. Intentamos registrar
             if ($this->modelo->registrarCargo($nombre)) {
+                global $conexion;
+                registrarBitacora($conexion, 'Cargos', 'Crear', "Registró el cargo \"$nombre\".");
                 header("Location: /FUNDACITE/vistas/registrar_cargo.php?status=success");
                 exit();
             } else {
@@ -53,6 +59,8 @@ class CargoControlador {
 
             // 2. Intentamos actualizar
             if ($this->modelo->actualizarCargo($id, $nombre)) {
+                global $conexion;
+                registrarBitacora($conexion, 'Cargos', 'Editar', "Actualizó el cargo ID $id a \"$nombre\".");
                 header("Location: /FUNDACITE/vistas/registrar_cargo.php?status=updated");
                 exit();
             } else {
@@ -67,6 +75,8 @@ class CargoControlador {
         if (isset($_GET['action']) && $_GET['action'] == 'eliminar' && !empty($_GET['id'])) {
             $id = intval($_GET['id']);
             if ($this->modelo->eliminarCargo($id)) {
+                global $conexion;
+                registrarBitacora($conexion, 'Cargos', 'Eliminar', "Eliminó el cargo ID $id.");
                 header("Location: /FUNDACITE/vistas/registrar_cargo.php?status=deleted");
                 exit();
             } else {

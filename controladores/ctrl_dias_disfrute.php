@@ -9,6 +9,7 @@ requireAdministradorODirector();
 
 require_once(__DIR__ . '/../conexion.php');
 require_once(__DIR__ . '/../modelos/clase_solicitud.php');
+require_once(__DIR__ . '/helpers/bitacora_helper.php');
 
 $solicitudModelo = new Solicitud($conexion);
 
@@ -110,6 +111,7 @@ if (isset($_POST['accion'])) {
             );
 
             if ($resultado) {
+                registrarBitacora($conexion, 'Días de Disfrute', 'Crear', "Registró días de disfrute para el trabajador ID $id_trabajador (código $codigo_solicitud).");
                 $_SESSION['exito'] = 'Dias de disfrute registrados correctamente.';
                 unset($_SESSION['old']);
             } else {

@@ -28,6 +28,8 @@ if (!$constanciaActual) {
     exit;
 }
 
+registrarBitacora($conexion, 'Constancias', 'Consultar', "Consultó la constancia ID $id_constancia.");
+
 // --- Normalización de campos (con fallbacks por si el controlador no hace JOIN) ---
 $nombreTrabajador = $constanciaActual['nombre_trabajador']
     ?? trim(($constanciaActual['nombres'] ?? '') . ' ' . ($constanciaActual['apellidos'] ?? ''))

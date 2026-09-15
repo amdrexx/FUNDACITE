@@ -7,6 +7,7 @@ error_reporting(E_ALL);
 
 require_once("../conexion.php");
 require_once("../modelos/clase_cargo.php");
+require_once __DIR__ . "/../controladores/helpers/bitacora_helper.php";
 
 // Validamos que venga el ID por la URL
 if (!isset($_GET['id']) || empty($_GET['id'])) {
@@ -23,6 +24,8 @@ if (!$cargoActual) {
     header("Location: registrar_cargo.php?status=error");
     exit();
 }
+
+registrarBitacora($conexion, 'Cargos', 'Consultar', "Consultó el cargo ID $id_cargo para edición.");
 
 // Mensaje de alerta si el controlador redirige con algún estatus de error
 $mensaje_alerta = '';

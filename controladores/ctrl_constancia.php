@@ -5,6 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once '../conexion.php';
 require_once '../modelos/clase_solicitud.php';
+require_once __DIR__ . '/helpers/bitacora_helper.php';
 
 $constanciaModelo = new Solicitud($conexion);
 
@@ -37,6 +38,7 @@ if (isset($_POST['eliminar_constancia'])) {
         $ok = $constanciaModelo->eliminar($id_constancia);
 
         if ($ok) {
+            registrarBitacora($conexion, 'Constancias', 'Eliminar', "Eliminó la constancia ID $id_constancia.");
             $_SESSION['exito_edicion'] = 'Constancia eliminada correctamente.';
         } else {
             $_SESSION['error_edicion'] = ['No se pudo eliminar la constancia.'];
@@ -116,6 +118,8 @@ if ($accion === 'guardar') {
             // Mensaje de éxito para mostrar en la lista de constancias
             $_SESSION['exito_edicion'] = 'Constancia registrada correctamente.';
 
+            registrarBitacora($conexion, 'Constancias', 'Crear', "Registró la constancia (código $codigo_solicitud) para el trabajador ID $id_trabajador.");
+
             unset($_SESSION['old_constancia']);
 
             // Redirige a la lista de constancias
@@ -186,6 +190,7 @@ if ($accion === 'actualizar') {
         );
 
         if ($ok) {
+            registrarBitacora($conexion, 'Constancias', 'Editar', "Actualizó la constancia ID $id_constancia.");
             $_SESSION['exito_edicion'] = 'Constancia actualizada correctamente.';
             header('Location: ../vistas/lista_constancias.php');
             exit;

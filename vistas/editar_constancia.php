@@ -8,6 +8,7 @@ if (function_exists('requireAdministradorODirector')) {
 
 require_once '../conexion.php';
 require_once '../modelos/clase_solicitud.php';
+require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
 $solicitudObj = new Solicitud($conexion);
 
@@ -24,6 +25,8 @@ if (!$constancia) {
     header("Location: lista_constancias.php?status=error");
     exit;
 }
+
+registrarBitacora($conexion, 'Constancias', 'Consultar', "Consultó la constancia ID $id_constancia para edición.");
 
 $errores = $_SESSION['errores_constancia'] ?? [];
 unset($_SESSION['errores_constancia']);

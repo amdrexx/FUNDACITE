@@ -11,6 +11,7 @@ error_reporting(E_ALL);
 require_once '../conexion.php';
 require_once '../modelos/clase_usuario.php';
 require_once '../modelos/clase_trabajador.php';
+require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
 $id_usuario = intval($_GET['id'] ?? 0);
 
@@ -29,6 +30,8 @@ if (!$usuarioActual) {
     header("Location: lista_usuarios.php");
     exit;
 }
+
+registrarBitacora($conexion, 'Usuarios', 'Consultar', "Consultó el usuario ID $id_usuario para edición.");
 
 $stmtTrabajador = $conexion->prepare("SELECT * FROM TRABAJADOR WHERE id_trabajador = ?");
 $stmtTrabajador->bind_param("i", $usuarioActual['id_trabajador']);

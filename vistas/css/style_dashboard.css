@@ -556,13 +556,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
             transform: scale(1.03);
         }
         .btn-ver {
-            background: #3f3fff;
-            color: white;
+            background: #0487f3bd;
+            color: rgb(0, 0, 0);
             text-decoration: none;
         }
 
         .btn-ver:hover {
-            background: #2626f6;
+            background: #4dafff;
             transform: scale(1.03);
         }
 

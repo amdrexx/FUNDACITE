@@ -16,6 +16,8 @@ $cargos = $controladorAsignarCargo->obtenerCargos();
 $todosTrabajadores = $controladorAsignarCargo->obtenerTodosLosTrabajadores(); 
 $trabajadoresConCargo = $controladorAsignarCargo->listarTrabajadoresConCargo(); 
 
+registrarBitacora($conexion, 'Asignación de Cargos', 'Consultar', 'Consultó el listado de trabajadores y cargos.');
+
 $cedulaPreseleccionada = $_GET['cedula'] ?? '';
 
 $status = $_GET['status'] ?? null;

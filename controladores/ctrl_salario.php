@@ -5,6 +5,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 require_once("../conexion.php");
 require_once("../modelos/clase_salario.php");
+require_once __DIR__ . "/helpers/bitacora_helper.php";
 
 $modelo = new clase_salario($conexion);
 
@@ -53,6 +54,7 @@ if (isset($_POST['accion']) && $_POST['accion'] == "guardar") {
     $id_cargo_final = ($tipo_salario === 'cargo') ? intval($id_cargo) : null;
 
     if ($modelo->registrarSalario($fecha, $monto, $tipo_salario, $id_cargo_final)) {
+        registrarBitacora($conexion, 'Salarios', 'Crear', "Registró un salario de tipo \"$tipo_salario\" por $monto (fecha $fecha).");
         $_SESSION['exito'] = "Salario registrado correctamente y marcado como Vigente.";
         unset($_SESSION['old']);
     } else {
@@ -113,6 +115,7 @@ if (isset($_POST['accion']) && $_POST['accion'] == "actualizar") {
     $id_cargo_final = ($tipo_salario === 'cargo') ? intval($id_cargo) : null;
 
     if ($modelo->actualizarSalario($id, $fecha, $monto, $estado, $tipo_salario, $id_cargo_final)) {
+        registrarBitacora($conexion, 'Salarios', 'Editar', "Actualizó el salario ID $id (monto: $monto).");
         $_SESSION['exito'] = "Salario actualizado correctamente.";
     } else {
         $_SESSION['errores'] = ["No fue posible actualizar el salario."];
@@ -135,6 +138,7 @@ if (isset($_GET['eliminar'])) {
     } elseif ($resultado === false) {
         $_SESSION['errores'] = ["Ocurrió un error al eliminar el salario."];
     } else {
+        registrarBitacora($conexion, 'Salarios', 'Eliminar', "Eliminó el salario ID $id.");
         $_SESSION['exito'] = "Salario eliminado correctamente.";
     }
 
@@ -147,11 +151,14 @@ if (isset($_GET['eliminar'])) {
 // =====================================
 function listarSalarios($conexion) {
     $modelo = new clase_salario($conexion);
+    registrarBitacora($conexion, 'Salarios', 'Listar', 'Consultó el listado de salarios.');
     return $modelo->listarSalarios();
 }
 
 function buscarSalario($conexion, $id) {
     $modelo = new clase_salario($conexion);
-    return $modelo->obtenerPorId($id);
+    $resultado = $modelo->obtenerPorId($id);
+    registrarBitacora($conexion, 'Salarios', 'Consultar', "Consultó el salario ID $id.");
+    return $resultado;
 }
 ?>

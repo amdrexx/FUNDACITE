@@ -3,11 +3,11 @@ session_start();
 include_once "includes/guardian.php";
 require_once '../conexion.php';
 require_once '../modelos/clase_primas.php';
-
-$prima = new Prima($conexion);
+require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
 $prima = new Prima($conexion);
 $primas = $prima->mostrarPrimas();
+registrarBitacora($conexion, 'Primas', 'Consultar', 'Consultó el listado de primas.');
 ?>
 <!DOCTYPE html>
 <html lang="es">

@@ -8,10 +8,12 @@ unset($_SESSION['error_edicion'], $_SESSION['exito_edicion']);
 
 require_once '../conexion.php';
 require_once '../modelos/clase_solicitud.php';
+require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
 $buscar = trim($_GET['buscar'] ?? '');
 $constanciaObj = new Solicitud($conexion);
 $constancias = $constanciaObj->listarConstancias($buscar);
+registrarBitacora($conexion, 'Constancias', 'Consultar', $buscar !== '' ? "Consultó el listado de constancias (búsqueda: \"$buscar\")." : 'Consultó el listado de constancias.');
 ?>
 <!DOCTYPE html>
 <html lang="es">

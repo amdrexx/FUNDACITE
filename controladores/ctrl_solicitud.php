@@ -4,6 +4,7 @@ session_start();
 
 require_once '../conexion.php';
 require_once '../modelos/clase_solicitud.php';
+require_once __DIR__ . '/helpers/bitacora_helper.php';
 
 $solicitudModelo = new Solicitud($conexion);
 
@@ -34,6 +35,7 @@ if (isset($_POST['eliminar_solicitud'])) {
         $ok = $solicitudModelo->eliminar($id_solicitud);
 
         if ($ok) {
+            registrarBitacora($conexion, 'Solicitudes', 'Eliminar', "Eliminó la solicitud ID $id_solicitud.");
             $_SESSION['exito_edicion'] = 'Solicitud eliminada correctamente.';
         } else {
             $_SESSION['error_edicion'] = ['No se pudo eliminar la solicitud.'];
@@ -91,6 +93,7 @@ if ($accion === 'consultar') {
 
     // Se guarda en sesión para precargar el formulario
     $_SESSION['old'] = $trabajador;
+    registrarBitacora($conexion, 'Solicitudes', 'Consultar', "Consultó al trabajador con cédula \"$cedula\".");
     header('Location: ../vistas/registrar_solicitud.php');
     exit;
 }
@@ -174,6 +177,7 @@ if ($accion === 'guardar') {
         );
 
         if ($id_solicitud) {
+            registrarBitacora($conexion, 'Solicitudes', 'Crear', "Registró la solicitud de tipo \"$tipo_solicitud\" (código $codigo_solicitud) para el trabajador con cédula \"$cedula\".");
             $_SESSION['exito'] = 'Solicitud registrada correctamente con el código ' . $codigo_solicitud . '.';
             unset($_SESSION['old']);
         } else {

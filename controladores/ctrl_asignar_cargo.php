@@ -5,6 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . "/../conexion.php";
 require_once __DIR__ . "/../modelos/clase_asignar_cargo.php";
+require_once __DIR__ . "/helpers/bitacora_helper.php";
 
 $controladorAsignarCargo = new clase_asignar_cargo($conexion);
 
@@ -19,6 +20,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'buscar_trabajador') {
     }
 
     $trabajador = $controladorAsignarCargo->buscarTrabajadorPorCedula($cedula);
+
+    registrarBitacora($conexion, 'Asignación de Cargos', 'Consultar', "Buscó al trabajador con cédula \"$cedula\".");
 
     if ($trabajador) {
         echo json_encode([
@@ -54,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['asignar_cargo'])) {
     $resultado = $controladorAsignarCargo->asignarCargo($id_trabajador, $id_cargo);
 
     if ($resultado) {
+        registrarBitacora($conexion, 'Asignación de Cargos', 'Editar', "Asignó el cargo ID $id_cargo al trabajador ID $id_trabajador.");
         $_SESSION['exito_asignacion'] = "¡Cargo asignado correctamente!";
         header("Location: ../vistas/asignar_cargo.php?status=success");
     } else {
@@ -71,6 +75,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'desvincular' && isset($_GET['
         $resultado = $controladorAsignarCargo->asignarCargo($id_trabajador, null);
 
         if ($resultado) {
+            registrarBitacora($conexion, 'Asignación de Cargos', 'Eliminar', "Desvinculó el cargo del trabajador ID $id_trabajador.");
             header("Location: ../vistas/asignar_cargo.php?status=unlinked");
         } else {
             header("Location: ../vistas/asignar_cargo.php?status=error");

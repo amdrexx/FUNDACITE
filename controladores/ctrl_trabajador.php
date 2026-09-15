@@ -9,6 +9,7 @@ require_once __DIR__ . '/../vistas/includes/guardian.php';
 
 require_once '../conexion.php';
 require_once '../modelos/clase_trabajador.php';
+require_once __DIR__ . '/helpers/bitacora_helper.php';
 
 $trabajador = new Trabajador($conexion);
 
@@ -26,6 +27,7 @@ if (isset($_POST['eliminar_trabajador'])) {
     }
 
     if ($trabajador->eliminarLogicamenteTrabajador($idTrabajador)) {
+        registrarBitacora($conexion, 'Trabajadores', 'Eliminar', "Eliminó lógicamente al trabajador ID $idTrabajador.");
         $_SESSION['exito_eliminacion'] = "Trabajador eliminado lógicamente correctamente.";
         header("Location: ../vistas/lista_trabajadores.php");
         exit;
@@ -42,6 +44,8 @@ if (isset($_POST['eliminar_trabajador'])) {
 if (isset($_GET['accion']) && $_GET['accion'] === 'listar') {
     $buscar = trim($_GET['buscar'] ?? '');
     $trabajadores = $trabajador->listarTrabajadores($buscar);
+
+    registrarBitacora($conexion, 'Trabajadores', 'Listar', $buscar !== '' ? "Consultó el listado de trabajadores (búsqueda: \"$buscar\")." : 'Consultó el listado de trabajadores.');
 
     require_once '../vistas/lista_trabajadores.php';
     exit;
@@ -120,6 +124,7 @@ if (isset($_POST['editar_trabajador'])) {
         $status,
         $idDir
     )) {
+        registrarBitacora($conexion, 'Trabajadores', 'Editar', "Actualizó los datos del trabajador ID $idTrabajador.");
         $_SESSION['exito_edicion'] = "Trabajador actualizado correctamente.";
         header("Location: ../vistas/lista_trabajadores.php");
         exit;
@@ -251,6 +256,8 @@ try {
     }
 
     unset($_SESSION['old_input']);
+
+    registrarBitacora($conexion, 'Trabajadores', 'Crear', "Registró al trabajador $nombres $apellidos (CI $cedula).");
 
     $_SESSION['exito_registro'] = "Trabajador registrado correctamente.";
     header("Location: ../vistas/registrar_trabajadores.php");

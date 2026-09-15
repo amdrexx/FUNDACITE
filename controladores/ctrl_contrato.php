@@ -12,6 +12,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . "/../conexion.php";
 require_once __DIR__ . "/../modelos/clase_contrato.php";
+require_once __DIR__ . "/helpers/bitacora_helper.php";
 
 class ContratoControlador {
     private $modelo;
@@ -66,6 +67,8 @@ class ContratoControlador {
             );
 
             if ($resultado) {
+                global $conexion;
+                registrarBitacora($conexion, 'Contratos', 'Crear', "Registró un contrato ($tipo_contrato) para el trabajador ID $id_trabajador.");
                 header("Location: ../vistas/registrar_contrato.php?status=success");
             } else {
                 header("Location: ../vistas/registrar_contrato.php?status=error");
@@ -111,6 +114,8 @@ class ContratoControlador {
             );
 
             if ($resultado) {
+                global $conexion;
+                registrarBitacora($conexion, 'Contratos', 'Editar', "Actualizó el contrato ID $id_contrato.");
                 header("Location: ../vistas/registrar_contrato.php?status=updated");
             } else {
                 header("Location: ../vistas/editar_contrato.php?id={$id_contrato}&status=error");
@@ -127,6 +132,8 @@ class ContratoControlador {
             $id_contrato = intval($_GET['id'] ?? 0);
             if ($id_contrato > 0) {
                 $this->modelo->eliminarContrato($id_contrato);
+                global $conexion;
+                registrarBitacora($conexion, 'Contratos', 'Eliminar', "Eliminó el contrato ID $id_contrato.");
             }
             header("Location: ../vistas/registrar_contrato.php?status=deleted");
             exit();
@@ -137,6 +144,9 @@ class ContratoControlador {
     // MÉTODOS DE CONSULTA PARA LAS VISTAS
     // =========================================================================
     public function mostrarContratos() {
+        global $conexion;
+        registrarBitacora($conexion, 'Contratos', 'Listar', 'Consultó el listado de contratos.');
+
         if (method_exists($this->modelo, 'obtenerContratos')) {
             return $this->modelo->obtenerContratos();
         } elseif (method_exists($this->modelo, 'listarContratos')) {
@@ -147,11 +157,15 @@ class ContratoControlador {
 
     public function buscarPorId($id) {
         if (method_exists($this->modelo, 'obtenerPorId')) {
-            return $this->modelo->obtenerPorId($id);
+            $resultado = $this->modelo->obtenerPorId($id);
         } elseif (method_exists($this->modelo, 'buscarPorId')) {
-            return $this->modelo->buscarPorId($id);
+            $resultado = $this->modelo->buscarPorId($id);
+        } else {
+            $resultado = false;
         }
-        return false;
+        global $conexion;
+        registrarBitacora($conexion, 'Contratos', 'Consultar', "Consultó el contrato ID $id.");
+        return $resultado;
     }
 }
 
