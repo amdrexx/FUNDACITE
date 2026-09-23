@@ -135,6 +135,8 @@ if ($resultado) {
 
 </div>
 
+<?php include "includes/bitacora_flotante.php"; // Campana de la bitácora (solo Administrador) ?>
+
 <script src="/FUNDACITE/vistas/js/chart.js"></script>
 
 <script>

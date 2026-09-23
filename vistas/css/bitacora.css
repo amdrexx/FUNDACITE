@@ -1,0 +1,934 @@
+/* ============================================================================
+   ARCHIVO: vistas/css/bitacora.css
+   DESCRIPCIÓN: Campana flotante + panel de la bitácora (solo Administrador).
+   Hereda el lenguaje visual del dashboard: vidrio esmerilado sobre la foto de
+   fondo, azules institucionales (#093e61 / #0F4C75 / #3282B8) y los semáforos
+   verde / gris / rojo de las tarjetas de personal.
+   ============================================================================ */
+
+.bt-root {
+    /* Superficies: derivadas del sidebar (#1B262C), con transparencia */
+    --bt-bg: rgba(20, 30, 36, 0.84);
+    --bt-surface: rgba(255, 255, 255, 0.06);
+    --bt-surface-hover: rgba(255, 255, 255, 0.11);
+    --bt-line: rgba(255, 255, 255, 0.12);
+    --bt-line-soft: rgba(255, 255, 255, 0.07);
+
+    /* Texto en capas de opacidad */
+    --bt-text: #eaeaea;
+    --bt-text-dim: rgba(255, 255, 255, 0.62);
+    --bt-text-faint: rgba(255, 255, 255, 0.42);
+
+    /* Acentos del proyecto */
+    --bt-navy: #0f4c75;
+    --bt-accent: #3282b8;
+    --bt-accent-hi: #4da3ff;
+
+    /* Ease-out fuerte: arranca rápido, asienta suave (nunca ease-in en entradas) */
+    --bt-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* Tono por defecto de íconos/etiquetas (r,g,b) */
+    --tone: 143, 184, 214;
+
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: var(--bt-text);
+}
+
+.bt-root *,
+.bt-root *::before,
+.bt-root *::after {
+    box-sizing: border-box;
+}
+
+.bt-root button,
+.bt-root input {
+    font: inherit;
+    color: inherit;
+}
+
+.bt-root button {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Tonos semánticos (se aplican con una clase y alimentan --tone) */
+.tone-green { --tone: 76, 175, 80; }
+.tone-blue  { --tone: 77, 163, 255; }
+.tone-red   { --tone: 244, 67, 54; }
+.tone-amber { --tone: 245, 165, 36; }
+.tone-slate { --tone: 143, 184, 214; }
+.tone-gray  { --tone: 180, 180, 180; }
+
+/* Foco visible consistente con el azul del proyecto */
+.bt-root :focus-visible {
+    outline: 2px solid var(--bt-accent-hi);
+    outline-offset: 2px;
+}
+
+/* ============================================================================
+   BOTÓN FLOTANTE (campana)
+   ============================================================================ */
+
+.bt-fab {
+    position: fixed;
+    right: 28px;
+    bottom: 28px;
+    z-index: 1001;
+    width: 58px;
+    height: 58px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: linear-gradient(145deg, #3a90c9 0%, var(--bt-accent) 38%, var(--bt-navy) 100%);
+    color: #fff;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    /* Elevación con luz ambiente azulada, no una sombra gris genérica */
+    box-shadow:
+        0 12px 30px rgba(9, 62, 97, 0.6),
+        0 3px 8px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.32);
+    transition:
+        transform 160ms var(--bt-ease),
+        box-shadow 160ms var(--bt-ease);
+}
+
+/* Halo que se expande cuando llega un aviso */
+.bt-fab::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: 50%;
+    border: 2px solid var(--bt-accent-hi);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.bt-fab i {
+    display: block;
+    transform-origin: 50% 12%;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .bt-fab:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            0 16px 36px rgba(9, 62, 97, 0.7),
+            0 4px 10px rgba(0, 0, 0, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
+}
+
+.bt-fab:active {
+    transform: scale(0.95);
+    transition-duration: 90ms;
+}
+
+.bt-fab[aria-expanded="true"] {
+    background: linear-gradient(145deg, #2f78a8 0%, #1d6390 45%, #0b3d60 100%);
+}
+
+/* Aro de foco por fuera del círculo */
+.bt-fab:focus-visible {
+    outline-offset: 4px;
+}
+
+/* Contador */
+.bt-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: 12px;
+    background: #f44336;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 24px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    /* "Recorte" oscuro para separarlo de la campana */
+    box-shadow: 0 0 0 3px #0b2a3f, 0 4px 10px rgba(244, 67, 54, 0.45);
+    opacity: 0;
+    transform: scale(0.95);
+    pointer-events: none;
+    transition:
+        opacity 160ms var(--bt-ease),
+        transform 200ms var(--bt-ease);
+}
+
+.bt-badge.is-on {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Campana con pendientes: leve resplandor permanente (sin animación) */
+.bt-fab.has-unread {
+    box-shadow:
+        0 12px 30px rgba(9, 62, 97, 0.6),
+        0 3px 8px rgba(0, 0, 0, 0.35),
+        0 0 0 4px rgba(77, 163, 255, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.32);
+}
+
+/* Aviso entrante: un repique corto y un halo (duran < 300 ms) */
+.bt-fab.is-ringing i {
+    animation: bt-ring 280ms ease-out;
+}
+
+.bt-fab.is-ringing::before {
+    animation: bt-halo 280ms ease-out;
+}
+
+@keyframes bt-ring {
+    0%   { transform: rotate(0); }
+    25%  { transform: rotate(17deg); }
+    50%  { transform: rotate(-13deg); }
+    75%  { transform: rotate(7deg); }
+    100% { transform: rotate(0); }
+}
+
+@keyframes bt-halo {
+    from { opacity: 0.7; transform: scale(0.95); }
+    to   { opacity: 0;   transform: scale(1.5); }
+}
+
+/* ============================================================================
+   ÍCONO CIRCULAR (compartido por aviso y lista)
+   ============================================================================ */
+
+.bt-ico {
+    flex: none;
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    font-size: 16px;
+    color: rgb(var(--tone));
+    background: rgba(var(--tone), 0.16);
+    border: 1px solid rgba(var(--tone), 0.32);
+}
+
+/* ============================================================================
+   AVISO EMERGENTE (como una notificación)
+   ============================================================================ */
+
+.bt-toast {
+    position: fixed;
+    right: 28px;
+    bottom: 100px;
+    z-index: 1001;
+    width: min(350px, calc(100vw - 32px));
+    border-radius: 16px;
+    background: var(--bt-bg);
+    -webkit-backdrop-filter: blur(16px) saturate(1.15);
+    backdrop-filter: blur(16px) saturate(1.15);
+    border: 1px solid rgba(var(--tone), 0.38);
+    box-shadow:
+        0 16px 38px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+    /* Cerrado: nace desde la campana (esquina inferior derecha) */
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+    transform-origin: bottom right;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity 160ms var(--bt-ease),
+        transform 180ms var(--bt-ease),
+        visibility 0s linear 180ms;
+}
+
+.bt-toast.is-on {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+        opacity 200ms var(--bt-ease),
+        transform 260ms var(--bt-ease),
+        visibility 0s;
+}
+
+.bt-toast-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 40px 12px 12px;
+    border: 0;
+    border-radius: 16px;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 120ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .bt-toast-main:hover {
+        background: var(--bt-surface);
+    }
+}
+
+.bt-toast-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.bt-toast-top {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.bt-toast-top strong {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bt-toast-more {
+    flex: none;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: rgba(77, 163, 255, 0.2);
+    color: #9fd0ff;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.bt-toast-more:empty {
+    display: none;
+}
+
+.bt-toast-meta {
+    font-size: 12px;
+    color: rgb(var(--tone));
+    font-weight: 600;
+}
+
+.bt-toast-text {
+    font-size: 13px;
+    line-height: 1.38;
+    color: var(--bt-text-dim);
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.bt-toast-x {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--bt-text-faint);
+    font-size: 11px;
+    cursor: pointer;
+    transition:
+        background-color 120ms ease-out,
+        color 120ms ease-out,
+        transform 90ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .bt-toast-x:hover {
+        background: var(--bt-surface-hover);
+        color: #fff;
+    }
+}
+
+.bt-toast-x:active {
+    transform: scale(0.92);
+}
+
+/* ============================================================================
+   PANEL
+   ============================================================================ */
+
+.bt-panel {
+    position: fixed;
+    right: 28px;
+    bottom: 100px;
+    z-index: 1001;
+    width: min(420px, calc(100vw - 32px));
+    height: min(640px, calc(100vh - 128px));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 20px;
+    background: var(--bt-bg);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    backdrop-filter: blur(20px) saturate(1.2);
+    border: 1px solid var(--bt-line);
+    box-shadow:
+        0 28px 64px rgba(0, 0, 0, 0.52),
+        0 0 0 1px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.09);
+    outline: none;
+
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+    transform-origin: bottom right;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity 160ms var(--bt-ease),
+        transform 200ms var(--bt-ease),
+        visibility 0s linear 200ms;
+}
+
+.bt-panel.is-open {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+        opacity 200ms var(--bt-ease),
+        transform 280ms var(--bt-ease),
+        visibility 0s;
+}
+
+/* --- Encabezado ------------------------------------------------------------ */
+
+.bt-head {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 14px 14px 16px;
+    background: linear-gradient(180deg, rgba(9, 62, 97, 0.9), rgba(9, 62, 97, 0.38));
+    border-bottom: 1px solid var(--bt-line);
+}
+
+.bt-head-ico {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    font-size: 19px;
+    color: #fff;
+    background: linear-gradient(145deg, #3a90c9, var(--bt-navy));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 10px rgba(9, 62, 97, 0.5);
+}
+
+.bt-head-txt {
+    flex: 1;
+    min-width: 0;
+}
+
+.bt-head-txt h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: #fff;
+}
+
+.bt-head-txt p {
+    margin: 2px 0 0;
+    font-size: 12.5px;
+    color: var(--bt-text-dim);
+}
+
+.bt-close {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--bt-surface);
+    font-size: 13px;
+    cursor: pointer;
+    transition:
+        background-color 120ms ease-out,
+        transform 90ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .bt-close:hover {
+        background: var(--bt-surface-hover);
+    }
+}
+
+.bt-close:active {
+    transform: scale(0.92);
+}
+
+/* --- Búsqueda y filtros ------------------------------------------------------ */
+
+.bt-tools {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--bt-line-soft);
+}
+
+.bt-search {
+    position: relative;
+    display: block;
+}
+
+.bt-search > i {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: var(--bt-text-faint);
+    pointer-events: none;
+}
+
+.bt-search input {
+    width: 100%;
+    height: 38px;
+    padding: 0 12px 0 34px;
+    border: 1px solid var(--bt-line);
+    border-radius: 10px;
+    background: var(--bt-surface);
+    font-size: 14px;
+    outline: none;
+    transition:
+        border-color 150ms ease-out,
+        background-color 150ms ease-out,
+        box-shadow 150ms ease-out;
+}
+
+.bt-search input::placeholder {
+    color: var(--bt-text-faint);
+}
+
+.bt-search input:focus {
+    border-color: var(--bt-accent-hi);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(77, 163, 255, 0.22);
+}
+
+.bt-search input::-webkit-search-cancel-button {
+    filter: invert(1) opacity(0.6);
+    cursor: pointer;
+}
+
+.bt-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.bt-chip {
+    padding: 6px 13px;
+    border: 1px solid var(--bt-line);
+    border-radius: 999px;
+    background: var(--bt-surface);
+    color: var(--bt-text-dim);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background-color 140ms ease-out,
+        border-color 140ms ease-out,
+        color 140ms ease-out,
+        transform 90ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .bt-chip:hover {
+        background: var(--bt-surface-hover);
+        color: #fff;
+    }
+}
+
+.bt-chip:active {
+    transform: scale(0.96);
+}
+
+.bt-chip[aria-pressed="true"] {
+    background: var(--bt-accent);
+    border-color: rgba(255, 255, 255, 0.28);
+    color: #fff;
+}
+
+/* --- Lista ------------------------------------------------------------------- */
+
+.bt-scroll {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.24) transparent;
+}
+
+.bt-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.bt-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+/* Píldora "Movimientos nuevos": flota arriba mientras se lee más abajo */
+.bt-nuevos-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    height: 0;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.bt-nuevos {
+    margin-top: 10px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0 14px 0 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+    background: var(--bt-accent);
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(9, 62, 97, 0.55);
+
+    opacity: 0;
+    transform: translateY(-6px) scale(0.95);
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity 140ms var(--bt-ease),
+        transform 180ms var(--bt-ease),
+        visibility 0s linear 180ms;
+}
+
+.bt-nuevos i {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.bt-nuevos.is-on {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+        opacity 180ms var(--bt-ease),
+        transform 240ms var(--bt-ease),
+        visibility 0s;
+}
+
+.bt-list {
+    list-style: none;
+    margin: 0;
+    padding: 4px 0;
+}
+
+.bt-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px 12px 14px;
+    border-bottom: 1px solid var(--bt-line-soft);
+    /* Barra lateral transparente: reserva el espacio para la marca de "nuevo" */
+    box-shadow: inset 3px 0 0 transparent;
+}
+
+.bt-item:last-child {
+    border-bottom: 0;
+}
+
+.bt-item.is-nuevo {
+    background: rgba(50, 130, 184, 0.14);
+    box-shadow: inset 3px 0 0 var(--bt-accent-hi);
+}
+
+.bt-item-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.bt-item-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.bt-user {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bt-time {
+    flex: none;
+    font-size: 12px;
+    color: var(--bt-text-faint);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.bt-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 3px;
+}
+
+.bt-tag {
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: rgba(var(--tone), 0.16);
+    color: rgb(var(--tone));
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.bt-mod {
+    font-size: 12px;
+    color: var(--bt-text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bt-item-text {
+    margin: 6px 0 0;
+    font-size: 13.5px;
+    line-height: 1.42;
+    color: rgba(255, 255, 255, 0.8);
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* --- Carga, vacío, error ------------------------------------------------------ */
+
+.bt-sk {
+    display: flex;
+    gap: 12px;
+    padding: 14px 16px;
+    animation: bt-pulse 1.3s ease-in-out infinite;
+}
+
+.bt-sk-c {
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bt-surface-hover);
+}
+
+.bt-sk-l {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 4px;
+}
+
+.bt-sk-l span {
+    height: 10px;
+    border-radius: 6px;
+    background: var(--bt-surface-hover);
+}
+
+.bt-sk-l span:nth-child(1) { width: 38%; }
+.bt-sk-l span:nth-child(2) { width: 88%; }
+
+@keyframes bt-pulse {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1; }
+}
+
+.bt-estado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 44px 28px;
+    text-align: center;
+}
+
+.bt-estado[hidden] {
+    display: none;
+}
+
+.bt-estado > i {
+    font-size: 30px;
+    color: var(--bt-text-faint);
+}
+
+.bt-estado strong {
+    font-size: 15px;
+    color: #fff;
+}
+
+.bt-estado span {
+    font-size: 13px;
+    color: var(--bt-text-dim);
+    line-height: 1.4;
+}
+
+.bt-reintentar,
+.bt-mas {
+    border: 1px solid var(--bt-line);
+    border-radius: 10px;
+    background: var(--bt-surface);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background-color 140ms ease-out,
+        transform 90ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .bt-reintentar:hover,
+    .bt-mas:hover {
+        background: var(--bt-surface-hover);
+    }
+}
+
+.bt-reintentar:active,
+.bt-mas:active {
+    transform: scale(0.97);
+}
+
+.bt-reintentar {
+    margin-top: 10px;
+    padding: 8px 16px;
+}
+
+.bt-mas {
+    display: block;
+    width: calc(100% - 28px);
+    margin: 6px 14px 16px;
+    padding: 10px;
+}
+
+.bt-mas[hidden] {
+    display: none;
+}
+
+.bt-mas:disabled {
+    opacity: 0.6;
+    cursor: progress;
+}
+
+/* ============================================================================
+   RESPONSIVO
+   ============================================================================ */
+
+@media (max-width: 576px) {
+    .bt-fab {
+        right: 16px;
+        bottom: 16px;
+        width: 54px;
+        height: 54px;
+        font-size: 22px;
+    }
+
+    .bt-toast,
+    .bt-panel {
+        right: 8px;
+        left: 8px;
+        width: auto;
+        bottom: 80px;
+    }
+
+    .bt-panel {
+        height: min(78vh, calc(100vh - 100px));
+        border-radius: 18px;
+    }
+
+    /* 16px evita el zoom automático de iOS al enfocar el campo */
+    .bt-search input {
+        font-size: 16px;
+    }
+
+    /* Que los 4 filtros quepan en una sola fila */
+    .bt-chips {
+        gap: 5px;
+    }
+
+    .bt-chip {
+        padding: 6px 11px;
+    }
+}
+
+/* ============================================================================
+   MOVIMIENTO REDUCIDO: sin repique ni desplazamientos, solo fundidos cortos
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .bt-fab.is-ringing i,
+    .bt-fab.is-ringing::before,
+    .bt-sk {
+        animation: none;
+    }
+
+    .bt-fab,
+    .bt-panel,
+    .bt-panel.is-open,
+    .bt-toast,
+    .bt-toast.is-on,
+    .bt-nuevos,
+    .bt-nuevos.is-on,
+    .bt-badge {
+        transform: none;
+        transition-property: opacity, visibility;
+        transition-duration: 120ms, 0s;
+        transition-delay: 0s, 0s;
+    }
+
+    /* Al cerrar, esperar el fundido antes de ocultar del todo */
+    .bt-panel:not(.is-open),
+    .bt-toast:not(.is-on),
+    .bt-nuevos:not(.is-on) {
+        transition-delay: 0s, 120ms;
+    }
+}
