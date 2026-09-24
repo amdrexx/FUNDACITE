@@ -24,6 +24,7 @@ error_reporting(0);
 ini_set('display_errors', 0);
 
 require_once __DIR__ . '/../vistas/includes/roles.php'; // inicia sesión + helpers de rol
+require_once __DIR__ . '/../vistas/includes/sesion.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -38,6 +39,12 @@ function responderJson(int $codigo, array $datos): void
 // --- Control de acceso -------------------------------------------------------
 if (!isset($_SESSION['id_usuario'])) {
     responderJson(401, ['ok' => false, 'error' => 'Sesión no válida.']);
+}
+
+// El sondeo es pasivo: NO renueva la actividad (si lo hiciera, la sesión del
+// administrador no expiraría nunca), pero sí respeta la expiración.
+if (sesionInactiva()) {
+    responderJson(401, ['ok' => false, 'expirada' => true, 'error' => 'Sesión expirada por inactividad.']);
 }
 
 if (!esAdministrador()) {

@@ -41,6 +41,7 @@ if(isset($_POST["login"])){
     $_SESSION["id_trabajador"]=$datos["id_trabajador"];
     $_SESSION["usuario"]=$datos["nombre"];
     $_SESSION["tipo_usuario"]=$datos["tipo_usuario"];
+    $_SESSION["ultima_actividad"]=time();
 
     registrarBitacora($conexion, 'Autenticación', 'Login', "Inicio de sesión exitoso (rol: {$datos['tipo_usuario']}).");
 

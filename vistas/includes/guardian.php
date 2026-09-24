@@ -10,3 +10,14 @@ if (!isset($_SESSION["id_usuario"])) {
 }
 
 require_once __DIR__ . '/roles.php';
+require_once __DIR__ . '/sesion.php';
+
+// Sesión inactiva: se cierra en el servidor (queda en bitácora y se muestra
+// el motivo en la pantalla de acceso).
+if (sesionInactiva()) {
+    header('Location: /FUNDACITE/controladores/logout.php?motivo=inactividad');
+    exit;
+}
+
+// Cada petición válida cuenta como actividad.
+sesionRenovar();
