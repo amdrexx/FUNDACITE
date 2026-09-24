@@ -134,6 +134,7 @@ class Solicitud {
                     t.nombres,
                     t.apellidos,
                     t.cedula,
+                    t.genero,
                     t.fecha_ingreso,
                     c.nombre_cargo,
                     sa.monto AS salario_monto

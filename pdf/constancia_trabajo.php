@@ -1,6 +1,9 @@
 <?php
 session_start();
-include_once "includes/guardian.php";
+require_once __DIR__ . '/../vistas/includes/guardian.php';
+
+// Solo Director o Administrador pueden emitir/imprimir la constancia.
+requireAdministradorODirector();
 
 require_once '../conexion.php';
 require_once '../modelos/clase_solicitud.php';
@@ -42,7 +45,61 @@ $nombreDirector =
     $constancia['nombre_director_departamento']
     ?? 'MSc. KARLA Y. MONTANEZ O';
 
-$cedulaDirector = '19.817.989';
+// Cédula de quien imprime (usuario en sesión), con puntos de miles.
+$cedulaDirector = '';
+$generoFirmante = null;
+$idTrabajadorSesion = (int) ($_SESSION['id_trabajador'] ?? 0);
+
+if ($idTrabajadorSesion > 0) {
+    $stmtUsr = $conexion->prepare(
+        'SELECT cedula, tipo_documento, genero FROM TRABAJADOR WHERE id_trabajador = ?'
+    );
+    if ($stmtUsr) {
+        $stmtUsr->bind_param('i', $idTrabajadorSesion);
+        $stmtUsr->execute();
+        $filaUsr = $stmtUsr->get_result()->fetch_assoc();
+        $stmtUsr->close();
+
+        if ($filaUsr) {
+            $generoFirmante = $filaUsr['genero'] ?? null;
+            $prefijo = match ($filaUsr['tipo_documento']) {
+                'Cédula de Extranjería' => 'E-',
+                'Pasaporte'             => 'P-',
+                default                 => 'V-',
+            };
+            $soloDigitos = preg_replace('/\D/', '', (string) $filaUsr['cedula']);
+            $cedulaDirector = $prefijo . ($soloDigitos !== ''
+                ? number_format((int) $soloDigitos, 0, '', '.')
+                : (string) $filaUsr['cedula']);
+        }
+    }
+}
+
+if ($cedulaDirector === '') {
+    die('No se pudo determinar la cédula del usuario que emite la constancia.');
+}
+
+/**
+ * Devuelve la forma gramatical según el género registrado.
+ * Si el género no está registrado se usa la forma neutra "(a)",
+ * igual que el resto del sistema (p. ej. "ciudadano(a)").
+ */
+function porGenero(?string $genero, string $masc, string $fem, string $neutro): string
+{
+    return match ($genero) {
+        'Masculino' => $masc,
+        'Femenino'  => $fem,
+        default     => $neutro,
+    };
+}
+
+// Cargo del firmante (quien imprime) y del trabajador, según su género.
+$tituloFirmante = porGenero($generoFirmante, 'Director', 'Directora', 'Director(a)');
+$cargoFirmante  = $tituloFirmante . ' de Gestión Humana';
+
+$generoTrabajador = $constancia['genero'] ?? null;
+$ciudadanoTexto   = porGenero($generoTrabajador, 'el ciudadano', 'la ciudadana', 'el ciudadano(a)');
+
 $rif = 'G20009933-0';
 
 $logoMinisterioPath = __DIR__ . '/../vistas/img/logo_ministerio.png';
@@ -460,11 +517,11 @@ body {
         Quien suscribe:
         <strong>' . e($nombreDirector) . '</strong>,
         Titular de la cédula de identidad
-        <strong>V-' . e($cedulaDirector) . '</strong>,
-        en mí carácter de Directora de Gestión Humana de la
+        <strong>' . e($cedulaDirector) . '</strong>,
+        en mi carácter de ' . e($cargoFirmante) . ' de la
         <strong>FUNDACIÓN PARA EL DESARROLLO DE LA CIENCIA Y TECNOLOGÍA
         (FUNDACITE YARACUY)</strong>,
-        hago constar por medio de la presente que el ciudadano(a):
+        hago constar por medio de la presente que ' . e($ciudadanoTexto) . ':
         <strong>' . e($nombreTrabajador) . '</strong>,
         Titular de la C.I.
         <strong>' . e($cedulaTrabajador) . '</strong>,
@@ -490,7 +547,7 @@ body {
             ' . e($nombreDirector) . '
         </div>
         <div class="cargo-firma">
-            Directora de Gestión Humana.
+            ' . e($cargoFirmante) . '.
         </div>
         <div class="cargo-firma">
                Providencia Administrativa FY-004 de fecha  15/09/2025

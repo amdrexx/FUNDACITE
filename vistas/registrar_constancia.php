@@ -163,6 +163,7 @@ unset($_SESSION['errores_constancia'], $_SESSION['exito_constancia']);
     </div>
 </div>
 
+<script src="/FUNDACITE/vistas/js/valid_constancia.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var selectTrabajador = document.getElementById('id_trabajador');

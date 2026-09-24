@@ -174,7 +174,7 @@ $fechaEmision   = !empty($constancia['fecha'])
                 <!-- 6. Salario -->
                 <div class="field">
                     <label>6. Salario Mensual (Bs.)</label>
-                    <input type="text" class="campo-auto"
+                    <input type="text" id="salario_display" class="campo-auto"
                            value="<?= $salarioMonto !== null ? number_format((float)$salarioMonto, 2, ',', '.') : '' ?>"
                            readonly placeholder="---">
                 </div>
@@ -237,6 +237,8 @@ $fechaEmision   = !empty($constancia['fecha'])
         <button onclick="document.getElementById('customAlert').classList.add('hidden')">Cerrar</button>
     </div>
 </div>
+
+<script src="/FUNDACITE/vistas/js/valid_constancia.js"></script>
 
 <?php if (!empty($errores)): ?>
 <script>
