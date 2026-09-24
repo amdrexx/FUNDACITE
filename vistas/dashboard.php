@@ -195,7 +195,7 @@ new Chart(ctx, {
 
                 labels: {
 
-                    color: '#000',
+                    color: '#ffffff',
                     font: {
 
                         size: 14
