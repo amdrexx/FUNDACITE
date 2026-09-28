@@ -15,11 +15,13 @@ unset(
 
 require_once '../conexion.php';
 require_once '../modelos/clase_trabajador.php';
+require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
 $buscar = trim($_GET['buscar'] ?? '');
 
 $trabajador = new Trabajador($conexion);
 $trabajadores = $trabajador->listarTrabajadores($buscar);
+registrarBitacora($conexion, 'Trabajadores', 'Consultar', $buscar !== '' ? "Consultó el listado de trabajadores (búsqueda: \"$buscar\")." : 'Consultó el listado de trabajadores.');
 ?>
 <!DOCTYPE html>
 <html lang="es">

@@ -74,7 +74,14 @@ class ParroquiaController
             global $conexion;
             registrarBitacora($conexion, 'Parroquias', 'Crear', "Registró parroquia(s) en el municipio ID $cod_muni: " . implode(', ', (array) $parroquias) . ".");
 
-            header("Location: ../vistas/registro_parroquia.php");
+            $cod_est = $_POST["cod_est"] ?? "";
+            $destino = "../vistas/registro_parroquia.php";
+
+            if (ctype_digit((string) $cod_est) && (int) $cod_est > 0) {
+                $destino .= "?estado=" . (int) $cod_est;
+            }
+
+            header("Location: " . $destino);
             exit();
         }
     }
@@ -95,7 +102,14 @@ class ParroquiaController
             global $conexion;
             registrarBitacora($conexion, 'Parroquias', 'Editar', "Actualizó la parroquia ID $cod_par a \"$nombre\".");
 
-            header("Location: ../vistas/registro_parroquia.php");
+            $cod_est = $_POST["cod_est"] ?? "";
+            $destino = "../vistas/registro_parroquia.php";
+
+            if (ctype_digit((string) $cod_est) && (int) $cod_est > 0) {
+                $destino .= "?estado=" . (int) $cod_est;
+            }
+
+            header("Location: " . $destino);
             exit();
         }
     }
@@ -123,7 +137,15 @@ public function eliminar()
             registrarBitacora($conexion, 'Parroquias', 'Eliminar', "Eliminó la parroquia ID $codPar.");
         }
 
-        header("Location: ../vistas/registro_parroquia.php?msg=" . $mensaje);
+        $destino = "../vistas/registro_parroquia.php?msg=" . $mensaje;
+
+        if (isset($_GET["estado"]) && (int) $_GET["estado"] > 0) {
+            $destino .= "&estado=" . (int) $_GET["estado"];
+        } elseif (isset($_GET["ver"]) && $_GET["ver"] === "todos") {
+            $destino .= "&ver=todos";
+        }
+
+        header("Location: " . $destino);
         exit();
     }
 }

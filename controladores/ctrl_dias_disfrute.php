@@ -25,6 +25,36 @@ function puedeGozarVacaciones(string $tipoContrato): bool
     return !in_array($tipoContrato, $noGozan, true);
 }
 
+// =====================================================
+// ELIMINAR DÍAS DE DISFRUTE (viene de lista_dias_disfrute.php)
+// =====================================================
+if (isset($_POST['eliminar_solicitud'])) {
+
+    $id_solicitud = (int) ($_POST['id_solicitud'] ?? 0);
+
+    if ($id_solicitud <= 0) {
+        $_SESSION['error_edicion'] = ['No se especificó una solicitud válida para eliminar.'];
+        header('Location: /FUNDACITE/vistas/lista_dias_disfrute.php');
+        exit;
+    }
+
+    try {
+        $ok = $solicitudModelo->eliminarDiasDisfrute($id_solicitud);
+
+        if ($ok) {
+            registrarBitacora($conexion, 'Días de Disfrute', 'Eliminar', "Eliminó la solicitud de días de disfrute ID $id_solicitud.");
+            $_SESSION['exito_edicion'] = 'Solicitud de días de disfrute eliminada correctamente.';
+        } else {
+            $_SESSION['error_edicion'] = ['No se pudo eliminar la solicitud de días de disfrute.'];
+        }
+    } catch (mysqli_sql_exception $e) {
+        $_SESSION['error_edicion'] = ['Error de base de datos al eliminar: ' . $e->getMessage()];
+    }
+
+    header('Location: /FUNDACITE/vistas/lista_dias_disfrute.php');
+    exit;
+}
+
 /**
  * CONTROL DE ACCIONES
  */

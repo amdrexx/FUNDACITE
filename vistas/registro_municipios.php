@@ -9,6 +9,9 @@ require_once("../controladores/ctrl_municipio.php");
 
 $controlador = new MunicipioController();
 
+// Estado que llega por URL: sirve para enfocar el filtro de la tabla
+$estadoSeleccionado = isset($_GET['estado']) ? (int) $_GET['estado'] : 0;
+
 // Guardar
 if (isset($_POST['guardar'])) {
 
@@ -19,7 +22,7 @@ if (isset($_POST['guardar'])) {
 
         $controlador->guardar($cod_est, $nombre);
 
-        header("Location: registro_municipios.php");
+        header("Location: registro_municipios.php?estado=" . (int) $cod_est);
         exit();
     }
 }
@@ -33,7 +36,11 @@ if (isset($_POST['actualizar'])) {
 
     $controlador->actualizar($id, $cod_est, $nombre);
 
-    header("Location: registro_municipios.php");
+    if (ctype_digit((string) $cod_est) && (int) $cod_est > 0) {
+        header("Location: registro_municipios.php?estado=" . (int) $cod_est);
+    } else {
+        header("Location: registro_municipios.php");
+    }
     exit();
 }
 
@@ -52,7 +59,13 @@ if (isset($_GET['eliminar'])) {
         $mensaje = "error";
     }
 
-    header("Location: registro_municipios.php?msg=" . $mensaje);
+    $destino = "registro_municipios.php?msg=" . $mensaje;
+
+    if ($estadoSeleccionado > 0) {
+        $destino .= "&estado=" . $estadoSeleccionado;
+    }
+
+    header("Location: " . $destino);
     exit();
 }
 
@@ -64,10 +77,10 @@ if (isset($_GET['editar'])) {
     $municipioEditar = $controlador->buscar($_GET['editar']);
 }
 
-// Listar Estados
+// Listar Estados (formulario de registro y filtro de la tabla)
 $estados = $controlador->obtenerEstados();
 
-// Listar Municipios
+// Listar Municipios (todos; el filtrado y la paginación se hacen en el cliente)
 $municipios = $controlador->listar();
 
 ?>
@@ -109,183 +122,266 @@ $municipios = $controlador->listar();
 
     <div class="main">
 
-        <div class="contenedor-estados">
+        <!-- ================= CABECERA DEL MÓDULO ================= -->
 
-<!-- ================= FORMULARIO ================= -->
+        <div class="cabecera-modulo">
 
-<div class="form-card">
+            <i class="bi bi-map"></i>
 
-    <form method="POST">
-
-        <?php if ($municipioEditar) { ?>
-
-            <input
-                type="hidden"
-                name="cod_muni"
-                value="<?= $municipioEditar['cod_muni']; ?>"
-            >
-
-        <?php } ?>
-
-        <!-- TÍTULO -->
-        <div class="full-width">
-            <h2 style="text-align:center;">
-                <?= $municipioEditar ? "Editar Municipio" : "Registro de Municipio"; ?>
-            </h2>
-        </div>
-
-        <!-- ESTADO -->
-        <div class="field">
-
-            <label>Seleccione el Estado</label>
-
-            <select name="cod_est" required>
-
-                <option value="">Seleccione un Estado</option>
-
-                <?php foreach ($estados as $estado) { ?>
-
-                    <option
-                        value="<?= $estado['cod_est']; ?>"
-                        <?= ($municipioEditar && $municipioEditar['cod_est'] == $estado['cod_est']) ? 'selected' : ''; ?>
-                    >
-                        <?= $estado['nombre']; ?>
-                    </option>
-
-                <?php } ?>
-
-            </select>
+            <h1>REGISTRO DE MUNICIPIOS</h1>
 
         </div>
 
-        <!-- MUNICIPIO -->
-        <div class="field">
+        <!-- ================= FORMULARIO ================= -->
 
-            <label>Nombre del Municipio</label>
-
-            <input
-                type="text"
-                name="nombre"
-                placeholder="Ingrese el municipio"
-                value="<?= $municipioEditar['nombre'] ?? ''; ?>"
-                required
-            >
-
-        </div>
-
-        <!-- BOTÓN -->
-        <div class="full-width" style="text-align:center;">
+        <div class="modulo-card">
 
             <?php if ($municipioEditar) { ?>
 
-                <button
-                    type="submit"
-                    name="actualizar"
-                    class="btn-guardar"
-                    style="max-width:350px;"
-                >
-                    Actualizar Municipio
-                </button>
-
-            <?php } else { ?>
-
-                <button
-                    type="submit"
-                    name="guardar"
-                    class="btn-guardar"
-                    style="max-width:350px;"
-                >
-                    Guardar Municipio
-                </button>
+                <h3 class="titulo-card">Editar Municipio</h3>
 
             <?php } ?>
 
+            <form method="POST">
+
+                <?php if ($municipioEditar) { ?>
+
+                    <input
+                        type="hidden"
+                        name="cod_muni"
+                        value="<?= $municipioEditar['cod_muni']; ?>"
+                    >
+
+                <?php } ?>
+
+                <div class="form-registro">
+
+                    <!-- ESTADO -->
+                    <div class="field">
+
+                        <label>Estado</label>
+
+                        <select name="cod_est" required>
+
+                            <option value="">Seleccione un Estado</option>
+
+                            <?php foreach ($estados as $estado) { ?>
+
+                                <option
+                                    value="<?= $estado['cod_est']; ?>"
+                                    <?php if ($municipioEditar) { ?>
+                                        <?= ($municipioEditar['cod_est'] == $estado['cod_est']) ? 'selected' : ''; ?>
+                                    <?php } else { ?>
+                                        <?= ($estadoSeleccionado == $estado['cod_est']) ? 'selected' : ''; ?>
+                                    <?php } ?>
+                                >
+                                    <?= $estado['nombre']; ?>
+                                </option>
+
+                            <?php } ?>
+
+                        </select>
+
+                    </div>
+
+                    <!-- MUNICIPIO -->
+                    <div class="field">
+
+                        <label>Municipio</label>
+
+                        <input
+                            type="text"
+                            name="nombre"
+                            placeholder="Ingrese el municipio"
+                            value="<?= $municipioEditar['nombre'] ?? ''; ?>"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+                <!-- BOTONES DEL FORMULARIO -->
+                <?php if ($municipioEditar) { ?>
+
+                    <div class="form-acciones">
+
+                        <a
+                            href="registro_municipios.php?estado=<?= (int) $municipioEditar['cod_est']; ?>"
+                            class="btn-eliminar"
+                        >
+                            <i class="bi bi-x-circle"></i>
+
+                            Cancelar
+                        </a>
+
+                        <button
+                            type="submit"
+                            name="actualizar"
+                            class="btn-primario"
+                        >
+                            <i class="bi bi-check-lg"></i>
+
+                            Actualizar
+                        </button>
+
+                    </div>
+
+                <?php } else { ?>
+
+                    <div class="form-acciones" style="justify-content:center;">
+
+                        <button
+                            type="submit"
+                            name="guardar"
+                            class="btn-primario"
+                        >
+                            <i class="bi bi-plus-lg"></i>
+
+                            Registrar
+                        </button>
+
+                    </div>
+
+                <?php } ?>
+
+            </form>
+
         </div>
 
-    </form>
+        <!-- ================= TABLA ================= -->
 
-</div>
+        <div class="modulo-card" id="moduloUbicacion" data-etiqueta="municipios">
 
-            <br>
+            <!-- BUSCADOR Y FILTRO POR ESTADO -->
+            <div class="toolbar-tabla">
 
-            <div class="form-card">
+                <div class="input-icon">
 
-                <center>
+                    <i class="bi bi-search"></i>
 
-                    <h2>Lista de Municipios</h2>
+                    <input
+                        type="text"
+                        class="input-tabla"
+                        id="buscadorRegistros"
+                        placeholder="Buscar municipio..."
+                    >
 
-                </center>
-                <table class="tabla">
+                </div>
 
-                    <thead>
+                <label class="filtro-label" for="filtroEstado">Estado</label>
 
-                        <tr>
+                <select class="filtro-select" id="filtroEstado">
 
-                            <th>Estado</th>
-                            <th>Municipio</th>
-                            <th>Acciones</th>
+                    <option value="">Todos</option>
+
+                    <?php foreach ($estados as $estado) { ?>
+
+                        <option
+                            value="<?= $estado['cod_est']; ?>"
+                            <?= ($estadoSeleccionado == $estado['cod_est']) ? 'selected' : ''; ?>
+                        >
+                            <?= htmlspecialchars($estado['nombre']); ?>
+                        </option>
+
+                    <?php } ?>
+
+                </select>
+
+            </div>
+
+            <!-- LISTADO -->
+            <table class="tabla tabla-modulo">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Estado</th>
+
+                        <th>Municipio</th>
+
+                        <th style="text-align:center;">Acciones</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="listaRegistros">
+
+                    <?php foreach ($municipios as $municipio) { ?>
+
+                        <tr
+                            data-estado="<?= $municipio['cod_est']; ?>"
+                            data-busqueda="<?= htmlspecialchars($municipio['municipio'] . ' ' . $municipio['estado']); ?>"
+                        >
+
+                            <td>
+
+                                <?= htmlspecialchars($municipio['estado']); ?>
+
+                            </td>
+
+                            <td>
+
+                                <?= htmlspecialchars($municipio['municipio']); ?>
+
+                            </td>
+
+                            <td class="acciones">
+
+                                <!-- BOTÓN EDITAR -->
+                                <button
+                                    type="button"
+                                    class="btn-editar"
+                                    onclick="window.location.href='registro_municipios.php?editar=<?= $municipio['cod_muni']; ?>&estado=<?= $municipio['cod_est']; ?>';"
+                                >
+
+                                    <i class="bi bi-pencil-square"></i>
+
+                                    Editar
+
+                                </button>
+
+                                <!-- BOTÓN ELIMINAR -->
+                                <button
+                                    type="button"
+                                    class="btn-eliminar"
+                                    onclick="if(confirm('¿Desea eliminar este municipio?')){window.location.href='registro_municipios.php?eliminar=<?= $municipio['cod_muni']; ?>&estado=<?= $municipio['cod_est']; ?>';}"
+                                >
+
+                                    <i class="bi bi-trash"></i>
+
+                                    Eliminar
+
+                                </button>
+
+                            </td>
 
                         </tr>
 
-                    </thead>
+                    <?php } ?>
 
-                    <tbody>
+                    <tr id="filaVacia" style="display:none;">
 
-                        <?php foreach ($municipios as $municipio) { ?>
+                        <td colspan="3" class="sin-registros">
 
-                            <tr>
+                            No se encontraron municipios.
 
-                                <td>
+                        </td>
 
-                                    <?php echo $municipio['estado']; ?>
+                    </tr>
 
-                                </td>
+                </tbody>
 
-                                <td>
+            </table>
 
-                                    <?php echo $municipio['municipio']; ?>
+            <!-- PIE: CONTADOR Y PAGINACIÓN -->
+            <div class="paginacion-fila">
 
-                                </td>
+                <span id="infoRegistros"></span>
 
-                                <td class="acciones">
-
-                                    <!-- BOTÓN EDITAR -->
-
-                                    <button
-                                        type="button"
-                                        class="btn-editar"
-                                        onclick="window.location.href='registro_municipios.php?editar=<?php echo $municipio['cod_muni']; ?>';"
-                                    >
-
-                                        <i class="bi bi-pencil-square"></i>
-
-                                        Editar
-
-                                    </button>
-
-                                    <!-- BOTÓN ELIMINAR -->
-
-                                    <button
-                                        type="button"
-                                        class="btn-eliminar"
-                                        onclick="if(confirm('¿Desea eliminar este municipio?')){window.location.href='registro_municipios.php?eliminar=<?php echo $municipio['cod_muni']; ?>';}"
-                                    >
-
-                                        <i class="bi bi-trash"></i>
-
-                                        Eliminar
-
-                                    </button>
-
-                                </td>
-
-                            </tr>
-
-                        <?php } ?>
-
-                    </tbody>
-
-                </table>
+                <div class="paginacion" id="paginacion"></div>
 
             </div>
 
@@ -298,8 +394,30 @@ $municipios = $controlador->listar();
     <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
     <script src="/FUNDACITE/vistas/js/boton_desplegable.js"></script>
     <script src="/FUNDACITE/vistas/js/valid_trabajadores.js"></script>
-    <script src="/FUNDACITE/vistas/js/parroquia.js"></script>
-    
+
+    <!-- BUSCADOR, FILTRO POR ESTADO Y PAGINACIÓN DE LA TABLA -->
+    <script src="/FUNDACITE/vistas/js/filtrar_tabla_ubicacion.js"></script>
+
+<?php if (isset($_GET['msg'])): ?>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const mensajes = {
+            restrict: "No se puede eliminar: este municipio tiene parroquias registradas.",
+            notfound: "El registro que intentaste eliminar ya no existe.",
+            error: "Ocurrió un error al eliminar el registro.",
+            ok: "Municipio eliminado correctamente."
+        };
+
+        const tipo = "<?= htmlspecialchars($_GET['msg']) ?>";
+
+        if (mensajes[tipo]) {
+            document.getElementById("alertMessage").innerText = mensajes[tipo];
+            document.getElementById("customAlert").classList.remove("hidden");
+        }
+    });
+</script>
+<?php endif; ?>
+
 </body>
 
 </html>

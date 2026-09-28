@@ -22,6 +22,15 @@ if (!$editar) {
 }
  
 $estados = $controller->listarEstados();
+
+// Contexto de navegación (volver al listado por estado donde se encontraba)
+$contexto = '';
+
+if (isset($_GET['estado']) && (int) $_GET['estado'] > 0) {
+    $contexto = '?estado=' . (int) $_GET['estado'];
+} elseif (isset($_GET['ver']) && $_GET['ver'] === 'todos') {
+    $contexto = '?ver=todos';
+}
 ?>
  
 <!DOCTYPE html>
@@ -185,7 +194,7 @@ $estados = $controller->listarEstados();
                         </button>
  
                         <a
-                            href="registro_parroquia.php"
+                            href="registro_parroquia.php<?php echo $contexto; ?>"
                             class="btn-eliminar"
                             style="text-decoration:none; display:flex; align-items:center; justify-content:center;"
                         >
