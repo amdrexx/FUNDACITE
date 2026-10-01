@@ -8,7 +8,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-require_once __DIR__ . '/../vistas/includes/roles.php';
+require_once __DIR__ . '/../vistas/includes/guardian.php'; // exige sesión (y deja rastro si no la hay)
 require_once "../conexion.php";
 require_once "../modelos/clase_usuario.php";
 require_once __DIR__ . "/helpers/bitacora_helper.php";
@@ -20,11 +20,7 @@ $usuario = new Usuario($conexion);
 // ============================================================================
 if (isset($_POST['registrar_usuario'])) {
 
-    if (!esAdministrador()) {
-        $_SESSION['error_registro'] = ["No tienes permisos para registrar usuarios."];
-        header("Location: ../vistas/lista_usuarios.php");
-        exit;
-    }
+    requireAdministrador(); // si no es Administrador queda en bitácora como "Acceso denegado"
 
     $id_trabajador       = trim($_POST['id_trabajador'] ?? '');
     $nombre              = trim($_POST['nombre'] ?? '');
@@ -97,7 +93,7 @@ if (isset($_POST['registrar_usuario'])) {
         $tipo_usuario
     )) {
         unset($_SESSION['old_input']);
-        registrarBitacora($conexion, 'Usuarios', 'Crear', "Registró el usuario \"$nombre\" (rol: $tipo_usuario).");
+        registrarBitacora($conexion, 'Usuarios', 'Crear', "Registró el usuario \"$nombre\" (rol: $tipo_usuario) para el trabajador \"" . bitacoraNombreDe($conexion, 'trabajador', $id_trabajador) . "\".");
         $_SESSION['exito_registro'] = "Usuario registrado correctamente.";
     } else {
         $_SESSION['error_registro'][] = "No fue posible registrar el usuario.";
@@ -112,11 +108,7 @@ if (isset($_POST['registrar_usuario'])) {
 // ============================================================================
 if (isset($_POST['editar_usuario'])) {
 
-    if (!esAdministrador()) {
-        $_SESSION['error_registro'] = ["No tienes permisos para editar usuarios."];
-        header("Location: ../vistas/lista_usuarios.php");
-        exit;
-    }
+    requireAdministrador(); // si no es Administrador queda en bitácora como "Acceso denegado"
 
     $id_usuario          = intval($_POST['id_usuario']);
     $id_trabajador       = intval($_POST['id_trabajador']);
@@ -163,6 +155,8 @@ if (isset($_POST['editar_usuario'])) {
         exit;
     }
 
+    $antes = bitacoraSnapshot($conexion, 'usuario', $id_usuario);
+
     $actualizado = $usuario->actualizar(
         $id_usuario,
         $id_trabajador,
@@ -174,7 +168,15 @@ if (isset($_POST['editar_usuario'])) {
         if (!empty($contrasena)) {
             $usuario->actualizarPassword($id_usuario, $contrasena);
         }
-        registrarBitacora($conexion, 'Usuarios', 'Editar', "Actualizó el usuario ID $id_usuario (\"$nombre\").");
+        $despues = bitacoraSnapshot($conexion, 'usuario', $id_usuario);
+        $cambios = bitacoraCambios($antes, $despues);
+
+        if (!empty($contrasena)) {
+            // Nunca se guarda la contraseña, solo el hecho de que cambió.
+            $cambios = ($cambios === 'sin cambios en los datos.' ? '' : $cambios . ' ') . 'Contraseña: actualizada.';
+        }
+
+        registrarBitacora($conexion, 'Usuarios', 'Editar', 'Actualizó el usuario "' . bitacoraNombre($antes, $id_usuario) . '": ' . $cambios);
         $_SESSION['exito_registro'] = "Usuario actualizado correctamente.";
     } else {
         $_SESSION['error_registro'][] = "No fue posible actualizar el usuario.";
@@ -189,16 +191,14 @@ if (isset($_POST['editar_usuario'])) {
 // ============================================================================
 if (isset($_GET['eliminar'])) {
 
-    if (!esAdministrador()) {
-        $_SESSION['error_registro'] = ["No tienes permisos para eliminar usuarios."];
-        header("Location: ../vistas/lista_usuarios.php");
-        exit;
-    }
+    requireAdministrador(); // si no es Administrador queda en bitácora como "Acceso denegado"
 
     $id_usuario = intval($_GET['eliminar']);
 
+    $antes = bitacoraSnapshot($conexion, 'usuario', $id_usuario);
+
     if ($usuario->eliminar($id_usuario)) {
-        registrarBitacora($conexion, 'Usuarios', 'Eliminar', "Desactivó el usuario ID $id_usuario.");
+        registrarBitacora($conexion, 'Usuarios', 'Eliminar', 'Desactivó el usuario "' . bitacoraNombre($antes, $id_usuario) . '" (rol: ' . ($antes['Rol'] ?? 'desconocido') . ').');
         $_SESSION['exito_registro'] = "Usuario desactivado correctamente.";
     } else {
         $_SESSION['error_registro'][] = "No fue posible desactivar el usuario.";
@@ -213,16 +213,14 @@ if (isset($_GET['eliminar'])) {
 // ============================================================================
 if (isset($_GET['activar'])) {
 
-    if (!esAdministrador()) {
-        $_SESSION['error_registro'] = ["No tienes permisos para activar usuarios."];
-        header("Location: ../vistas/lista_usuarios.php");
-        exit;
-    }
+    requireAdministrador(); // si no es Administrador queda en bitácora como "Acceso denegado"
 
     $id_usuario = intval($_GET['activar']);
 
+    $antes = bitacoraSnapshot($conexion, 'usuario', $id_usuario);
+
     if ($usuario->activar($id_usuario)) {
-        registrarBitacora($conexion, 'Usuarios', 'Editar', "Activó el usuario ID $id_usuario.");
+        registrarBitacora($conexion, 'Usuarios', 'Editar', 'Activó el usuario "' . bitacoraNombre($antes, $id_usuario) . '" (rol: ' . ($antes['Rol'] ?? 'desconocido') . ').');
         $_SESSION['exito_registro'] = "Usuario activado correctamente.";
     } else {
         $_SESSION['error_registro'][] = "No fue posible activar el usuario.";
@@ -236,6 +234,8 @@ if (isset($_GET['activar'])) {
 // BUSCAR USUARIO POR ID
 // ============================================================================
 if (isset($_GET['buscar'])) {
+
+    requireAdministrador(); // la ficha de usuarios es solo para el Administrador
 
     $id_usuario = intval($_GET['buscar']);
 

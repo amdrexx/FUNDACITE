@@ -26,8 +26,10 @@ if (isset($_POST['eliminar_trabajador'])) {
         exit;
     }
 
+    $antes = bitacoraSnapshot($conexion, 'trabajador', $idTrabajador);
+
     if ($trabajador->eliminarLogicamenteTrabajador($idTrabajador)) {
-        registrarBitacora($conexion, 'Trabajadores', 'Eliminar', "Eliminó lógicamente al trabajador ID $idTrabajador.");
+        registrarBitacora($conexion, 'Trabajadores', 'Eliminar', 'Eliminó lógicamente al trabajador "' . bitacoraNombre($antes, $idTrabajador) . '".');
         $_SESSION['exito_eliminacion'] = "Trabajador eliminado lógicamente correctamente.";
         header("Location: ../vistas/lista_trabajadores.php");
         exit;
@@ -99,6 +101,9 @@ if (isset($_POST['editar_trabajador'])) {
         exit;
     }
 
+    // Foto del trabajador ANTES de tocar su dirección o sus datos (para la bitácora).
+    $antes = bitacoraSnapshot($conexion, 'trabajador', $idTrabajador);
+
     // Si el trabajador ya tenía una dirección asignada, se ACTUALIZA ese mismo
     // registro (mismo id_dir, nueva parroquia/texto). Si por algún motivo no
     // tenía ninguna, se crea una nueva (caso excepcional / datos antiguos).
@@ -124,7 +129,8 @@ if (isset($_POST['editar_trabajador'])) {
         $status,
         $idDir
     )) {
-        registrarBitacora($conexion, 'Trabajadores', 'Editar', "Actualizó los datos del trabajador ID $idTrabajador.");
+        $despues = bitacoraSnapshot($conexion, 'trabajador', $idTrabajador);
+        registrarBitacora($conexion, 'Trabajadores', 'Editar', 'Actualizó los datos del trabajador "' . bitacoraNombre($antes, $idTrabajador) . '": ' . bitacoraCambios($antes, $despues));
         $_SESSION['exito_edicion'] = "Trabajador actualizado correctamente.";
         header("Location: ../vistas/lista_trabajadores.php");
         exit;

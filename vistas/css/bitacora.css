@@ -733,7 +733,14 @@
     white-space: nowrap;
 }
 
+.bt-item-text.is-open {
+    display: block;
+    -webkit-line-clamp: unset;
+    overflow: visible;
+}
+
 .bt-item-text {
+    cursor: pointer; /* clic = ver el detalle completo (antes → después) */
     margin: 6px 0 0;
     font-size: 13.5px;
     line-height: 1.42;

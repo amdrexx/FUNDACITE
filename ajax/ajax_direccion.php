@@ -6,6 +6,8 @@
 error_reporting(0);
 ini_set('display_errors', 0);
 
+define('GUARDIAN_JSON', true); // sin sesión: 401 en JSON (y queda en bitácora)
+require_once __DIR__ . '/../vistas/includes/guardian.php';
 require_once("../controladores/ctrl_direccion.php");
 
 $controller = new DireccionController();

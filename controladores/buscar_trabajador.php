@@ -1,6 +1,9 @@
 <?php
 // ARCHIVO: controladores/buscar_trabajador.php
 
+define('GUARDIAN_JSON', true); // sin sesión: 401 en JSON (y queda en bitácora)
+require_once __DIR__ . '/../vistas/includes/guardian.php';
+
 ob_start();
 header('Content-Type: application/json; charset=utf-8');
 

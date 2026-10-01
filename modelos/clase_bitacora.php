@@ -12,12 +12,14 @@ class Bitacora
     // Acciones que hacen "sonar" la campana del administrador. El resto
     // (Listar, Consultar, Login, Logout, Generar PDF) se ve en el panel pero
     // no notifica, para no saturar con ruido.
-    const ACCIONES_ALERTA = ['Crear', 'Editar', 'Eliminar', 'Login fallido'];
+    // "Acceso sin sesión" y "Acceso denegado" son intentos de entrar por URL a
+    // un módulo sin sesión o sin permiso de rol: siempre deben llamar la atención.
+    const ACCIONES_ALERTA = ['Crear', 'Editar', 'Eliminar', 'Login fallido', 'Acceso sin sesión', 'Acceso denegado'];
 
     // Agrupaciones de acciones para los filtros rápidos del panel.
     const GRUPOS = [
         'cambios'   => ['Crear', 'Editar', 'Eliminar'],
-        'accesos'   => ['Login', 'Logout', 'Login fallido'],
+        'accesos'   => ['Login', 'Logout', 'Login fallido', 'Acceso sin sesión', 'Acceso denegado'],
         'consultas' => ['Listar', 'Consultar', 'Generar PDF'],
     ];
 
@@ -51,6 +53,15 @@ class Bitacora
         if (!$stmt) {
             return false;
         }
+
+        // Los campos tienen longitud máxima (descripcion = 500). Con MySQL en modo
+        // estricto un texto más largo haría fallar el INSERT y se perdería el registro.
+        $usuario     = mb_substr((string) $usuario, 0, 100);
+        $modulo      = mb_substr((string) $modulo, 0, 100);
+        $accion      = mb_substr((string) $accion, 0, 50);
+        $descripcion = mb_strlen((string) $descripcion) > 500
+            ? mb_substr((string) $descripcion, 0, 497) . '...'
+            : (string) $descripcion;
 
         $stmt->bind_param(
             "issss",

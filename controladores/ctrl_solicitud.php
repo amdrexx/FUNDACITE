@@ -2,6 +2,7 @@
 
 session_start();
 
+require_once __DIR__ . '/../vistas/includes/guardian.php';
 require_once '../conexion.php';
 require_once '../modelos/clase_solicitud.php';
 require_once __DIR__ . '/helpers/bitacora_helper.php';
@@ -32,10 +33,11 @@ if (isset($_POST['eliminar_solicitud'])) {
     }
 
     try {
+        $antes = bitacoraSnapshot($conexion, 'solicitud', $id_solicitud);
         $ok = $solicitudModelo->eliminar($id_solicitud);
 
         if ($ok) {
-            registrarBitacora($conexion, 'Solicitudes', 'Eliminar', "Eliminó la solicitud ID $id_solicitud.");
+            registrarBitacora($conexion, 'Solicitudes', 'Eliminar', 'Eliminó la solicitud "' . bitacoraNombre($antes, $id_solicitud) . '".');
             $_SESSION['exito_edicion'] = 'Solicitud eliminada correctamente.';
         } else {
             $_SESSION['error_edicion'] = ['No se pudo eliminar la solicitud.'];

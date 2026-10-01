@@ -39,10 +39,11 @@ if (isset($_POST['eliminar_solicitud'])) {
     }
 
     try {
+        $antes = bitacoraSnapshot($conexion, 'solicitud', $id_solicitud);
         $ok = $solicitudModelo->eliminarDiasDisfrute($id_solicitud);
 
         if ($ok) {
-            registrarBitacora($conexion, 'Días de Disfrute', 'Eliminar', "Eliminó la solicitud de días de disfrute ID $id_solicitud.");
+            registrarBitacora($conexion, 'Días de Disfrute', 'Eliminar', 'Eliminó los días de disfrute de la solicitud "' . bitacoraNombre($antes, $id_solicitud) . '".');
             $_SESSION['exito_edicion'] = 'Solicitud de días de disfrute eliminada correctamente.';
         } else {
             $_SESSION['error_edicion'] = ['No se pudo eliminar la solicitud de días de disfrute.'];
@@ -141,7 +142,7 @@ if (isset($_POST['accion'])) {
             );
 
             if ($resultado) {
-                registrarBitacora($conexion, 'Días de Disfrute', 'Crear', "Registró días de disfrute para el trabajador ID $id_trabajador (código $codigo_solicitud).");
+                registrarBitacora($conexion, 'Días de Disfrute', 'Crear', "Registró días de disfrute para el trabajador \"" . bitacoraNombreDe($conexion, 'trabajador', $id_trabajador) . "\" (código $codigo_solicitud, del $desde al $hasta).");
                 $_SESSION['exito'] = 'Dias de disfrute registrados correctamente.';
                 unset($_SESSION['old']);
             } else {

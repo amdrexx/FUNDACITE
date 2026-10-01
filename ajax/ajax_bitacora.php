@@ -14,9 +14,10 @@
 //       q           Texto libre (opcional)
 //       antes_id    Cursor: trae los anteriores a este id (opcional)
 //
-// NOTA: este endpoint NO llama a registrarBitacora(); de lo contrario cada
-//       consulta de la campana generaría un registro nuevo y se alimentaría
-//       a sí misma.
+// NOTA: las consultas válidas de la campana NO se registran en la bitácora; de
+//       lo contrario cada sondeo generaría un registro nuevo y se alimentaría a
+//       sí misma. Solo se registran los accesos NO permitidos (sin sesión o sin
+//       rol de administrador), que son raros y llevan antirrebote de 60 s.
 // ============================================================================
 
 // Suprimimos errores para no contaminar el JSON de respuesta
@@ -25,6 +26,7 @@ ini_set('display_errors', 0);
 
 require_once __DIR__ . '/../vistas/includes/roles.php'; // inicia sesión + helpers de rol
 require_once __DIR__ . '/../vistas/includes/sesion.php';
+require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -38,6 +40,7 @@ function responderJson(int $codigo, array $datos): void
 
 // --- Control de acceso -------------------------------------------------------
 if (!isset($_SESSION['id_usuario'])) {
+    registrarAccesoRestringido(false);
     responderJson(401, ['ok' => false, 'error' => 'Sesión no válida.']);
 }
 
@@ -48,6 +51,7 @@ if (sesionInactiva()) {
 }
 
 if (!esAdministrador()) {
+    registrarAccesoRestringido(true, ['Administrador']);
     responderJson(403, ['ok' => false, 'error' => 'Acceso restringido al administrador.']);
 }
 

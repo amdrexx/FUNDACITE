@@ -3,6 +3,7 @@ session_start();
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+require_once __DIR__ . '/../vistas/includes/guardian.php';
 require_once '../conexion.php';
 require_once '../modelos/clase_primas.php';
 require_once __DIR__ . '/helpers/bitacora_helper.php';
@@ -66,11 +67,14 @@ switch ($accion) {
         $porcentaje = $_POST['porcentaje'] ?? '';
         $estado = $_POST['estado'] ?? '';
 
+        $antes = bitacoraSnapshot($conexion, 'prima', $id);
+
         if (!$prima->actualizar($id, $porcentaje, $estado)) {
             die("Error al actualizar la prima: " . $conexion->error);
         }
 
-        registrarBitacora($conexion, 'Primas', 'Editar', "Actualizó la prima ID $id (porcentaje: $porcentaje%, estado: $estado).");
+        $despues = bitacoraSnapshot($conexion, 'prima', $id);
+        registrarBitacora($conexion, 'Primas', 'Editar', 'Actualizó la prima "' . bitacoraNombre($antes, $id) . '": ' . bitacoraCambios($antes, $despues));
         $_SESSION['exito'] = "Prima actualizada correctamente";
         header("Location: ../vistas/registrar_prima.php");
         exit;
@@ -108,11 +112,13 @@ switch ($accion) {
             exit;
         }
 
+        $antes = bitacoraSnapshot($conexion, 'prima', $id);
+
         if (!$prima->eliminar($id)) {
             die("Error al eliminar la prima: " . $conexion->error);
         }
 
-        registrarBitacora($conexion, 'Primas', 'Eliminar', "Eliminó la prima ID $id.");
+        registrarBitacora($conexion, 'Primas', 'Eliminar', 'Eliminó la prima "' . bitacoraNombre($antes, $id) . '" (' . ($antes['Porcentaje'] ?? '?') . '%).');
         $_SESSION['exito'] = "Eliminado correctamente";
         header("Location: ../vistas/registrar_prima.php");
         exit;

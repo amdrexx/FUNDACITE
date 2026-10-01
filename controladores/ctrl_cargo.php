@@ -2,6 +2,7 @@
 // ARCHIVO: /FUNDACITE/controladores/CargoControlador.php
 
 // Incluimos la conexión y el modelo obligatoriamente
+require_once __DIR__ . '/../vistas/includes/guardian.php';
 require_once __DIR__ . '/../conexion.php'; 
 require_once __DIR__ . '/../modelos/clase_cargo.php';
 require_once __DIR__ . '/helpers/bitacora_helper.php';
@@ -58,9 +59,12 @@ class CargoControlador {
             }
 
             // 2. Intentamos actualizar
+            global $conexion;
+            $antes = bitacoraSnapshot($conexion, 'cargo', $id);
+
             if ($this->modelo->actualizarCargo($id, $nombre)) {
-                global $conexion;
-                registrarBitacora($conexion, 'Cargos', 'Editar', "Actualizó el cargo ID $id a \"$nombre\".");
+                $despues = bitacoraSnapshot($conexion, 'cargo', $id);
+                registrarBitacora($conexion, 'Cargos', 'Editar', 'Actualizó el cargo "' . bitacoraNombre($antes, $id) . '": ' . bitacoraCambios($antes, $despues));
                 header("Location: /FUNDACITE/vistas/registrar_cargo.php?status=updated");
                 exit();
             } else {
@@ -74,9 +78,11 @@ class CargoControlador {
     public function borrar() {
         if (isset($_GET['action']) && $_GET['action'] == 'eliminar' && !empty($_GET['id'])) {
             $id = intval($_GET['id']);
+            global $conexion;
+            $antes = bitacoraSnapshot($conexion, 'cargo', $id);
+
             if ($this->modelo->eliminarCargo($id)) {
-                global $conexion;
-                registrarBitacora($conexion, 'Cargos', 'Eliminar', "Eliminó el cargo ID $id.");
+                registrarBitacora($conexion, 'Cargos', 'Eliminar', 'Eliminó el cargo "' . bitacoraNombre($antes, $id) . '".');
                 header("Location: /FUNDACITE/vistas/registrar_cargo.php?status=deleted");
                 exit();
             } else {

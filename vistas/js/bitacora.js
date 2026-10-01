@@ -33,6 +33,8 @@
         'Editar':        { icono: 'bi-pencil-fill',           tono: 'blue'  },
         'Eliminar':      { icono: 'bi-trash3-fill',           tono: 'red'   },
         'Login fallido': { icono: 'bi-shield-exclamation',    tono: 'amber' },
+        'Acceso sin sesión': { icono: 'bi-shield-slash-fill',  tono: 'red'   },
+        'Acceso denegado':   { icono: 'bi-shield-lock-fill',   tono: 'red'   },
         'Login':         { icono: 'bi-box-arrow-in-right',    tono: 'slate' },
         'Logout':        { icono: 'bi-box-arrow-left',        tono: 'gray'  },
         'Listar':        { icono: 'bi-list-ul',               tono: 'gray'  },
@@ -265,6 +267,8 @@
 
         const texto = el('p', 'bt-item-text', it.descripcion || 'Sin detalle.');
         texto.title = it.descripcion;
+        // Los cambios largos (campo: "antes" → "después") se recortan a 3 líneas: un clic los despliega.
+        texto.addEventListener('click', () => texto.classList.toggle('is-open'));
 
         cuerpo.append(arriba, etiquetas, texto);
         li.append(ico, cuerpo);

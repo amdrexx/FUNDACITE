@@ -1,5 +1,7 @@
 <?php
 // ARCHIVO: /FUNDACITE/ajax/ajax_constancia_trabajador.php
+define('GUARDIAN_JSON', true); // sin sesión: 401 en JSON (y queda en bitácora)
+require_once __DIR__ . '/../vistas/includes/guardian.php';
 header('Content-Type: application/json');
 
 ini_set('display_errors', 0);

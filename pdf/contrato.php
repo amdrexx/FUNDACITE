@@ -16,6 +16,9 @@ declare(strict_types=1);
  * =============================================================================
  */
 
+require_once __DIR__ . '/../vistas/includes/guardian.php';
+requireAdministradorODirector(); // mismo permiso que vistas/ver_contrato.php
+
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../conexion.php';
 require_once __DIR__ . '/../modelos/clase_contrato.php';

@@ -3,6 +3,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
+require_once __DIR__ . '/../vistas/includes/guardian.php';
 require_once("../conexion.php");
 require_once("../modelos/clase_salario.php");
 require_once __DIR__ . "/helpers/bitacora_helper.php";
@@ -54,7 +55,8 @@ if (isset($_POST['accion']) && $_POST['accion'] == "guardar") {
     $id_cargo_final = ($tipo_salario === 'cargo') ? intval($id_cargo) : null;
 
     if ($modelo->registrarSalario($fecha, $monto, $tipo_salario, $id_cargo_final)) {
-        registrarBitacora($conexion, 'Salarios', 'Crear', "Registró un salario de tipo \"$tipo_salario\" por $monto (fecha $fecha).");
+        $detalleCargo = $id_cargo_final !== null ? ' del cargo "' . bitacoraNombreDe($conexion, 'cargo', $id_cargo_final) . '"' : '';
+        registrarBitacora($conexion, 'Salarios', 'Crear', "Registró un salario de tipo \"$tipo_salario\"$detalleCargo por $monto (fecha $fecha).");
         $_SESSION['exito'] = "Salario registrado correctamente y marcado como Vigente.";
         unset($_SESSION['old']);
     } else {
@@ -114,8 +116,11 @@ if (isset($_POST['accion']) && $_POST['accion'] == "actualizar") {
     $estado = $actual ? $actual['estado'] : 'Deshabilitado';
     $id_cargo_final = ($tipo_salario === 'cargo') ? intval($id_cargo) : null;
 
+    $antes = bitacoraSnapshot($conexion, 'salario', $id);
+
     if ($modelo->actualizarSalario($id, $fecha, $monto, $estado, $tipo_salario, $id_cargo_final)) {
-        registrarBitacora($conexion, 'Salarios', 'Editar', "Actualizó el salario ID $id (monto: $monto).");
+        $despues = bitacoraSnapshot($conexion, 'salario', $id);
+        registrarBitacora($conexion, 'Salarios', 'Editar', 'Actualizó el salario ' . bitacoraNombre($antes, $id) . ': ' . bitacoraCambios($antes, $despues));
         $_SESSION['exito'] = "Salario actualizado correctamente.";
     } else {
         $_SESSION['errores'] = ["No fue posible actualizar el salario."];
@@ -131,6 +136,7 @@ if (isset($_POST['accion']) && $_POST['accion'] == "actualizar") {
 if (isset($_GET['eliminar'])) {
 
     $id = intval($_GET['eliminar']);
+    $antes = bitacoraSnapshot($conexion, 'salario', $id);
     $resultado = $modelo->eliminarSalario($id);
 
     if ($resultado === "RESTRICT") {
@@ -138,7 +144,7 @@ if (isset($_GET['eliminar'])) {
     } elseif ($resultado === false) {
         $_SESSION['errores'] = ["Ocurrió un error al eliminar el salario."];
     } else {
-        registrarBitacora($conexion, 'Salarios', 'Eliminar', "Eliminó el salario ID $id.");
+        registrarBitacora($conexion, 'Salarios', 'Eliminar', 'Eliminó el salario ' . bitacoraNombre($antes, $id) . '.');
         $_SESSION['exito'] = "Salario eliminado correctamente.";
     }
 

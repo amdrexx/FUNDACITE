@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../vistas/includes/guardian.php';
 require_once("../modelos/clase_municipio.php");
 require_once __DIR__ . "/helpers/bitacora_helper.php";
 
@@ -23,7 +24,7 @@ class MunicipioController
         $resultado = $this->modelo->guardar($cod_est, $nombre);
         if ($resultado) {
             global $conexion;
-            registrarBitacora($conexion, 'Municipios', 'Crear', "Registró el municipio \"$nombre\" (estado ID $cod_est).");
+            registrarBitacora($conexion, 'Municipios', 'Crear', "Registró el municipio \"$nombre\" en el estado \"" . bitacoraNombreDe($conexion, 'estado', $cod_est) . "\".");
         }
         return $resultado;
     }
@@ -49,10 +50,12 @@ class MunicipioController
     // Actualizar municipio
     public function actualizar($cod_muni, $cod_est, $nombre)
     {
+        global $conexion;
+        $antes = bitacoraSnapshot($conexion, 'municipio', $cod_muni);
         $resultado = $this->modelo->actualizar($cod_muni, $cod_est, $nombre);
         if ($resultado) {
-            global $conexion;
-            registrarBitacora($conexion, 'Municipios', 'Editar', "Actualizó el municipio ID $cod_muni a \"$nombre\".");
+            $despues = bitacoraSnapshot($conexion, 'municipio', $cod_muni);
+            registrarBitacora($conexion, 'Municipios', 'Editar', 'Actualizó el municipio "' . bitacoraNombre($antes, $cod_muni) . '": ' . bitacoraCambios($antes, $despues));
         }
         return $resultado;
     }
@@ -60,10 +63,11 @@ class MunicipioController
     // Eliminar municipio
     public function eliminar($cod_muni)
     {
+        global $conexion;
+        $antes = bitacoraSnapshot($conexion, 'municipio', $cod_muni);
         $resultado = $this->modelo->eliminar($cod_muni);
         if ($resultado) {
-            global $conexion;
-            registrarBitacora($conexion, 'Municipios', 'Eliminar', "Eliminó el municipio ID $cod_muni.");
+            registrarBitacora($conexion, 'Municipios', 'Eliminar', 'Eliminó el municipio "' . bitacoraNombre($antes, $cod_muni) . '" (estado "' . ($antes['Estado'] ?? 'desconocido') . '").');
         }
         return $resultado;
     }

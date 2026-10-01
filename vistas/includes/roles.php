@@ -42,14 +42,27 @@ function esAdministradorODirector(): bool
 }
 
 /**
- * Corta la ejecución y redirige al dashboard si el rol de la sesión
- * no está dentro de la lista de roles permitidos.
+ * Corta la ejecución si el rol de la sesión no está dentro de la lista de roles
+ * permitidos, y lo deja en la bitácora:
+ *   · sin sesión          → "Acceso sin sesión" y redirige al login.
+ *   · rol sin permiso     → "Acceso denegado" (usuario, rol y URL) y redirige al dashboard.
  *
  * @param string[] $rolesPermitidos Ej: ['Administrador'] o ['Administrador','Director']
  */
 function requerirRol(array $rolesPermitidos): void
 {
+    if (!isset($_SESSION['id_usuario'])) {
+        require_once __DIR__ . '/../../controladores/helpers/bitacora_helper.php';
+        registrarAccesoRestringido(false);
+
+        header('Location: /FUNDACITE/index.php');
+        exit;
+    }
+
     if (!in_array(usuarioActual(), $rolesPermitidos, true)) {
+        require_once __DIR__ . '/../../controladores/helpers/bitacora_helper.php';
+        registrarAccesoRestringido(true, $rolesPermitidos);
+
         $_SESSION['error_permiso'] = "No tiene permisos para acceder a esta sección.";
         header('Location: /FUNDACITE/vistas/dashboard.php');
         exit;

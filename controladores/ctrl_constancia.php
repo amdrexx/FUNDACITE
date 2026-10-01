@@ -3,6 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+require_once __DIR__ . '/../vistas/includes/guardian.php';
 require_once '../conexion.php';
 require_once '../modelos/clase_solicitud.php';
 require_once __DIR__ . '/helpers/bitacora_helper.php';
@@ -35,10 +36,11 @@ if (isset($_POST['eliminar_constancia'])) {
     }
 
     try {
+        $antes = bitacoraSnapshot($conexion, 'constancia', $id_constancia);
         $ok = $constanciaModelo->eliminar($id_constancia);
 
         if ($ok) {
-            registrarBitacora($conexion, 'Constancias', 'Eliminar', "Eliminó la constancia ID $id_constancia.");
+            registrarBitacora($conexion, 'Constancias', 'Eliminar', 'Eliminó la ' . bitacoraNombre($antes, $id_constancia) . '.');
             $_SESSION['exito_edicion'] = 'Constancia eliminada correctamente.';
         } else {
             $_SESSION['error_edicion'] = ['No se pudo eliminar la constancia.'];
@@ -118,7 +120,7 @@ if ($accion === 'guardar') {
             // Mensaje de éxito para mostrar en la lista de constancias
             $_SESSION['exito_edicion'] = 'Constancia registrada correctamente.';
 
-            registrarBitacora($conexion, 'Constancias', 'Crear', "Registró la constancia (código $codigo_solicitud) para el trabajador ID $id_trabajador.");
+            registrarBitacora($conexion, 'Constancias', 'Crear', "Registró la constancia (código $codigo_solicitud) para el trabajador \"" . bitacoraNombreDe($conexion, 'trabajador', $id_trabajador) . "\".");
 
             unset($_SESSION['old_constancia']);
 
@@ -179,6 +181,8 @@ if ($accion === 'actualizar') {
     }
 
     try {
+        $antes = bitacoraSnapshot($conexion, 'constancia', $id_constancia);
+
         $ok = $constanciaModelo->actualizar(
             $id_constancia,
             $id_trabajador,
@@ -190,7 +194,8 @@ if ($accion === 'actualizar') {
         );
 
         if ($ok) {
-            registrarBitacora($conexion, 'Constancias', 'Editar', "Actualizó la constancia ID $id_constancia.");
+            $despues = bitacoraSnapshot($conexion, 'constancia', $id_constancia);
+            registrarBitacora($conexion, 'Constancias', 'Editar', 'Actualizó la ' . bitacoraNombre($antes, $id_constancia) . ': ' . bitacoraCambios($antes, $despues));
             $_SESSION['exito_edicion'] = 'Constancia actualizada correctamente.';
             header('Location: ../vistas/lista_constancias.php');
             exit;

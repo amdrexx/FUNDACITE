@@ -10,6 +10,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+require_once __DIR__ . "/../vistas/includes/guardian.php";
+requireAdministradorODirector(); // misma restricción que las vistas de contratos
+
 require_once __DIR__ . "/../conexion.php";
 require_once __DIR__ . "/../modelos/clase_contrato.php";
 require_once __DIR__ . "/helpers/bitacora_helper.php";
@@ -68,7 +71,7 @@ class ContratoControlador {
 
             if ($resultado) {
                 global $conexion;
-                registrarBitacora($conexion, 'Contratos', 'Crear', "Registró un contrato ($tipo_contrato) para el trabajador ID $id_trabajador.");
+                registrarBitacora($conexion, 'Contratos', 'Crear', "Registró un contrato ($tipo_contrato) para el trabajador \"" . bitacoraNombreDe($conexion, 'trabajador', $id_trabajador) . "\".");
                 header("Location: ../vistas/registrar_contrato.php?status=success");
             } else {
                 header("Location: ../vistas/registrar_contrato.php?status=error");
@@ -101,6 +104,9 @@ class ContratoControlador {
                 exit();
             }
 
+            global $conexion;
+            $antes = bitacoraSnapshot($conexion, 'contrato', $id_contrato);
+
             $resultado = $this->modelo->actualizarContrato(
                 $id_contrato, 
                 $id_trabajador, 
@@ -114,8 +120,8 @@ class ContratoControlador {
             );
 
             if ($resultado) {
-                global $conexion;
-                registrarBitacora($conexion, 'Contratos', 'Editar', "Actualizó el contrato ID $id_contrato.");
+                $despues = bitacoraSnapshot($conexion, 'contrato', $id_contrato);
+                registrarBitacora($conexion, 'Contratos', 'Editar', 'Actualizó el contrato "' . bitacoraNombre($antes, $id_contrato) . '": ' . bitacoraCambios($antes, $despues));
                 header("Location: ../vistas/registrar_contrato.php?status=updated");
             } else {
                 header("Location: ../vistas/editar_contrato.php?id={$id_contrato}&status=error");
@@ -131,9 +137,14 @@ class ContratoControlador {
         if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['accion']) && $_GET['accion'] === 'eliminar') {
             $id_contrato = intval($_GET['id'] ?? 0);
             if ($id_contrato > 0) {
-                $this->modelo->eliminarContrato($id_contrato);
                 global $conexion;
-                registrarBitacora($conexion, 'Contratos', 'Eliminar', "Eliminó el contrato ID $id_contrato.");
+                $antes = bitacoraSnapshot($conexion, 'contrato', $id_contrato);
+                $this->modelo->eliminarContrato($id_contrato);
+
+                // Solo se registra si el contrato realmente desapareció.
+                if (!empty($antes) && empty(bitacoraSnapshot($conexion, 'contrato', $id_contrato))) {
+                    registrarBitacora($conexion, 'Contratos', 'Eliminar', 'Eliminó el contrato "' . bitacoraNombre($antes, $id_contrato) . '".');
+                }
             }
             header("Location: ../vistas/registrar_contrato.php?status=deleted");
             exit();

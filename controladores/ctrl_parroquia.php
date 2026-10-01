@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/../vistas/includes/guardian.php';
 require_once("../modelos/clase_parroquia.php");
 require_once __DIR__ . "/helpers/bitacora_helper.php";
 
@@ -72,7 +73,7 @@ class ParroquiaController
             $this->modelo->registrar($cod_muni, $parroquias);
 
             global $conexion;
-            registrarBitacora($conexion, 'Parroquias', 'Crear', "Registró parroquia(s) en el municipio ID $cod_muni: " . implode(', ', (array) $parroquias) . ".");
+            registrarBitacora($conexion, 'Parroquias', 'Crear', 'Registró parroquia(s) en el municipio "' . bitacoraNombreDe($conexion, 'municipio', $cod_muni) . '": ' . implode(', ', (array) $parroquias) . '.');
 
             $cod_est = $_POST["cod_est"] ?? "";
             $destino = "../vistas/registro_parroquia.php";
@@ -97,10 +98,12 @@ class ParroquiaController
             $cod_muni = $_POST["cod_muni"];
             $nombre   = trim($_POST["parroquia"][0]);
 
-            $this->modelo->editar($cod_par, $cod_muni, $nombre);
-
             global $conexion;
-            registrarBitacora($conexion, 'Parroquias', 'Editar', "Actualizó la parroquia ID $cod_par a \"$nombre\".");
+            $antes = bitacoraSnapshot($conexion, 'parroquia', $cod_par);
+            $this->modelo->editar($cod_par, $cod_muni, $nombre);
+            $despues = bitacoraSnapshot($conexion, 'parroquia', $cod_par);
+
+            registrarBitacora($conexion, 'Parroquias', 'Editar', 'Actualizó la parroquia "' . bitacoraNombre($antes, $cod_par) . '": ' . bitacoraCambios($antes, $despues));
 
             $cod_est = $_POST["cod_est"] ?? "";
             $destino = "../vistas/registro_parroquia.php";
@@ -122,6 +125,8 @@ public function eliminar()
     if (isset($_GET["eliminar"])) {
 
         $codPar = $_GET["eliminar"];
+        global $conexion;
+        $antes = bitacoraSnapshot($conexion, 'parroquia', $codPar);
         $resultado = $this->modelo->eliminar($codPar);
 
         $mensaje = "ok";
@@ -133,8 +138,7 @@ public function eliminar()
         } elseif ($resultado === false) {
             $mensaje = "error";
         } else {
-            global $conexion;
-            registrarBitacora($conexion, 'Parroquias', 'Eliminar', "Eliminó la parroquia ID $codPar.");
+            registrarBitacora($conexion, 'Parroquias', 'Eliminar', 'Eliminó la parroquia "' . bitacoraNombre($antes, $codPar) . '" (municipio "' . ($antes['Municipio'] ?? 'desconocido') . '").');
         }
 
         $destino = "../vistas/registro_parroquia.php?msg=" . $mensaje;

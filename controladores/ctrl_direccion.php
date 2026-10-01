@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../vistas/includes/guardian.php';
 require_once("../modelos/clase_direccion.php");
 require_once("../conexion.php");
 require_once __DIR__ . "/helpers/bitacora_helper.php";
@@ -45,7 +46,7 @@ class DireccionController
             $this->modelo->registrar($cod_par);
 
             global $conexion;
-            registrarBitacora($conexion, 'Direcciones', 'Crear', "Registró una dirección (parroquia ID $cod_par).");
+            registrarBitacora($conexion, 'Direcciones', 'Crear', 'Registró una dirección en la parroquia "' . bitacoraNombreDe($conexion, 'parroquia', $cod_par) . '".');
 
             header("Location: ../vistas/registro_direccion.php");
             exit;
@@ -67,10 +68,12 @@ class DireccionController
                 exit;
             }
 
-            $this->modelo->editar($id_dir, $cod_par);
-
             global $conexion;
-            registrarBitacora($conexion, 'Direcciones', 'Editar', "Actualizó la dirección ID $id_dir (parroquia ID $cod_par).");
+            $antes = bitacoraSnapshot($conexion, 'direccion', $id_dir);
+            $this->modelo->editar($id_dir, $cod_par);
+            $despues = bitacoraSnapshot($conexion, 'direccion', $id_dir);
+
+            registrarBitacora($conexion, 'Direcciones', 'Editar', 'Actualizó la dirección "' . bitacoraNombre($antes, $id_dir) . '": ' . bitacoraCambios($antes, $despues));
 
             header("Location: ../vistas/registro_direccion.php");
             exit;
@@ -82,6 +85,8 @@ class DireccionController
         if (isset($_GET["eliminar"])) {
 
             $idDir = $_GET["eliminar"];
+            global $conexion;
+            $antes = bitacoraSnapshot($conexion, 'direccion', $idDir);
             $resultado = $this->modelo->eliminar($idDir);
 
             $mensaje = "ok";
@@ -90,8 +95,7 @@ class DireccionController
             } elseif ($resultado === false) {
                 $mensaje = "error";
             } else {
-                global $conexion;
-                registrarBitacora($conexion, 'Direcciones', 'Eliminar', "Eliminó la dirección ID $idDir.");
+                registrarBitacora($conexion, 'Direcciones', 'Eliminar', 'Eliminó la dirección "' . bitacoraNombre($antes, $idDir) . '".');
             }
 
             header("Location: ../vistas/registro_direccion.php?msg=" . $mensaje);
