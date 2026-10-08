@@ -78,7 +78,31 @@ body::before {
     transition: none;            /* ya no necesitamos animación */
     z-index: 1002;
     box-shadow: 4px 0 15px rgba(0,0,0,0.4);
+    /* Cuando el menú es más largo que la pantalla, la barra lateral
+       hace scroll por dentro sin mover el resto de la página */
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #0F4C75 #1B262C;
+}
 
+/* Barra de desplazamiento del sidebar (WebKit) */
+.sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: #1B262C;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: #0F4C75;
+    border-radius: 8px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: #3282B8;
 }
 .sidebar.active {
     left: 0;
@@ -518,6 +542,35 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     background:#3694f8;
     transform:translateY(-2px);
 }
+
+/* Botón Exportar a PDF (visible solo para Administrador y Director) */
+.btn-pdf{
+    padding:12px 25px;
+    border:none;
+    border-radius:10px;
+    background:linear-gradient(145deg, #0F4C75, #093e61);
+    color:#fff;
+    font-weight:bold;
+    font-size:15px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    text-decoration:none;
+    transition:background 0.25s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+}
+.btn-pdf:hover{
+    background:linear-gradient(145deg, #3282B8, #0F4C75);
+    transform:translateY(-2px);
+    box-shadow:0 6px 14px rgba(9, 62, 97, 0.35);
+}
+.btn-pdf:active{
+    transform:translateY(0);
+}
+.btn-pdf:focus-visible{
+    outline:3px solid rgba(50,130,184,0.55);
+    outline-offset:2px;
+}
  /* ================= BOTENES ================= */
 .btn-editar,
         .btn-eliminar,
@@ -802,8 +855,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
     .input-busqueda,
     .btn-buscar,
-    .btn-persona{
+    .btn-persona,
+    .btn-pdf{
         width: 100%;
+    }
+
+    .btn-pdf{
+        justify-content: center;
     }
 }
 

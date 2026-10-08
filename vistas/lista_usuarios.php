@@ -37,6 +37,18 @@ placeholder="Buscar usuario, cédula o trabajador"
 value="<?php echo htmlspecialchars($buscar); ?>">
 <button class="btn-buscar">Buscar</button>
 <a href="registrar_usuario.php" class="btn-persona" style="text-decoration:none;">+ Agregar Usuario</a>
+
+<?php if (esAdministradorODirector()): ?>
+<a
+    href="/FUNDACITE/pdf/reporte_usuarios.php<?= $buscar !== '' ? '?buscar=' . urlencode($buscar) : ''; ?>"
+    class="btn-pdf"
+    target="_blank"
+    style="text-decoration:none; margin-left:auto;"
+>
+    <i class="bi bi-file-earmark-pdf"></i>
+    Exportar PDF
+</a>
+<?php endif; ?>
 </form>
 
 

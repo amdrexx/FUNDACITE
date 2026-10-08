@@ -60,6 +60,18 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', $buscar !== '' ? 
             <a href="registrar_dias_disfrute.php" class="btn-persona" style="text-decoration:none;">
                 + Nuevo Registro
             </a>
+
+            <?php if (esAdministradorODirector()): ?>
+            <a
+                href="/FUNDACITE/pdf/reporte_dias_disfrute.php<?= $buscar !== '' ? '?buscar=' . urlencode($buscar) : ''; ?>"
+                class="btn-pdf"
+                target="_blank"
+                style="text-decoration:none; margin-left:auto;"
+            >
+                <i class="bi bi-file-earmark-pdf"></i>
+                Exportar PDF
+            </a>
+            <?php endif; ?>
         </form>
 
         <table class="tabla">

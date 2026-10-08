@@ -1,5 +1,5 @@
 <div class="sidebar" id="sidebar"
-style="display:flex;flex-direction:column;justify-content:space-between;height:calc(102vh - 70px);">
+style="display:flex;flex-direction:column;">
 
     <ul style="list-style:none;padding:0;margin:0;">
 
@@ -134,7 +134,7 @@ style="display:flex;flex-direction:column;justify-content:space-between;height:c
 
     </ul>
 
-    <ul style="list-style:none;padding:0;margin-bottom:20px;">
+    <ul style="list-style:none;padding:0;margin-bottom:20px;margin-top:auto;">
 
         <li>
             <a href="/FUNDACITE/controladores/logout.php" class="submenu-link">
