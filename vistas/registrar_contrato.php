@@ -124,6 +124,18 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
             <div class="glass tabla-container" style="width: 100% !important; max-width: 100% !important; box-sizing: border-box; margin: 0 !important;">
                 <h2 style="text-align:center; color:white;">Lista de Contratos</h2>
 
+                <div style="text-align:right; margin-bottom:10px;">
+                    <a
+                        href="/FUNDACITE/pdf/reporte_contratos.php"
+                        class="btn-pdf"
+                        target="_blank"
+                        style="text-decoration:none;"
+                    >
+                        <i class="bi bi-file-earmark-pdf"></i>
+                        Exportar PDF
+                    </a>
+                </div>
+
                 <table class="tabla">
                     <thead>
                         <tr>

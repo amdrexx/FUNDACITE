@@ -171,7 +171,7 @@ if (!function_exists('reporteImagenBase64')) {
         font-size: 8.5pt;
         font-weight: bold;
         color: #093e61;
-        line-height: 1.3;
+        line-height: 1;
     }
     .titulo-reporte {
         text-align: center;
@@ -329,13 +329,8 @@ if (!function_exists('reporteImagenBase64')) {
         Teléfonos 0424-5447057 / 0254-2315616
     </div>
 
-    <?php if ($banderaHtml !== '') { ?>
 
-        <div class="pie-bandera">
-            <?php echo $banderaHtml; ?>
-        </div>
-
-    <?php } ?>
+   
 
 </body>
 </html>

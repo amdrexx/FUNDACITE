@@ -492,7 +492,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .input-busqueda{
-    width:350px;
+    width:500px;
     padding:12px 15px;
     border:none;
     outline:none;
@@ -903,10 +903,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .campo-monto input::-webkit-outer-spin-button,
 .campo-monto input::-webkit-inner-spin-button {
     -webkit-appearance: none;
+    appearance: none;
     margin: 0;
 }
 .campo-monto input[type="number"] {
     -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 .campo-monto .sufijo-bs {

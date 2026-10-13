@@ -391,6 +391,19 @@ unset($_SESSION['old']);
 
         </center>
 
+        <?php if (esAdministradorODirector()): ?>
+        <div style="text-align:right; margin-bottom:10px;">
+            <a
+                href="/FUNDACITE/pdf/reporte_salarios.php"
+                class="btn-pdf"
+                target="_blank"
+                style="text-decoration:none;"
+            >
+                <i class="bi bi-file-earmark-pdf"></i>
+                Exportar PDF
+            </a>
+        </div>
+        <?php endif; ?>
 
         <table class="tabla">
 

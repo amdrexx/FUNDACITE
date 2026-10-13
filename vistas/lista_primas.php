@@ -5,9 +5,11 @@ require_once '../conexion.php';
 require_once '../modelos/clase_primas.php';
 require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
+$buscar = trim($_GET['buscar'] ?? '');
+
 $prima = new Prima($conexion);
-$primas = $prima->mostrarPrimas();
-registrarBitacora($conexion, 'Primas', 'Consultar', 'Consultó el listado de primas.');
+$primas = $prima->mostrarPrimas($buscar);
+registrarBitacora($conexion, 'Primas', 'Consultar', $buscar !== '' ? "Consultó el listado de primas (búsqueda: \"$buscar\")." : 'Consultó el listado de primas.');
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -29,17 +31,31 @@ registrarBitacora($conexion, 'Primas', 'Consultar', 'Consultó el listado de pri
         <div class="glass tabla-container">
             <h2 style="text-align:center; color:white;">Lista Primas</h2>
 
-            <div class="buscador-container">
-                <input 
-                    type="text" 
+            <form method="GET" action="lista_primas.php" class="buscador-container" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                <input
+                    type="text"
+                    name="buscar"
                     class="input-busqueda"
-                   
+                    placeholder="Buscar por tipo de prima o estado..."
+                    value="<?= htmlspecialchars($buscar) ?>"
                 >
-                <button class="btn-buscar">Buscar</button>
+                <button type="submit" class="btn-buscar">Buscar</button>
                 <a href="/FUNDACITE/vistas/registrar_prima.php" class="btn-persona" style="text-decoration:none;">
                     + Agregar prima
                 </a>
-            </div>
+
+                <?php if (esAdministradorODirector()): ?>
+                <a
+                    href="/FUNDACITE/pdf/reporte_primas.php<?= $buscar !== '' ? '?buscar=' . urlencode($buscar) : ''; ?>"
+                    class="btn-pdf"
+                    target="_blank"
+                    style="text-decoration:none; margin-left:auto;"
+                >
+                    <i class="bi bi-file-earmark-pdf"></i>
+                    Exportar PDF
+                </a>
+                <?php endif; ?>
+            </form>
 
 
             <table class="tabla">
