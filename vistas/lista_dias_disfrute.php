@@ -129,12 +129,7 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', $buscar !== '' ? 
 </div>
 
 <!-- Alertas de errores/éxito -->
-<div id="customAlert" class="custom-alert hidden">
-    <div class="alert-box">
-        <p id="alertMessage"></p>
-        <button onclick="document.getElementById('customAlert').classList.add('hidden')">Cerrar</button>
-    </div>
-</div>
+<?php include "includes/alerta.php"; ?>
 
 <script src="boton_desplegable.js"></script>
 <?php if (!empty($errores)): ?>

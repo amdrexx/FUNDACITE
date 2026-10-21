@@ -38,6 +38,7 @@ registrarBitacora($conexion, 'Trabajadores', 'Consultar', $buscar !== '' ? "Cons
 <body>
     
 <?php include "includes/layout.php"; ?>
+<?php include "includes/alerta.php"; ?>
 
 <!-- ================= CONTENIDO ================= -->
 <div class="main">

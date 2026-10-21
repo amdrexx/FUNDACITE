@@ -91,25 +91,7 @@ unset($_SESSION['old']);
 
 <body>
 
-<div
-    id="customAlert"
-    class="custom-alert hidden"
->
-
-    <div class="alert-box">
-
-        <p id="alertMessage"></p>
-
-        <button
-            type="button"
-            onclick="closeAlert()"
-        >
-            Aceptar
-        </button>
-
-    </div>
-
-</div>
+<?php include "includes/alerta.php"; ?>
 
 
 
@@ -338,7 +320,17 @@ unset($_SESSION['old']);
             </div>
 
 
-            <div class="full-width">
+            <div class="form-actions full-width">
+
+                <button
+                    type="reset"
+                    class="btn-secundario"
+                    id="btnLimpiar"
+                >
+
+                    Limpiar
+
+                </button>
 
                 <button
                     type="submit"
@@ -354,17 +346,6 @@ unset($_SESSION['old']);
                         ? "Actualizar"
                         : "Guardar";
                     ?>
-
-                </button>
-
-
-                <button
-                    type="reset"
-                    class="btn-guardar"
-                    id="btnLimpiar"
-                >
-
-                    Limpiar
 
                 </button>
 

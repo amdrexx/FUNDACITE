@@ -26,6 +26,7 @@ unset($_SESSION['error_registro'], $_SESSION['exito_registro']);
 <body>
 
 <?php include "includes/layout.php"; ?>
+<?php include "includes/alerta.php"; ?>
 
 <div class="main">
 <div class="glass tabla-container">

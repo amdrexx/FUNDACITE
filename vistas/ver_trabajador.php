@@ -213,12 +213,7 @@ $estatusActivo = mb_strtolower($estatus, 'UTF-8') === 'activo';
 
 <?php include "includes/layout.php"; ?>
 
-<div class="custom-alert hidden" id="customAlert">
-    <div class="alert-box">
-        <p id="alertMessage"></p>
-        <button onclick="closeAlert()">Aceptar</button>
-    </div>
-</div>
+<?php include "includes/alerta.php"; ?>
 
 <div class="main">
     <div class="worker-page">

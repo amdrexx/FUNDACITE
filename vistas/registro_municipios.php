@@ -105,17 +105,7 @@ $municipios = $controlador->listar();
 
 <body>
 
-    <div id="customAlert" class="custom-alert hidden">
-
-        <div class="alert-box">
-
-            <p id="alertMessage"></p>
-
-            <button onclick="closeAlert()">Aceptar</button>
-
-        </div>
-
-    </div>
+    <?php include "includes/alerta.php"; ?>
 
 
 <?php include "includes/layout.php"; ?>

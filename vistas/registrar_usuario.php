@@ -35,12 +35,7 @@ $trabajadores = $trabajadorObj->listarTrabajadoresSinUsuario();
 </head>
 <body>
 
-<div id="customAlert" class="custom-alert hidden">
-    <div class="alert-box">
-        <p id="alertMessage"></p>
-        <button onclick="closeAlert()">Aceptar</button>
-    </div>
-</div>
+<?php include "includes/alerta.php"; ?>
 
 <?php include "includes/layout.php"; ?>
 
@@ -94,7 +89,9 @@ $trabajadores = $trabajadorObj->listarTrabajadoresSinUsuario();
                 </select>
             </div>
 
-            <button type="submit" name="registrar_usuario" class="btn-guardar full-width">Registrar Usuario</button>
+            <div class="form-actions full-width">
+                <button type="submit" name="registrar_usuario" class="btn-guardar">Registrar Usuario</button>
+            </div>
         </div>
     </form>
 </div>

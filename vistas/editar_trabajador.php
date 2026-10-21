@@ -64,12 +64,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
 </div>
 <?php endif; ?>
 
-<div id="customAlert" class="custom-alert hidden">
-    <div class="alert-box">
-        <p id="alertMessage"></p>
-        <button onclick="closeAlert()">Aceptar</button>
-    </div>
-</div>
+<?php include "includes/alerta.php"; ?>
 
 
 <div class="main">

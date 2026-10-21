@@ -37,12 +37,7 @@ $direcciones = $trabajador->listarDirecciones();
 </head>
 <body>
 
-<div id="customAlert" class="custom-alert hidden">
-    <div class="alert-box">
-        <p id="alertMessage"></p>
-        <button onclick="closeAlert()">Aceptar</button>
-    </div>
-</div>
+<?php include "includes/alerta.php"; ?>
 
 <?php include "includes/layout.php"; ?>
 
@@ -51,6 +46,22 @@ $direcciones = $trabajador->listarDirecciones();
     <form class="form-card" id="formPersonas" method="POST" action="../controladores/ctrl_trabajador.php">
         <div class="form-grid">
             <h2 style="text-align: center; margin-bottom: 10px;">Registro de Trabajador</h2>
+
+            <h3 class="form-section-title full-width">Datos personales</h3>
+
+            <!-- Nombres -->
+            <div class="field">
+                <label>Nombres</label>
+                <input type="text" name="nombres" id="nombres" maxlength="50" placeholder="Ingrese nombres"
+                       value="<?php echo htmlspecialchars($old['nombres'] ?? ''); ?>">
+            </div>
+
+            <!-- Apellidos -->
+            <div class="field">
+                <label>Apellidos</label>
+                <input type="text" name="apellidos" id="apellidos" maxlength="50" placeholder="Ingrese apellidos"
+                       value="<?php echo htmlspecialchars($old['apellidos'] ?? ''); ?>">
+            </div>
 
             <!-- Tipo Documento -->
             <div class="field">
@@ -62,36 +73,11 @@ $direcciones = $trabajador->listarDirecciones();
                 </select>
             </div>
 
-            <!-- Edad (no se envía, solo decorativo) -->
-            <div class="field">
-                <label>Edad</label>
-                <input type="text" id="edad" placeholder="Se calculará automáticamente" readonly>
-            </div>
-
             <!-- Cédula -->
             <div class="field">
                 <label>Cédula</label>
                 <input type="text" name="cedula" id="cedula" maxlength="8" placeholder="Ingrese cédula"
                        value="<?php echo htmlspecialchars($old['cedula'] ?? ''); ?>">
-            </div>
-
-            <!-- Estado Civil -->
-            <div class="field">
-                <label>Estado Civil</label>
-                <select name="estadoCivil" id="estadoCivil">
-                    <option value="" disabled selected>Seleccione...</option>
-                    <option value="Soltero(a)" <?php echo (isset($old['estadoCivil']) && $old['estadoCivil'] == 'Soltero(a)') ? 'selected' : ''; ?>>Soltero(a)</option>
-                    <option value="Casado(a)" <?php echo (isset($old['estadoCivil']) && $old['estadoCivil'] == 'Casado(a)') ? 'selected' : ''; ?>>Casado(a)</option>
-                    <option value="Divorciado(a)" <?php echo (isset($old['estadoCivil']) && $old['estadoCivil'] == 'Divorciado(a)') ? 'selected' : ''; ?>>Divorciado(a)</option>
-                    <option value="Viudo(a)" <?php echo (isset($old['estadoCivil']) && $old['estadoCivil'] == 'Viudo(a)') ? 'selected' : ''; ?>>Viudo(a)</option>
-                </select>
-            </div>
-
-            <!-- Nombres -->
-            <div class="field">
-                <label>Nombres</label>
-                <input type="text" name="nombres" id="nombres" maxlength="50" placeholder="Ingrese nombres"
-                       value="<?php echo htmlspecialchars($old['nombres'] ?? ''); ?>">
             </div>
 
             <!-- Género -->
@@ -109,18 +95,16 @@ $direcciones = $trabajador->listarDirecciones();
                 </div>
             </div>
 
-            <!-- Apellidos -->
+            <!-- Estado Civil -->
             <div class="field">
-                <label>Apellidos</label>
-                <input type="text" name="apellidos" id="apellidos" maxlength="50" placeholder="Ingrese apellidos"
-                       value="<?php echo htmlspecialchars($old['apellidos'] ?? ''); ?>">
-            </div>
-
-            <!-- Correo Electrónico -->
-            <div class="field">
-                <label>Correo Electrónico</label>
-                <input type="text" name="correoElectronico" id="correoElectronico" maxlength="100" placeholder="Ingrese correo electrónico"
-                       value="<?php echo htmlspecialchars($old['correoElectronico'] ?? ''); ?>">
+                <label>Estado Civil</label>
+                <select name="estadoCivil" id="estadoCivil">
+                    <option value="" disabled selected>Seleccione...</option>
+                    <option value="Soltero(a)" <?php echo (isset($old['estadoCivil']) && $old['estadoCivil'] == 'Soltero(a)') ? 'selected' : ''; ?>>Soltero(a)</option>
+                    <option value="Casado(a)" <?php echo (isset($old['estadoCivil']) && $old['estadoCivil'] == 'Casado(a)') ? 'selected' : ''; ?>>Casado(a)</option>
+                    <option value="Divorciado(a)" <?php echo (isset($old['estadoCivil']) && $old['estadoCivil'] == 'Divorciado(a)') ? 'selected' : ''; ?>>Divorciado(a)</option>
+                    <option value="Viudo(a)" <?php echo (isset($old['estadoCivil']) && $old['estadoCivil'] == 'Viudo(a)') ? 'selected' : ''; ?>>Viudo(a)</option>
+                </select>
             </div>
 
             <!-- Fecha de Nacimiento -->
@@ -129,12 +113,29 @@ $direcciones = $trabajador->listarDirecciones();
                 <input type="date" name="fecha" id="fecha" value="<?php echo htmlspecialchars($old['fecha'] ?? ''); ?>">
             </div>
 
+            <!-- Edad (no se envía, solo decorativo) -->
+            <div class="field">
+                <label>Edad</label>
+                <input type="text" id="edad" placeholder="Se calculará automáticamente" readonly>
+            </div>
+
+            <h3 class="form-section-title full-width">Contacto</h3>
+
+            <!-- Correo Electrónico -->
+            <div class="field">
+                <label>Correo Electrónico</label>
+                <input type="text" name="correoElectronico" id="correoElectronico" maxlength="100" placeholder="Ingrese correo electrónico"
+                       value="<?php echo htmlspecialchars($old['correoElectronico'] ?? ''); ?>">
+            </div>
+
             <!-- Número de Teléfono -->
             <div class="field">
                 <label>Número de Teléfono</label>
                 <input type="text" name="numeroTelefono" id="numeroTelefono" maxlength="11" placeholder="Ingrese Número de Teléfono"
                        value="<?php echo htmlspecialchars($old['numeroTelefono'] ?? ''); ?>">
             </div>
+
+            <h3 class="form-section-title full-width">Datos laborales</h3>
 
             <!-- Fecha de Ingreso -->
            <div class="field">
@@ -153,6 +154,8 @@ $direcciones = $trabajador->listarDirecciones();
                     <option value="Retirado" <?php echo (isset($old['estatus_laboral']) && $old['estatus_laboral'] == 'Retirado') ? 'selected' : ''; ?>>Retirado (se guarda como Inactivo)</option>
                 </select>
             </div>
+
+            <h3 class="form-section-title full-width">Dirección</h3>
 
           <!-- Dirección: Estado -->
 <div class="field">
@@ -185,7 +188,9 @@ $direcciones = $trabajador->listarDirecciones();
         placeholder="Ingrese dirección exacta (calle, avenida, casa, referencia, etc.)"><?php echo htmlspecialchars($old['direccion_texto'] ?? ''); ?></textarea>
 </div>
 
-            <button type="submit" class="btn-guardar full-width">Registrar</button>
+            <div class="form-actions full-width">
+                <button type="submit" class="btn-guardar">Registrar</button>
+            </div>
         </div>
     </form>
 </div>

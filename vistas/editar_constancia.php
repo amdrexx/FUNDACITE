@@ -231,12 +231,7 @@ $fechaEmision   = !empty($constancia['fecha'])
     </div>
 </div>
 
-<div id="customAlert" class="custom-alert hidden">
-    <div class="alert-box">
-        <p id="alertMessage"></p>
-        <button onclick="document.getElementById('customAlert').classList.add('hidden')">Cerrar</button>
-    </div>
-</div>
+<?php include "includes/alerta.php"; ?>
 
 <script src="/FUNDACITE/vistas/js/valid_constancia.js"></script>
 

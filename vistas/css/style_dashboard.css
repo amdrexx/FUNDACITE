@@ -1,3 +1,46 @@
+/* ============================================================
+   DESIGN TOKENS — paleta oficial del sistema FUNDACITE
+   Toda alerta, tabla, formulario y botón debe referenciar estas
+   variables en lugar de colores sueltos, para mantener una sola
+   identidad visual en todos los módulos.
+   ============================================================ */
+:root {
+    /* Marca (navy → azul institucional) */
+    --fc-navy-900: #1B262C;
+    --fc-navy-800: #093e61;
+    --fc-navy-700: #0F4C75;
+    --fc-blue-600: #3282B8;
+    --fc-blue-500: #0487F3;
+    --fc-blue-300: #9ecbff;
+
+    /* Superficies */
+    --fc-surface: rgba(60, 60, 60, 0.55);
+    --fc-surface-border: rgba(255,255,255,0.2);
+    --fc-text: #ffffff;
+    --fc-text-muted: rgba(255,255,255,0.75);
+
+    /* Semántica (derivada del navy para que no "choque" con la marca) */
+    --fc-success: #2e9e6b;
+    --fc-success-bg: rgba(46,158,107,0.14);
+    --fc-success-border: #2e9e6b;
+
+    --fc-danger: #e5484d;
+    --fc-danger-bg: rgba(229,72,77,0.14);
+    --fc-danger-border: #e5484d;
+
+    --fc-warning: #e2a53a;
+    --fc-warning-bg: rgba(226,165,58,0.14);
+    --fc-warning-border: #e2a53a;
+
+    --fc-info: var(--fc-blue-500);
+    --fc-info-bg: rgba(4,135,243,0.14);
+    --fc-info-border: var(--fc-blue-500);
+
+    /* Movimiento (ver skill de interacción) */
+    --fc-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --fc-duration: 220ms;
+}
+
 body {
     margin: 0;
     font-family: 'Segoe UI', Arial, sans-serif;
@@ -325,9 +368,9 @@ body::before {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
-    color: white;
-    font-style: oblique;
-    font-weight: bold;
+    color: var(--fc-text);
+    font-style: normal;
+    font-weight: normal;
 }
  .tabla td.acciones {
     text-align: center;
@@ -336,15 +379,22 @@ body::before {
 
 .tabla th,
 .tabla td {
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 3px solid rgba(255, 255, 255, 0.154);
     padding: 10px;
 }
 
 .tabla th {
-    background: rgba(183, 179, 179, 0.609);
+    background: rgba(15,76,117,0.6); /* --fc-navy-700 */
+    text-align: left;
+    font-weight: 700;
 }
 .tabla td {
-    background: rgba(183, 179, 179, 0.208);
+    background: transparent;
+}
+
+.tabla tbody tr:hover td {
+    background: rgba(50,130,184,0.12); /* --fc-blue-600 */
+    transition: background var(--fc-duration) var(--fc-ease);
 }
 
 /* INPUTS */
@@ -412,6 +462,23 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     grid-column: span 2;
 }
 
+/* Subtítulo de sección dentro de un formulario (agrupa campos
+   relacionados: Datos personales, Contacto, Dirección, etc.). Mismo
+   patrón para todos los módulos de registro. */
+.form-section-title {
+    margin: 18px 0 2px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.14);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--fc-blue-300);
+}
+.form-section-title:first-of-type {
+    margin-top: 4px;
+}
+
 /* CAMPOS */
 .field {
     margin-bottom: 0;
@@ -419,11 +486,22 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     flex-direction: column;
 }
 
-.field input,
-.field select {
-    width: 100%;
+.field input{
+     width: 85%;
     height: 30px;
-    margin: 0 auto;
+    margin: 0;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: rgba(189, 187, 187, 0.9);
+    outline: none;
+    transition: 0.25s;
+    box-sizing: border-box;
+
+}
+.field select { 
+    width: 70%;
+    height: 30px;
+    margin: 0;
     border-radius: 6px;
     border: 1px solid #ccc;
     background: rgba(189, 187, 187, 0.9);
@@ -463,21 +541,86 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     margin: 0;
 }
 
-/* BOTÓN */
+/* ================= ACCIONES DEL FORMULARIO =================
+   Fila de acciones estándar para TODOS los formularios de registro:
+   va al final, fuera del flujo de dos columnas de .field, y alinea el
+   botón principal a la derecha en vez de estirarlo a todo el ancho.
+   Patrón: <div class="form-actions full-width"> ...botones... </div>
+   ============================================================== */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+}
+
+@media (max-width: 700px) {
+    .form-actions {
+        justify-content: stretch;
+    }
+    .form-actions .btn-guardar,
+    .form-actions .btn-secundario {
+        flex: 1;
+    }
+}
+
+/* BOTÓN PRINCIPAL — compacto, no ocupa todo el ancho del formulario */
 .btn-guardar {
-    width: 100%;
-    height: 32px;
-    margin-top: 10px;
+    width: auto;
+    min-width: 160px;
+    height: 38px;
+    padding: 0 22px;
+    margin-top: 0;
     border: none;
-    border-radius: 6px;
-    background: #9ecbff;
-    font-weight: bold;
+    border-radius: 8px;
+    background: var(--fc-blue-500);
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.2px;
     cursor: pointer;
-    transition: 0.3s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background var(--fc-duration) var(--fc-ease),
+                transform 120ms var(--fc-ease),
+                box-shadow var(--fc-duration) var(--fc-ease);
+    box-shadow: 0 2px 8px rgba(4,135,243,0.25);
 }
 
 .btn-guardar:hover {
-    background: #7fb7ff;
+    background: var(--fc-blue-600);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(4,135,243,0.35);
+}
+
+.btn-guardar:active {
+    transform: translateY(0);
+}
+
+/* Botón secundario (Limpiar / Cancelar) junto al principal */
+.btn-secundario {
+    width: auto;
+    min-width: 120px;
+    height: 38px;
+    padding: 0 18px;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    background: transparent;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background var(--fc-duration) var(--fc-ease), border-color var(--fc-duration) var(--fc-ease);
+}
+
+.btn-secundario:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.5);
 }
 /* ================= BUSCADOR ================= */
 
@@ -588,34 +731,27 @@ input[type="date"]::-webkit-calendar-picker-indicator {
             gap: 6px;
         }
 
-        .btn-editar {
-            background: #0487f3bd;
-            color: #212121;
+        .btn-editar,
+        .btn-ver {
+            background: var(--fc-blue-500);
+            color: #fff;
             text-decoration: none;
         }
 
-        .btn-editar:hover {
-            background: #4dafff;
+        .btn-editar:hover,
+        .btn-ver:hover {
+            background: var(--fc-blue-300);
+            color: var(--fc-navy-900);
             transform: scale(1.03);
         }
 
         .btn-eliminar {
-            background: #dc3545;
+            background: var(--fc-danger);
             color: white;
         }
 
         .btn-eliminar:hover {
-            background: #b02a37;
-            transform: scale(1.03);
-        }
-        .btn-ver {
-            background: #0487f3bd;
-            color: rgb(0, 0, 0);
-            text-decoration: none;
-        }
-
-        .btn-ver:hover {
-            background: #4dafff;
+            background: #c43237;
             transform: scale(1.03);
         }
 
@@ -627,51 +763,105 @@ input[type="date"]::-webkit-calendar-picker-indicator {
                 font-size: 12px;
             }
         }
-         /* ================= ALERTA PERSONALIZADA ================= */
-        .custom-alert {
+        /* ================= ALERTA DEL SISTEMA (sys-alert) =================
+           Componente único de alerta para todos los módulos. Mantiene la
+           identidad navy/azul del sistema en el fondo de la tarjeta y usa
+           el color de --fc-success/--fc-danger/--fc-warning/--fc-info solo
+           como acento (borde izquierdo + ícono), para que se note el tipo
+           de mensaje sin salirse de la paleta de la marca.
+           Clases de tipo: .sys-alert--success .sys-alert--error
+                            .sys-alert--warning .sys-alert--info (default)
+           ==================================================================== */
+        .custom-alert,
+        .sys-alert {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.6);
+            inset: 0;
+            background: rgba(27,38,44,0.72); /* --fc-navy-900 */
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 9999;
         }
 
-        .alert-box {
-            background: white;
-            padding: 25px;
+        .alert-box,
+        .sys-alert-box {
+            background: var(--fc-navy-700);
+            background: linear-gradient(145deg, #15415f, var(--fc-navy-900));
+            border: 1px solid var(--fc-surface-border);
+            border-left: 4px solid var(--fc-info-border);
+            padding: 22px 25px;
             border-radius: 12px;
-            width: 320px;
-            text-align: center;
-            box-shadow: 0px 10px 30px rgba(0,0,0,0.3);
-            animation: pop 0.2s ease-in-out;
+            width: 340px;
+            max-width: 90%;
+            text-align: left;
+            color: var(--fc-text);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+            animation: sysAlertPop var(--fc-duration) var(--fc-ease);
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
         }
 
-        .alert-box p {
+        .sys-alert--success .sys-alert-box { border-left-color: var(--fc-success-border); }
+        .sys-alert--error   .sys-alert-box { border-left-color: var(--fc-danger-border); }
+        .sys-alert--warning .sys-alert-box { border-left-color: var(--fc-warning-border); }
+        .sys-alert--info    .sys-alert-box { border-left-color: var(--fc-info-border); }
+
+        .sys-alert-icon {
+            flex: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            background: var(--fc-info-bg);
+            color: var(--fc-info-border);
+        }
+        .sys-alert--success .sys-alert-icon { background: var(--fc-success-bg); color: var(--fc-success-border); }
+        .sys-alert--error   .sys-alert-icon { background: var(--fc-danger-bg);  color: var(--fc-danger-border); }
+        .sys-alert--warning .sys-alert-icon { background: var(--fc-warning-bg); color: var(--fc-warning-border); }
+        .sys-alert--info    .sys-alert-icon { background: var(--fc-info-bg);    color: var(--fc-info-border); }
+
+        .sys-alert-content { flex: 1; min-width: 0; }
+
+        .alert-box p,
+        .sys-alert-message {
             white-space: pre-line;
-            font-size: 15px;
-            margin-bottom: 15px;
+            font-size: 14.5px;
+            line-height: 1.4;
+            margin: 0 0 14px;
         }
 
-        .alert-box button {
-            background: #1e88e5;
+        .alert-box button,
+        .sys-alert-ok {
+            background: var(--fc-blue-500);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 9px 18px;
             border-radius: 8px;
             cursor: pointer;
+            font-weight: 600;
+            transition: background var(--fc-duration) var(--fc-ease), transform 120ms var(--fc-ease);
+        }
+        .alert-box button:hover,
+        .sys-alert-ok:hover {
+            background: var(--fc-blue-600);
+            transform: translateY(-1px);
         }
 
         .hidden {
             display: none;
         }
 
+        @keyframes sysAlertPop {
+            from { transform: scale(0.95); opacity: 0; }
+            to   { transform: scale(1); opacity: 1; }
+        }
         @keyframes pop {
-            from { transform: scale(0.8); opacity: 0; }
+            from { transform: scale(0.95); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
         }
         /* Contenedor de botones */
@@ -688,27 +878,17 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     padding: 12px;
     border: none;
     border-radius: 8px;
-    background: #0b4f8a;
+    background: var(--fc-navy-700);
     color: white;
     font-size: 15px;
     cursor: pointer;
-    transition: 0.3s;
+    transition: background var(--fc-duration) var(--fc-ease), transform var(--fc-duration) var(--fc-ease);
 }
 
 /* Hover */
 .btn-accion:hover{
     transform: translateY(-2px);
-    opacity: 0.9;
-}
-
-/* Botón eliminar */
-.btn-eliminar{
-    background: #d62828;
-    text-decoration: none
-}
-
-.btn-eliminar:hover{
-    background: #b71c1c;
+    background: var(--fc-blue-600);
 }
 /* ============================================
    CLASE RESPONSIVE PARA CELULARES Y LAPTOPS
@@ -1083,31 +1263,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     color: #fff;
 }
 
-/* Tabla del módulo: filas sobrias sobre la tarjeta navy */
-.tabla-modulo {
-    font-style: normal;
-}
-
-.tabla-modulo th {
-    background: rgba(15,76,117,0.6);
-    text-align: left;
-    font-weight: 700;
-}
-
-.tabla-modulo td {
-    background: transparent;
-    border-color: rgba(255,255,255,0.08);
-    font-weight: normal;
-}
-
-.tabla-modulo tbody tr:hover td {
-    background: rgba(50,130,184,0.12);
-}
-
-.tabla-modulo td.acciones {
-    text-align: center;
-}
-
+/* .tabla-modulo queda como alias de .tabla (misma regla, mismo token)
+   para no romper vistas antiguas que usaran esta clase. */
 .tabla-modulo .btn-editar {
     color: #fff;
 }

@@ -115,7 +115,9 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                     <input type="text" name="gaceta_designacion_presidente" value="N° 41.823" placeholder="Ej: N° 41.823" required>
                 </div>
 
-                <button type="submit" name="registrar_contrato" class="btn-guardar">Registrar Contrato</button>
+                <div class="form-actions full-width">
+                    <button type="submit" name="registrar_contrato" class="btn-guardar">Registrar Contrato</button>
+                </div>
             </form>
         </div>
 
@@ -240,14 +242,16 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 
 <style>
-/* Estilos para el Modal de Alerta Personalizado (#customAlert) */
+/* Estilos para el Modal de Alerta Personalizado (#customAlert)
+   Alineado a los tokens de marca de style_dashboard.css para que esta
+   alerta se vea igual que la del resto de los módulos. */
 .custom-alert-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(27,38,44,0.72); /* --fc-navy-900 */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -255,37 +259,42 @@ document.addEventListener("DOMContentLoaded", function() {
 }
 
 .custom-alert-box {
-    background: #ffffff;
+    background: linear-gradient(145deg, #15415f, #1B262C);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-left: 4px solid #0487F3; /* --fc-info-border */
     padding: 20px 25px;
     border-radius: 12px;
     max-width: 380px;
     width: 90%;
-    text-align: center;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    text-align: left;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
     font-family: inherit;
+    color: #fff;
 }
 
 .custom-alert-box p {
-    font-size: 15px;
+    font-size: 14.5px;
     font-weight: normal;
-    color: #444;
-    margin: 10px 0 20px 0;
+    color: #fff;
+    margin: 0 0 16px 0;
     line-height: 1.4;
 }
 
 .btn-modal-compacto {
     font-size: 13px;
-    padding: 6px 18px;
-    border-radius: 6px;
-    background-color: #007bff;
+    padding: 8px 18px;
+    border-radius: 8px;
+    background-color: #0487F3; /* --fc-blue-500 */
     color: white;
     border: none;
+    font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition: background 0.2s ease, transform 0.12s ease;
 }
 
 .btn-modal-compacto:hover {
-    background-color: #0056b3;
+    background-color: #3282B8; /* --fc-blue-600 */
+    transform: translateY(-1px);
 }
 </style>
 

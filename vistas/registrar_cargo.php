@@ -65,12 +65,7 @@ if (isset($_GET['status'])) {
 <body>
 
 <!-- Alerta personalizada idéntica a registrar_trabajador -->
-<div id="customAlert" class="custom-alert hidden">
-    <div class="alert-box">
-        <p id="alertMessage"></p>
-        <button onclick="closeAlert()">Aceptar</button>
-    </div>
-</div>
+<?php include "includes/alerta.php"; ?>
 
 <?php include "includes/layout.php"; ?>
 
@@ -87,7 +82,9 @@ if (isset($_GET['status'])) {
                     <input type="text" name="nombre_cargo" id="nombreCargo" placeholder="Ingrese el nombre del cargo" required>
                 </div>
 
-                <button type="submit" name="registrar_cargo" class="btn-guardar">Registrar Cargo</button>
+                <div class="form-actions full-width">
+                    <button type="submit" name="registrar_cargo" class="btn-guardar">Registrar Cargo</button>
+                </div>
             </form>
         </div>
 

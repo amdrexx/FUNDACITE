@@ -26,6 +26,7 @@ registrarBitacora($conexion, 'Primas', 'Consultar', $buscar !== '' ? "Consultó 
 
   
   <?php include "includes/layout.php"; ?>
+  <?php include "includes/alerta.php"; ?>
 
     <div class="main">
         <div class="glass tabla-container">

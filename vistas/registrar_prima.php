@@ -83,12 +83,7 @@ if ($accion === 'registrar') {
 </head>
 <body>
 
-<div id="customAlert" class="custom-alert hidden">
-    <div class="alert-box">
-        <p id="alertMessage"></p>
-        <button onclick="closeAlert()">Aceptar</button>
-    </div>
-</div>
+<?php include "includes/alerta.php"; ?>
 
 
 <?php include "includes/layout.php"; ?>
@@ -121,7 +116,7 @@ if ($accion === 'registrar') {
 </div>
             </div>
     
-    <div class="botones">
+    <div class="form-actions full-width">
         <button type="submit" name="accion" value="guardar" class="btn-guardar">
             Guardar
         </button>

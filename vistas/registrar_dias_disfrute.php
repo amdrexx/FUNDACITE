@@ -195,12 +195,12 @@ unset($_SESSION['errores'], $_SESSION['exito']);
 
             </div>
 
-            <div class="contenedor-botones full-width">
-                <button type="submit" name="accion" value="guardar" class="btn-accion">
-                    Guardar
-                </button>
-                <button type="submit" name="accion" value="limpiar" class="btn-accion btn-eliminar">
+            <div class="form-actions full-width">
+                <button type="submit" name="accion" value="limpiar" class="btn-secundario">
                     Limpiar
+                </button>
+                <button type="submit" name="accion" value="guardar" class="btn-guardar">
+                    Guardar
                 </button>
             </div>
 
@@ -209,12 +209,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
     </div>
 </div>
 
-<div id="customAlert" class="custom-alert hidden">
-    <div class="alert-box">
-        <p id="alertMessage"></p>
-        <button onclick="document.getElementById('customAlert').classList.add('hidden')">Cerrar</button>
-    </div>
-</div>
+<?php include "includes/alerta.php"; ?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
