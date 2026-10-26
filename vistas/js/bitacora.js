@@ -39,7 +39,9 @@
         'Logout':        { icono: 'bi-box-arrow-left',        tono: 'gray'  },
         'Listar':        { icono: 'bi-list-ul',               tono: 'gray'  },
         'Consultar':     { icono: 'bi-eye-fill',              tono: 'gray'  },
-        'Generar PDF':   { icono: 'bi-file-earmark-pdf-fill', tono: 'slate' }
+        'Generar PDF':   { icono: 'bi-file-earmark-pdf-fill', tono: 'slate' },
+        'Exportar BD':   { icono: 'bi-database-fill-up',      tono: 'blue'  },
+        'Importar BD':   { icono: 'bi-database-fill-down',    tono: 'amber' }
     };
     const ACCION_DEFECTO = { icono: 'bi-journal-text', tono: 'gray' };
 

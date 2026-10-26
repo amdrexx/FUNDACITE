@@ -26,10 +26,10 @@ if (!$dato) {
 
 registrarBitacora($conexion, 'Trabajadores', 'Consultar', "Consultó al trabajador ID $idTrabajador para edición.");
 
+// Obtenemos el listado de cargos disponibles para el desplegable
+$cargos = $trabajador->listarCargos();
+
 // ── Precarga de Estado/Municipio/Parroquia YA SELECCIONADOS ──
-// Se resuelve del lado del servidor (no depende de que el AJAX
-// termine a tiempo en el navegador) para evitar que los combos
-// se vean "en blanco" al entrar a editar un trabajador.
 $direccionModelo = new Direccion();
 
 $estados    = $direccionModelo->listarEstados();
@@ -75,8 +75,6 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                 Editar Trabajador
             </h2>
 
-      
-
             <input type="hidden" name="editar_trabajador" value="1">
             <input type="hidden" name="id_trabajador" value="<?php echo htmlspecialchars($dato['id_trabajador']); ?>">
             <input type="hidden" name="id_dir" value="<?php echo htmlspecialchars($dato['id_dir'] ?? ''); ?>">
@@ -106,32 +104,31 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                 <label>Fecha de Nacimiento</label>
                 <input type="text" value="<?php echo htmlspecialchars($dato['fecha'] ?? ''); ?>" readonly>
             </div>
-<div class="field">
-    <label>Género</label>
-    <div class="radio-group">
-        <label class="radio-option">
-            <input
-                type="radio"
-                name="genero"
-                value="Masculino"
-                <?php echo (($dato['genero'] ?? '') == 'Masculino') ? 'checked' : ''; ?>
-                onclick="return false;">
-            <span>Masculino</span>
-        </label>
+            
+            <div class="field">
+                <label>Género</label>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input
+                            type="radio"
+                            name="genero"
+                            value="Masculino"
+                            <?php echo (($dato['genero'] ?? '') == 'Masculino') ? 'checked' : ''; ?>
+                            onclick="return false;">
+                        <span>Masculino</span>
+                    </label>
 
-        <label class="radio-option">
-            <input
-                type="radio"
-                name="genero"
-                value="Femenino"
-                <?php echo (($dato['genero'] ?? '') == 'Femenino') ? 'checked' : ''; ?>
-                onclick="return false;">
-            <span>Femenino</span>
-        </label>
-    </div>
-</div>
-
-
+                    <label class="radio-option">
+                        <input
+                            type="radio"
+                            name="genero"
+                            value="Femenino"
+                            <?php echo (($dato['genero'] ?? '') == 'Femenino') ? 'checked' : ''; ?>
+                            onclick="return false;">
+                        <span>Femenino</span>
+                    </label>
+                </div>
+            </div>
 
             <div class="field">
                 <label>Fecha de Ingreso</label>
@@ -171,6 +168,20 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                 </select>
             </div>
 
+            <!-- CARGO (Permite cambiarlo o dejarlo sin cargo) -->
+            <div class="field">
+                <label>Cargo del Trabajador</label>
+                <select name="id_cargo">
+                    <option value="">-- Sin cargo asignado --</option>
+                    <?php foreach ($cargos as $c): ?>
+                        <option value="<?php echo $c['id_cargo']; ?>" 
+                            <?php echo ((string)($dato['id_cargo'] ?? '') === (string)$c['id_cargo']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($c['nombre_cargo']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
             <!-- Dirección: Estado -->
             <div class="field">
                 <label>Estado</label>
@@ -203,7 +214,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
             <div class="field">
                 <label>Parroquia</label>
                 <select name="cod_par" id="selectParroquia" <?php echo empty($parroquias) ? 'disabled' : ''; ?>>
-                    <option value="">Seleccione una Parroquia</option>
+                    <option value="">Seleccione una Parroquia</>
                     <?php foreach ($parroquias as $p): ?>
                         <option value="<?php echo htmlspecialchars($p['cod_par']); ?>"
                             <?php echo ((string)($dato['cod_par'] ?? '') === (string)$p['cod_par']) ? 'selected' : ''; ?>>

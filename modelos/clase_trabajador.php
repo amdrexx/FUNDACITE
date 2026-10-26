@@ -25,6 +25,25 @@ class Trabajador
     }
 
     /**
+     * Lista todos los cargos disponibles en la tabla CARGO
+     * para mostrarlos en el desplegable del registro de trabajadores.
+     */
+    public function listarCargos()
+    {
+        $cargos = [];
+        $sql = "SELECT id_cargo, nombre_cargo FROM CARGO ORDER BY nombre_cargo ASC";
+        $resultado = $this->conexion->query($sql);
+
+        if ($resultado && $resultado->num_rows > 0) {
+            while ($fila = $resultado->fetch_assoc()) {
+                $cargos[] = $fila;
+            }
+        }
+
+        return $cargos;
+    }
+
+    /**
      * Lista las direcciones ya registradas en el maestro de direcciones
      * (tabla DIRECCION), con su ruta completa Estado/Municipio/Parroquia,
      * para mostrarlas como opciones de selección en el registro de trabajador.
@@ -59,18 +78,13 @@ class Trabajador
     /**
      * Crea (o reutiliza si ya existe una idéntica) un registro en DIRECCION
      * para la parroquia indicada, y devuelve el id_dir correspondiente.
-     *
-     * @param int    $codPar           Código de la parroquia (cod_par)
-     * @param string $nombreDireccion  Texto libre de la dirección exacta
-     * @return int|false  id_dir generado/existente, o false si falla
      */
     public function crearDireccion($codPar, $nombreDireccion)
     {
-        // 1. Buscar si ya existe una dirección idéntica en esa parroquia
         $sqlBuscar = "SELECT id_dir
-                      FROM DIRECCION
-                      WHERE cod_par = ? AND nombre = ?
-                      LIMIT 1";
+                     FROM DIRECCION
+                     WHERE cod_par = ? AND nombre = ?
+                     LIMIT 1";
 
         $stmtBuscar = $this->conexion->prepare($sqlBuscar);
         $stmtBuscar->bind_param("is", $codPar, $nombreDireccion);
@@ -83,9 +97,8 @@ class Trabajador
             return $fila['id_dir'];
         }
 
-        // 2. No existe, se crea un nuevo registro
         $sqlInsert = "INSERT INTO DIRECCION (cod_par, nombre)
-                      VALUES (?, ?)";
+                     VALUES (?, ?)";
 
         $stmtInsert = $this->conexion->prepare($sqlInsert);
         $stmtInsert->bind_param("is", $codPar, $nombreDireccion);
@@ -97,15 +110,6 @@ class Trabajador
         return false;
     }
 
-    /**
-     * Actualiza una dirección ya existente (usada al editar un trabajador
-     * que ya tenía una dirección asignada desde su registro).
-     *
-     * @param int    $idDir            id_dir a actualizar
-     * @param int    $codPar           Nueva parroquia
-     * @param string $nombreDireccion  Nuevo texto de dirección exacta
-     * @return bool
-     */
     public function actualizarDireccion($idDir, $codPar, $nombreDireccion)
     {
         $sql = "UPDATE DIRECCION
@@ -130,7 +134,8 @@ class Trabajador
         $telefono,
         $correo,
         $status,
-        $idDir = null
+        $idDir = null,
+        $idCargo = null
     )
     {
         $sql = "INSERT INTO TRABAJADOR
@@ -146,17 +151,19 @@ class Trabajador
             telefono,
             correo,
             status,
-            id_dir
+            id_dir,
+            id_cargo
         )
         VALUES
         (
-            ?,?,?,?,?,?,?,?,?,?,?,?
+            ?,?,?,?,?,?,?,?,?,?,?,?,?
         )";
 
         $stmt = $this->conexion->prepare($sql);
 
+        // 11 strings ("s") y 2 enteros ("i") -> "sssssssssssii"
         $stmt->bind_param(
-            "sssssssssssi",
+            "sssssssssssii",
             $tipoDocumento,
             $cedula,
             $nombres,
@@ -168,7 +175,8 @@ class Trabajador
             $telefono,
             $correo,
             $status,
-            $idDir
+            $idDir,
+            $idCargo
         );
 
         if ($stmt->execute()) {
@@ -189,8 +197,10 @@ class Trabajador
                     t.apellidos,
                     t.fecha_ingreso,
                     t.status,
+                    c.nombre_cargo,
                     co.tipo_contrato
                 FROM TRABAJADOR t
+                LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo
                 LEFT JOIN CONTRATO co ON co.id_trabajador = t.id_trabajador";
 
         if (!empty($buscar)) {
@@ -238,6 +248,8 @@ class Trabajador
                     t.correo AS correoElectronico,
                     t.status AS estatus_laboral,
                     t.id_dir,
+                    t.id_cargo,
+                    c.nombre_cargo,
                     d.nombre AS direccion,
                     p.cod_par,
                     p.nombre AS parroquia,
@@ -246,6 +258,7 @@ class Trabajador
                     e.cod_est,
                     e.nombre AS estado
                 FROM TRABAJADOR t
+                LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo
                 LEFT JOIN DIRECCION d ON t.id_dir = d.id_dir
                 LEFT JOIN PARROQUIA p ON d.cod_par = p.cod_par
                 LEFT JOIN MUNICIPIO m ON p.cod_muni = m.cod_muni
@@ -271,24 +284,27 @@ class Trabajador
         $telefono,
         $correo,
         $status,
-        $idDir = null
+        $idDir = null,
+        $idCargo = null
     ) {
         $sql = "UPDATE TRABAJADOR
                 SET estado_civil = ?,
                     telefono = ?,
                     correo = ?,
                     status = ?,
-                    id_dir = ?
+                    id_dir = ?,
+                    id_cargo = ?
                 WHERE id_trabajador = ?";
 
         $stmt = $this->conexion->prepare($sql);
         $stmt->bind_param(
-            "ssssii",
+            "ssssiii",
             $estadoCivil,
             $telefono,
             $correo,
             $status,
             $idDir,
+            $idCargo,
             $idTrabajador
         );
 

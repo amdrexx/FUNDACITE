@@ -63,8 +63,12 @@ if (isset($_POST['editar_trabajador'])) {
     $correo       = trim($_POST['correoElectronico'] ?? '');
     $telefono     = trim($_POST['numeroTelefono'] ?? '');
     $status       = trim($_POST['estatus_laboral'] ?? '');
+    $idCargo      = intval($_POST['id_cargo'] ?? 0);
 
-    // Dirección: viene del combo en cascada (Estado -> Municipio -> Parroquia) + texto exacto
+    if ($status === 'Retirado' || $status === 'Suspendido') {
+        $status = 'Inactivo';
+    }
+
     $idDirActual    = intval($_POST['id_dir'] ?? 0);
     $codPar         = intval($_POST['cod_par'] ?? 0);
     $direccionTexto = trim($_POST['direccion_texto'] ?? '');
@@ -87,6 +91,10 @@ if (isset($_POST['editar_trabajador'])) {
         $errores[] = "Seleccione el estatus laboral.";
     }
 
+    if ($idCargo <= 0) {
+        $errores[] = "Seleccione el cargo del trabajador.";
+    }
+
     if (empty($codPar)) {
         $errores[] = "Seleccione la parroquia correspondiente a la dirección.";
     }
@@ -101,12 +109,8 @@ if (isset($_POST['editar_trabajador'])) {
         exit;
     }
 
-    // Foto del trabajador ANTES de tocar su dirección o sus datos (para la bitácora).
     $antes = bitacoraSnapshot($conexion, 'trabajador', $idTrabajador);
 
-    // Si el trabajador ya tenía una dirección asignada, se ACTUALIZA ese mismo
-    // registro (mismo id_dir, nueva parroquia/texto). Si por algún motivo no
-    // tenía ninguna, se crea una nueva (caso excepcional / datos antiguos).
     if ($idDirActual > 0) {
         $direccionOk = $trabajador->actualizarDireccion($idDirActual, $codPar, $direccionTexto);
         $idDir = $idDirActual;
@@ -127,7 +131,8 @@ if (isset($_POST['editar_trabajador'])) {
         $telefono,
         $correo,
         $status,
-        $idDir
+        $idDir,
+        $idCargo
     )) {
         $despues = bitacoraSnapshot($conexion, 'trabajador', $idTrabajador);
         registrarBitacora($conexion, 'Trabajadores', 'Editar', 'Actualizó los datos del trabajador "' . bitacoraNombre($antes, $idTrabajador) . '": ' . bitacoraCambios($antes, $despues));
@@ -148,19 +153,23 @@ $_SESSION['old_input'] = $_POST;
 
 $errores = [];
 
-$tipoDoc          = trim($_POST['tipoDoc'] ?? '');
-$cedula           = trim($_POST['cedula'] ?? '');
-$nombres          = trim($_POST['nombres'] ?? '');
-$apellidos        = trim($_POST['apellidos'] ?? '');
-$fechaNacimiento  = trim($_POST['fecha'] ?? '');
-$genero           = trim($_POST['genero'] ?? '');
-$estadoCivil      = trim($_POST['estadoCivil'] ?? '');
-$correo           = trim($_POST['correoElectronico'] ?? '');
-$telefono         = trim($_POST['numeroTelefono'] ?? '');
-$fechaIngreso     = trim($_POST['fecha_ingreso'] ?? '');
-$status           = trim($_POST['estatus_laboral'] ?? '');
+$tipoDoc         = trim($_POST['tipoDoc'] ?? '');
+$cedula          = trim($_POST['cedula'] ?? '');
+$nombres         = trim($_POST['nombres'] ?? '');
+$apellidos       = trim($_POST['apellidos'] ?? '');
+$fechaNacimiento = trim($_POST['fecha'] ?? '');
+$genero          = trim($_POST['genero'] ?? '');
+$estadoCivil     = trim($_POST['estadoCivil'] ?? '');
+$correo          = trim($_POST['correoElectronico'] ?? '');
+$telefono        = trim($_POST['numeroTelefono'] ?? '');
+$fechaIngreso    = trim($_POST['fecha_ingreso'] ?? '');
+$status          = trim($_POST['estatus_laboral'] ?? '');
+$idCargo         = intval($_POST['id_cargo'] ?? 0);
 
-// Dirección: viene del combo en cascada (Estado -> Municipio -> Parroquia) + texto exacto
+if ($status === 'Retirado' || $status === 'Suspendido') {
+    $status = 'Inactivo';
+}
+
 $codEst          = intval($_POST['cod_est'] ?? 0);
 $codMuni         = intval($_POST['cod_muni'] ?? 0);
 $codPar          = intval($_POST['cod_par'] ?? 0);
@@ -172,10 +181,6 @@ if ($tipoDoc == 'V') {
     $tipoDocumento = 'Cédula de Extranjería';
 } else {
     $tipoDocumento = '';
-}
-
-if ($status == 'Retirado') {
-    $status = 'Inactivo';
 }
 
 if (empty($tipoDocumento))
@@ -211,6 +216,9 @@ if (empty($fechaIngreso))
 if (empty($status))
     $errores[] = "Seleccione el estatus laboral.";
 
+if ($idCargo <= 0)
+    $errores[] = "Seleccione el cargo a asignar.";
+
 if (empty($codEst))
     $errores[] = "Seleccione el estado.";
 
@@ -235,7 +243,6 @@ if (!empty($errores)) {
 
 try {
 
-    // Crear el registro de dirección (o reutilizar uno idéntico) y obtener su id
     $idDir = $trabajador->crearDireccion($codPar, $direccionTexto);
 
     if (!$idDir) {
@@ -254,7 +261,8 @@ try {
         $telefono,
         $correo,
         $status,
-        $idDir
+        $idDir,
+        $idCargo
     );
 
     if (!$idTrabajador) {

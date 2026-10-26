@@ -135,6 +135,7 @@ if ($resultado) {
 
 </div>
 
+<?php include "includes/exportar_importar_flotante.php"; // Exportar/Importar BD, encima de la campana (solo Administrador) ?>
 <?php include "includes/bitacora_flotante.php"; // Campana de la bitácora (solo Administrador) ?>
 
 <script src="/FUNDACITE/vistas/js/chart.js"></script>

@@ -148,6 +148,9 @@
 
     function revisar() {
         if (expirada) return;
+        // Una restauración SQL confirmada está en curso en el servidor. El
+        // formulario volverá con éxito/error y reiniciará el contador al cargar.
+        if (window.__fundaciteRespaldoEnCurso) return;
 
         // Puede haber actividad en otra pestaña que aún no llegó por 'storage'
         try {

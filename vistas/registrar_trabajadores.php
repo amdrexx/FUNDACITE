@@ -21,6 +21,9 @@ require_once '../modelos/clase_trabajador.php';
 
 $trabajador = new Trabajador($conexion);
 $direcciones = $trabajador->listarDirecciones();
+
+// Obtenemos los cargos de la base de datos para el desplegable
+$cargos = method_exists($trabajador, 'listarCargos') ? $trabajador->listarCargos() : [];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -138,55 +141,68 @@ $direcciones = $trabajador->listarDirecciones();
             <h3 class="form-section-title full-width">Datos laborales</h3>
 
             <!-- Fecha de Ingreso -->
-           <div class="field">
+            <div class="field">
                 <label>Fecha de Ingreso</label>
                 <input type="date" name="fecha_ingreso" id="fecha_ingreso" value="<?php echo htmlspecialchars($old['fecha_ingreso'] ?? ''); ?>">
             </div>
 
-            <!-- Estatus Laboral -->
+            <!-- Asignar Cargo -->
+            <div class="field">
+                <label>Cargo a Asignar</label>
+                <select name="id_cargo" id="id_cargo" required>
+                    <option value="" disabled selected>Seleccione un cargo...</option>
+                    <?php foreach ($cargos as $cargo): ?>
+                        <option value="<?php echo $cargo['id_cargo']; ?>" 
+                            <?php echo (isset($old['id_cargo']) && $old['id_cargo'] == $cargo['id_cargo']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($cargo['nombre_cargo']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- Estatus Laboral (Valores compatibles con el CHECK de la BD: Activo, Jubilado, Inactivo) -->
             <div class="field">
                 <label>Estatus Laboral</label>
-                <select name="estatus_laboral">
+                <select name="estatus_laboral" required>
                     <option value="" disabled selected>Seleccione</option>
                     <option value="Activo" <?php echo (isset($old['estatus_laboral']) && $old['estatus_laboral'] == 'Activo') ? 'selected' : ''; ?>>Activo</option>
                     <option value="Jubilado" <?php echo (isset($old['estatus_laboral']) && $old['estatus_laboral'] == 'Jubilado') ? 'selected' : ''; ?>>Jubilado</option>
-                    <option value="Suspendido" <?php echo (isset($old['estatus_laboral']) && $old['estatus_laboral'] == 'Suspendido') ? 'selected' : ''; ?>>Suspendido</option>
-                    <option value="Retirado" <?php echo (isset($old['estatus_laboral']) && $old['estatus_laboral'] == 'Retirado') ? 'selected' : ''; ?>>Retirado (se guarda como Inactivo)</option>
+                    <option value="Inactivo" <?php echo (isset($old['estatus_laboral']) && ($old['estatus_laboral'] == 'Inactivo' || $old['estatus_laboral'] == 'Retirado' || $old['estatus_laboral'] == 'Suspendido')) ? 'selected' : ''; ?>>Inactivo / Retirado / Suspendido</option>
                 </select>
             </div>
 
             <h3 class="form-section-title full-width">Dirección</h3>
 
-          <!-- Dirección: Estado -->
-<div class="field">
-    <label>Estado</label>
-    <select name="cod_est" id="selectEstado">
-        <option value="" disabled selected>Seleccione un estado</option>
-    </select>
-</div>
+            <!-- Dirección: Estado -->
+            <div class="field">
+                <label>Estado</label>
+                <select name="cod_est" id="selectEstado">
+                    <option value="" disabled selected>Seleccione un estado</option>
+                </select>
+            </div>
 
-<!-- Dirección: Municipio -->
-<div class="field">
-    <label>Municipio</label>
-    <select name="cod_muni" id="selectMunicipio">
-        <option value="" disabled selected>Seleccione un municipio</option>
-    </select>
-</div>
+            <!-- Dirección: Municipio -->
+            <div class="field">
+                <label>Municipio</label>
+                <select name="cod_muni" id="selectMunicipio">
+                    <option value="" disabled selected>Seleccione un municipio</option>
+                </select>
+            </div>
 
-<!-- Dirección: Parroquia -->
-<div class="field">
-    <label>Parroquia</label>
-    <select name="cod_par" id="selectParroquia">
-        <option value="" disabled selected>Seleccione una parroquia</option>
-    </select>
-</div>
+            <!-- Dirección: Parroquia -->
+            <div class="field">
+                <label>Parroquia</label>
+                <select name="cod_par" id="selectParroquia">
+                    <option value="" disabled selected>Seleccione una parroquia</option>
+                </select>
+            </div>
 
-<!-- Dirección exacta (va a DIRECCION.nombre) -->
-<div class="field full-width">
-    <label>Dirección</label>
-    <textarea name="direccion_texto" id="direccion_texto" maxlength="255"
-        placeholder="Ingrese dirección exacta (calle, avenida, casa, referencia, etc.)"><?php echo htmlspecialchars($old['direccion_texto'] ?? ''); ?></textarea>
-</div>
+            <!-- Dirección exacta (va a DIRECCION.nombre) -->
+            <div class="field full-width">
+                <label>Dirección</label>
+                <textarea name="direccion_texto" id="direccion_texto" maxlength="255"
+                    placeholder="Ingrese dirección exacta (calle, avenida, casa, referencia, etc.)"><?php echo htmlspecialchars($old['direccion_texto'] ?? ''); ?></textarea>
+            </div>
 
             <div class="form-actions full-width">
                 <button type="submit" class="btn-guardar">Registrar</button>

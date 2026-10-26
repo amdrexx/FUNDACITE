@@ -14,13 +14,13 @@ class Bitacora
     // no notifica, para no saturar con ruido.
     // "Acceso sin sesión" y "Acceso denegado" son intentos de entrar por URL a
     // un módulo sin sesión o sin permiso de rol: siempre deben llamar la atención.
-    const ACCIONES_ALERTA = ['Crear', 'Editar', 'Eliminar', 'Login fallido', 'Acceso sin sesión', 'Acceso denegado'];
+    const ACCIONES_ALERTA = ['Crear', 'Editar', 'Eliminar', 'Importar BD', 'Login fallido', 'Acceso sin sesión', 'Acceso denegado'];
 
     // Agrupaciones de acciones para los filtros rápidos del panel.
     const GRUPOS = [
-        'cambios'   => ['Crear', 'Editar', 'Eliminar'],
+        'cambios'   => ['Crear', 'Editar', 'Eliminar', 'Importar BD'],
         'accesos'   => ['Login', 'Logout', 'Login fallido', 'Acceso sin sesión', 'Acceso denegado'],
-        'consultas' => ['Listar', 'Consultar', 'Generar PDF'],
+        'consultas' => ['Listar', 'Consultar', 'Generar PDF', 'Exportar BD'],
     ];
 
     // Columnas listas para mostrar en la interfaz: fecha ya formateada y
