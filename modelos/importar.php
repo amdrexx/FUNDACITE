@@ -1,20 +1,13 @@
 <?php
-// ============================================================================
-// ARCHIVO: modelos/importar.php (Modelo / Procesador)
-// OBJETIVO: Leer y ejecutar un respaldo SQL subido o guardado en Respaldo_BD/,
-//           restaurando la base configurada directamente en este modelo.
-// NOTA: La vista existente muestra el resultado. Este modelo procesa datos y
-//       abre su conexión directa a MySQL y redirige al dashboard; no contiene HTML.
-// ============================================================================
 
-// 1. INICIAR LA SESIÓN, CARGAR SEGURIDAD Y VALIDAR EL ROL
+
+// 1. INICIAR LA SESIÓN VALIDAR EL ROL
 // ---------------------------------------------------------------------------
 // Inicia la sesión para que los archivos de seguridad puedan leer al usuario.
 session_start();
 
-// El guardián exige sesión válida y controla el tiempo de inactividad.
 require_once __DIR__ . '/../vistas/includes/guardian.php';
-require_once __DIR__ . '/conexion.php'; // Carga la clase de conexión a la BD.
+
 
 // Roles define requireAdministrador(). Sesion contiene funciones de actividad.
 require_once __DIR__ . '/../vistas/includes/roles.php';
@@ -201,6 +194,13 @@ $ejecutar = static function (string $sql) use ($conexion, &$consultasOk, &$error
 
     // Quita el DEFINER del archivo para que MySQL use el usuario conectado.
     $sql = preg_replace('/\\s+DEFINER=`[^`]+`@`[^`]+`/i', '', $sql);
+
+    // REPLACE INTO permite restaurar sobre respaldos antiguos o tablas que no
+    // llegaron a eliminarse: si una clave primaria ya existe, MySQL reemplaza
+    // esa fila con la del respaldo en vez de detenerse por Duplicate entry.
+    // Los respaldos nuevos además incluyen DROP TABLE, por lo que eliminan
+    // también filas actuales que no estén presentes en el archivo.
+    $sql = preg_replace('/^INSERT\\s+INTO\\b/i', 'REPLACE INTO', $sql);
 
     $sentencias++; // Cuenta esta consulta como intento de ejecución.
     if ($conexion->query($sql)) {

@@ -1,9 +1,6 @@
--- ============================================================
--- Respaldo generado por el sistema FUNDACITE
+-- Respaldo FUNDACITE
 -- Base de datos: bd_rrhh_fundacite_yaracuy
--- Generado por: admin
--- Fecha: 2026-10-26 04:09:57
--- ============================================================
+-- Fecha: 2026-10-27 04:22:16
 
 SET FOREIGN_KEY_CHECKS = 0;
 
@@ -21,17 +18,24 @@ CREATE TABLE `BITACORA` (
   KEY `idx_bitacora_modulo` (`modulo`),
   KEY `idx_bitacora_fecha` (`fecha_hora`),
   CONSTRAINT `fk_bitacora_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `USUARIO` (`id_usuario`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('1', '1', 'admin', 'Autenticación', 'Login', 'Inicio de sesión exitoso (rol: Administrador).', '2026-10-25 23:04:02');
 INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('2', '1', 'admin', 'Autenticación', 'Logout', 'Sesión cerrada por inactividad.', '2026-10-25 23:05:21');
 INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('3', '1', 'admin', 'Autenticación', 'Login', 'Inicio de sesión exitoso (rol: Administrador).', '2026-10-25 23:05:25');
-INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('4', '1', 'admin', 'Base de Datos', 'Importar BD', 'Importó la base de datos desde \"bd_rrhh_fundacite_yaracuy_2026-10-26_040528.sql\" (1539 sentencias ejecutadas, 2 con error).', '2026-10-25 23:07:40');
-INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('5', '1', 'admin', 'Autenticación', 'Logout', 'Sesión cerrada por inactividad.', '2026-10-25 23:07:40');
-INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('6', NULL, 'admin123', 'Autenticación', 'Login fallido', 'Intento de inicio de sesión fallido para el usuario \"admin123\".', '2026-10-25 23:07:47');
-INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('7', '1', 'admin', 'Autenticación', 'Login', 'Inicio de sesión exitoso (rol: Administrador).', '2026-10-25 23:07:52');
-INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('8', '1', 'admin', 'Autenticación', 'Logout', 'Sesión cerrada por inactividad.', '2026-10-25 23:09:06');
-INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('9', '1', 'admin', 'Autenticación', 'Login', 'Inicio de sesión exitoso (rol: Administrador).', '2026-10-25 23:09:52');
+INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('4', '1', 'admin', 'Base de Datos', 'Importar BD', 'Intentó importar \"bd_rrhh_fundacite_yaracuy_2026-10-26_040528.sql\": 1539 sentencias correctas', '2026-10-25 23:40:14');
+INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('5', '1', 'admin', 'Trabajadores', 'Consultar', 'Consultó el listado de trabajadores.', '2026-10-25 23:40:25');
+INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('6', '1', 'admin', 'Autenticación', 'Logout', 'Cierre de sesión.', '2026-10-25 23:41:12');
+INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('7', NULL, 'Visitante sin sesión', 'Dashboard', 'Acceso sin sesión', 'Intentó entrar por URL a \"/FUNDACITE/vistas/dashboard.php\" [], módulo Dashboard, sin haber iniciado sesión.', '2026-10-25 23:41:19');
+INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('8', NULL, 'Visitante sin sesión', 'Trabajadores', 'Acceso sin sesión', 'Intentó entrar por URL a \"/FUNDACITE/vistas/lista_trabajadores.php\" [], módulo Trabajadores, sin haber iniciado sesión.', '2026-10-25 23:41:30');
+INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('9', '1', 'admin', 'Autenticación', 'Login', 'Inicio de sesión exitoso (rol: Administrador).', '2026-10-25 23:41:35');
+INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('10', '1', 'admin', 'Autenticación', 'Logout', 'Sesión cerrada por inactividad.', '2026-10-25 23:43:27');
+INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('11', '1', 'admin', 'Autenticación', 'Login', 'Inicio de sesión exitoso (rol: Administrador).', '2026-10-26 00:19:33');
+INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('12', '1', 'admin', 'Base de Datos', 'Exportar BD', 'Creó el respaldo bd_rrhh_fundacite_yaracuy_2026-10-26_052043.sql (14 tablas y 2 vistas).', '2026-10-26 00:20:43');
+INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('13', '1', 'admin', 'Autenticación', 'Logout', 'Sesión cerrada por inactividad.', '2026-10-26 00:21:48');
+INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('14', '1', 'admin', 'Autenticación', 'Login', 'Inicio de sesión exitoso (rol: Administrador).', '2026-10-26 23:00:01');
+INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('15', '1', 'admin', 'Autenticación', 'Logout', 'Cierre de sesión.', '2026-10-26 23:00:13');
+INSERT INTO `BITACORA` (`id_bitacora`, `id_usuario`, `usuario`, `modulo`, `accion`, `descripcion`, `fecha_hora`) VALUES ('16', '1', 'admin', 'Autenticación', 'Login', 'Inicio de sesión exitoso (rol: Administrador).', '2026-10-26 23:22:10');
 
 DROP TABLE IF EXISTS `CARGO`;
 CREATE TABLE `CARGO` (
@@ -1736,14 +1740,10 @@ CREATE TABLE `USUARIO` (
 
 INSERT INTO `USUARIO` (`id_usuario`, `id_trabajador`, `nombre`, `contrasena`, `tipo_usuario`, `status`) VALUES ('1', '1', 'admin', '$2y$12$3Ewh6G9SB22RSOiiUFHnMeAAlLXsPGUaz8C32PrPhcT256vgubIDu', 'Administrador', 'Activo');
 
-DROP TABLE IF EXISTS `V_TRABAJADOR_COMPLETO`;
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `V_TRABAJADOR_COMPLETO` AS select `t`.`id_trabajador` AS `id_trabajador`,`t`.`cedula` AS `cedula`,`t`.`nombres` AS `nombres`,`t`.`apellidos` AS `apellidos`,`t`.`fecha_nacimiento` AS `fecha_nacimiento`,`t`.`fecha_ingreso` AS `fecha_ingreso`,timestampdiff(YEAR,`t`.`fecha_nacimiento`,curdate()) AS `edad`,`t`.`genero` AS `genero`,`t`.`estado_civil` AS `estado_civil`,`t`.`nacionalidad` AS `nacionalidad`,`t`.`telefono` AS `telefono`,`t`.`correo` AS `correo`,`t`.`status` AS `status`,`c`.`nombre_cargo` AS `nombre_cargo`,`d`.`nombre` AS `direccion`,`p`.`nombre` AS `parroquia`,`m`.`nombre` AS `municipio`,`e`.`nombre` AS `estado` from (((((`TRABAJADOR` `t` left join `CARGO` `c` on(`t`.`id_cargo` = `c`.`id_cargo`)) left join `DIRECCION` `d` on(`t`.`id_dir` = `d`.`id_dir`)) left join `PARROQUIA` `p` on(`d`.`cod_par` = `p`.`cod_par`)) left join `MUNICIPIO` `m` on(`p`.`cod_muni` = `m`.`cod_muni`)) left join `ESTADO` `e` on(`m`.`cod_est` = `e`.`cod_est`));
+DROP VIEW IF EXISTS `V_TRABAJADOR_COMPLETO`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `V_TRABAJADOR_COMPLETO` AS select `t`.`id_trabajador` AS `id_trabajador`,`t`.`cedula` AS `cedula`,`t`.`nombres` AS `nombres`,`t`.`apellidos` AS `apellidos`,`t`.`fecha_nacimiento` AS `fecha_nacimiento`,`t`.`fecha_ingreso` AS `fecha_ingreso`,timestampdiff(YEAR,`t`.`fecha_nacimiento`,curdate()) AS `edad`,`t`.`genero` AS `genero`,`t`.`estado_civil` AS `estado_civil`,`t`.`nacionalidad` AS `nacionalidad`,`t`.`telefono` AS `telefono`,`t`.`correo` AS `correo`,`t`.`status` AS `status`,`c`.`nombre_cargo` AS `nombre_cargo`,`d`.`nombre` AS `direccion`,`p`.`nombre` AS `parroquia`,`m`.`nombre` AS `municipio`,`e`.`nombre` AS `estado` from (((((`TRABAJADOR` `t` left join `CARGO` `c` on(`t`.`id_cargo` = `c`.`id_cargo`)) left join `DIRECCION` `d` on(`t`.`id_dir` = `d`.`id_dir`)) left join `PARROQUIA` `p` on(`d`.`cod_par` = `p`.`cod_par`)) left join `MUNICIPIO` `m` on(`p`.`cod_muni` = `m`.`cod_muni`)) left join `ESTADO` `e` on(`m`.`cod_est` = `e`.`cod_est`));
 
-INSERT INTO `V_TRABAJADOR_COMPLETO` (`id_trabajador`, `cedula`, `nombres`, `apellidos`, `fecha_nacimiento`, `fecha_ingreso`, `edad`, `genero`, `estado_civil`, `nacionalidad`, `telefono`, `correo`, `status`, `nombre_cargo`, `direccion`, `parroquia`, `municipio`, `estado`) VALUES ('1', '12345678', 'Admin', 'Sistema', '1980-01-01', '2026-10-25', '46', 'Masculino', 'Soltero(a)', 'Venezolano(a)', '0000000000', 'admin@fundacite.local', 'Activo', 'Administrador', NULL, NULL, NULL, NULL);
-
-DROP TABLE IF EXISTS `V_TRABAJADOR_DETALLE`;
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `V_TRABAJADOR_DETALLE` AS select `TRABAJADOR`.`id_trabajador` AS `id_trabajador`,`TRABAJADOR`.`cedula` AS `cedula`,`TRABAJADOR`.`nombres` AS `nombres`,`TRABAJADOR`.`apellidos` AS `apellidos`,`TRABAJADOR`.`fecha_nacimiento` AS `fecha_nacimiento`,`TRABAJADOR`.`fecha_ingreso` AS `fecha_ingreso`,timestampdiff(YEAR,`TRABAJADOR`.`fecha_nacimiento`,curdate()) AS `edad`,`TRABAJADOR`.`genero` AS `genero`,`TRABAJADOR`.`estado_civil` AS `estado_civil`,`TRABAJADOR`.`nacionalidad` AS `nacionalidad`,`TRABAJADOR`.`telefono` AS `telefono`,`TRABAJADOR`.`correo` AS `correo`,`TRABAJADOR`.`status` AS `status`,`TRABAJADOR`.`id_dir` AS `id_dir`,`TRABAJADOR`.`id_cargo` AS `id_cargo` from `TRABAJADOR`;
-
-INSERT INTO `V_TRABAJADOR_DETALLE` (`id_trabajador`, `cedula`, `nombres`, `apellidos`, `fecha_nacimiento`, `fecha_ingreso`, `edad`, `genero`, `estado_civil`, `nacionalidad`, `telefono`, `correo`, `status`, `id_dir`, `id_cargo`) VALUES ('1', '12345678', 'Admin', 'Sistema', '1980-01-01', '2026-10-25', '46', 'Masculino', 'Soltero(a)', 'Venezolano(a)', '0000000000', 'admin@fundacite.local', 'Activo', NULL, '1');
+DROP VIEW IF EXISTS `V_TRABAJADOR_DETALLE`;
+CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `V_TRABAJADOR_DETALLE` AS select `TRABAJADOR`.`id_trabajador` AS `id_trabajador`,`TRABAJADOR`.`cedula` AS `cedula`,`TRABAJADOR`.`nombres` AS `nombres`,`TRABAJADOR`.`apellidos` AS `apellidos`,`TRABAJADOR`.`fecha_nacimiento` AS `fecha_nacimiento`,`TRABAJADOR`.`fecha_ingreso` AS `fecha_ingreso`,timestampdiff(YEAR,`TRABAJADOR`.`fecha_nacimiento`,curdate()) AS `edad`,`TRABAJADOR`.`genero` AS `genero`,`TRABAJADOR`.`estado_civil` AS `estado_civil`,`TRABAJADOR`.`nacionalidad` AS `nacionalidad`,`TRABAJADOR`.`telefono` AS `telefono`,`TRABAJADOR`.`correo` AS `correo`,`TRABAJADOR`.`status` AS `status`,`TRABAJADOR`.`id_dir` AS `id_dir`,`TRABAJADOR`.`id_cargo` AS `id_cargo` from `TRABAJADOR`;
 
 SET FOREIGN_KEY_CHECKS = 1;
