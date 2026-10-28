@@ -135,6 +135,24 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                 <input type="text" value="<?php echo htmlspecialchars($dato['fecha_ingreso'] ?? ''); ?>" readonly>
             </div>
 
+            <div class="field">
+                <label for="hijos">Cantidad de Hijos</label>
+                <input type="number" name="hijos" id="hijos" min="0" max="30" step="1" required
+                       value="<?php echo htmlspecialchars($dato['hijos'] ?? '0'); ?>">
+            </div>
+
+            <div class="field">
+                <label for="anos_servicio_administracion_publica">Años de Servicio en la Administración Pública</label>
+                <input type="number" name="anos_servicio_administracion_publica" id="anos_servicio_administracion_publica" min="0" max="70" step="1" required
+                       value="<?php echo htmlspecialchars($dato['anos_servicio_administracion_publica'] ?? '0'); ?>">
+            </div>
+
+            <div class="field">
+                <label for="nivel_educacion">Nivel de Educación</label>
+                <input type="text" name="nivel_educacion" id="nivel_educacion" maxlength="100" required
+                       value="<?php echo htmlspecialchars($dato['nivel_educacion'] ?? ''); ?>">
+            </div>
+
             <!-- EDITABLES -->
             <div class="field">
                 <label>Estado Civil</label>

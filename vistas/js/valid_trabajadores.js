@@ -95,9 +95,18 @@ document.addEventListener("DOMContentLoaded", function () {
             const fechaNac = document.getElementById("fecha").value;
             const telefono = document.getElementById("numeroTelefono").value.trim();
             const fechaIngreso = document.getElementById("fecha_ingreso").value;
+            const hijos = Number(document.getElementById("hijos").value);
+            const anosServicio = Number(document.getElementById("anos_servicio_administracion_publica").value);
+            const nivelEducacion = document.getElementById("nivel_educacion").value.trim();
             const estadoCivil = document.getElementById("estadoCivil").value;
             const genero = document.querySelector('input[name="genero"]:checked');
             const estatus = document.querySelector('select[name="estatus_laboral"]').value;
+
+            const idCargo = document.getElementById("id_cargo").value;
+            const estado = document.getElementById("selectEstado").value;
+            const municipio = document.getElementById("selectMunicipio").value;
+            const parroquia = document.getElementById("selectParroquia").value;
+            const direccion = document.getElementById("direccion_texto").value.trim();
 
             if (!tipoDoc) errores.push("Tipo de Documento");
             if (!cedula) errores.push("Cédula");
@@ -109,35 +118,21 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!fechaNac) errores.push("Fecha de Nacimiento");
             if (!telefono) errores.push("Número de Teléfono");
             if (!fechaIngreso) errores.push("Fecha de Ingreso");
+            if (document.getElementById("hijos").value === "") errores.push("Cantidad de Hijos");
+            if (document.getElementById("anos_servicio_administracion_publica").value === "") errores.push("Años de Servicio en la Administración Pública");
+            if (!nivelEducacion) errores.push("Nivel de Educación");
+            if (!idCargo) errores.push("Cargo a Asignar");
             if (!estatus) errores.push("Estatus Laboral");
+            if (!estado) errores.push("Estado");
+            if (!municipio) errores.push("Municipio");
+            if (!parroquia) errores.push("Parroquia");
+            if (!direccion) errores.push("Dirección exacta");
 
-            if (errores.length > 0) {
-                e.preventDefault();
-                showAlert(
-                    "Debes completar los siguientes campos:\n\n• " + errores.join("\n• "),
-                    false
-                );
-                return false;
-            }
-
-            if (!/^\d{6,8}$/.test(cedula)) {
-                e.preventDefault();
-                showAlert("La cédula debe contener entre 6 y 8 dígitos.", false);
-                return false;
-            }
-
-            if (!/^0\d{10}$/.test(telefono)) {
-                e.preventDefault();
-                showAlert("El teléfono debe tener 11 dígitos.", false);
-                return false;
-            }
+            if (cedula && !/^\d{6,8}$/.test(cedula)) errores.push("Cédula: debe contener entre 6 y 8 dígitos");
+            if (telefono && !/^0\d{10}$/.test(telefono)) errores.push("Número de Teléfono: debe tener 11 dígitos y comenzar por 0");
 
             const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!regexCorreo.test(correo)) {
-                e.preventDefault();
-                showAlert("El correo electrónico no es válido.", false);
-                return false;
-            }
+            if (correo && !regexCorreo.test(correo)) errores.push("Correo Electrónico: formato no válido");
 
             const nacimiento = new Date(fechaNac);
             const hoy = new Date();
@@ -149,16 +144,26 @@ document.addEventListener("DOMContentLoaded", function () {
                 edad--;
             }
 
-            if (edad < 18) {
-                e.preventDefault();
-                showAlert("El trabajador debe ser mayor de edad.", false);
-                return false;
+            if (fechaNac && edad < 18) errores.push("Fecha de Nacimiento: el trabajador debe tener al menos 18 años");
+
+            const ingreso = fechaIngreso ? new Date(fechaIngreso + "T00:00:00") : null;
+            if (ingreso && ingreso > hoy) errores.push("Fecha de Ingreso: no puede ser futura");
+
+            const hijosValor = document.getElementById("hijos").value;
+            const anosServicioValor = document.getElementById("anos_servicio_administracion_publica").value;
+            if (hijosValor !== "" && (!Number.isInteger(hijos) || hijos < 0 || hijos > 30)) errores.push("Cantidad de Hijos: indique un entero entre 0 y 30");
+            if (anosServicioValor !== "" && (!Number.isInteger(anosServicio) || anosServicio < 0 || anosServicio > 70)) errores.push("Años de Servicio: indique un entero entre 0 y 70");
+
+            if (fechaNac && ingreso) {
+                const edadAlIngreso = edadEnFecha(new Date(fechaNac + "T00:00:00"), ingreso);
+                const maxServicioPorEdad = Math.max(0, edadAlIngreso - 18);
+                if (edadAlIngreso < 18) errores.push("Fecha de Ingreso: el trabajador debía tener al menos 18 años");
+                if (Number.isInteger(anosServicio) && anosServicio > maxServicioPorEdad) errores.push("Años de Servicio: superan el tiempo posible desde los 18 años hasta el ingreso");
             }
 
-            const ingreso = new Date(fechaIngreso);
-            if (ingreso > hoy) {
+            if (errores.length > 0) {
                 e.preventDefault();
-                showAlert("La fecha de ingreso no puede ser futura.", false);
+                showAlert("Corrige los siguientes campos o datos:\n\n• " + [...new Set(errores)].join("\n• "), false);
                 return false;
             }
         });
@@ -178,31 +183,33 @@ document.addEventListener("DOMContentLoaded", function () {
             const correo = document.querySelector('input[name="correoElectronico"]')?.value.trim() || '';
             const telefono = document.querySelector('input[name="numeroTelefono"]')?.value.trim() || '';
             const estatus = document.querySelector('select[name="estatus_laboral"]')?.value.trim() || '';
+            const hijosInput = document.querySelector('input[name="hijos"]');
+            const anosServicioInput = document.querySelector('input[name="anos_servicio_administracion_publica"]');
+            const hijos = Number(hijosInput?.value);
+            const anosServicio = Number(anosServicioInput?.value);
+            const nivelEducacion = document.querySelector('input[name="nivel_educacion"]')?.value.trim() || '';
+            const direccion = document.querySelector('textarea[name="direccion_texto"]')?.value.trim() || '';
+            const parroquia = document.querySelector('select[name="cod_par"]')?.value || '';
 
             if (!estadoCivil) errores.push("Estado Civil");
             if (!correo) errores.push("Correo Electrónico");
             if (!telefono) errores.push("Número de Teléfono");
             if (!estatus) errores.push("Estatus Laboral");
+            if (!hijosInput?.value) errores.push("Cantidad de Hijos");
+            if (!anosServicioInput?.value) errores.push("Años de Servicio en la Administración Pública");
+            if (!nivelEducacion) errores.push("Nivel de Educación");
+            if (!parroquia) errores.push("Parroquia");
+            if (!direccion) errores.push("Dirección exacta");
+
+            const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (correo && !regexCorreo.test(correo)) errores.push("Correo Electrónico: formato no válido");
+            if (telefono && !/^\d{11}$/.test(telefono)) errores.push("Número de Teléfono: debe tener 11 dígitos");
+            if (hijosInput?.value && (!Number.isInteger(hijos) || hijos < 0 || hijos > 30)) errores.push("Cantidad de Hijos: indique un entero entre 0 y 30");
+            if (anosServicioInput?.value && (!Number.isInteger(anosServicio) || anosServicio < 0 || anosServicio > 70)) errores.push("Años de Servicio: indique un entero entre 0 y 70");
 
             if (errores.length > 0) {
                 e.preventDefault();
-                showAlert(
-                    "Debes completar los siguientes campos:\n\n• " + errores.join("\n• "),
-                    false
-                );
-                return false;
-            }
-
-            const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!regexCorreo.test(correo)) {
-                e.preventDefault();
-                showAlert("El correo electrónico no es válido.", false);
-                return false;
-            }
-
-            if (!/^\d{11}$/.test(telefono)) {
-                e.preventDefault();
-                showAlert("El teléfono debe tener 11 dígitos.", false);
+                showAlert("Corrige los siguientes campos o datos:\n\n• " + [...new Set(errores)].join("\n• "), false);
                 return false;
             }
 
@@ -226,6 +233,13 @@ document.addEventListener("DOMContentLoaded", function () {
 function limitarCaracteresRepetidos(valor, maxRepeticiones = 2) {
     const patron = new RegExp(`(.)\\1{${maxRepeticiones},}`, 'g');
     return valor.replace(patron, (coincidencia, caracter) => caracter.repeat(maxRepeticiones));
+}
+
+function edadEnFecha(fechaNacimiento, fechaReferencia) {
+    let edad = fechaReferencia.getFullYear() - fechaNacimiento.getFullYear();
+    const mes = fechaReferencia.getMonth() - fechaNacimiento.getMonth();
+    if (mes < 0 || (mes === 0 && fechaReferencia.getDate() < fechaNacimiento.getDate())) edad--;
+    return edad;
 }
 
 // ==========================

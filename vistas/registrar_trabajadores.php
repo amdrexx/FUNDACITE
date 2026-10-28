@@ -146,6 +146,25 @@ $cargos = method_exists($trabajador, 'listarCargos') ? $trabajador->listarCargos
                 <input type="date" name="fecha_ingreso" id="fecha_ingreso" value="<?php echo htmlspecialchars($old['fecha_ingreso'] ?? ''); ?>">
             </div>
 
+            <div class="field">
+                <label for="hijos">Cantidad de Hijos</label>
+                <input type="number" name="hijos" id="hijos" min="0" max="30" step="1" required
+                       value="<?php echo htmlspecialchars($old['hijos'] ?? '0'); ?>">
+            </div>
+
+            <div class="field">
+                <label for="anos_servicio_administracion_publica">Años de Servicio en la Administración Pública</label>
+                <input type="number" name="anos_servicio_administracion_publica" id="anos_servicio_administracion_publica" min="0" max="70" step="1" required
+                       value="<?php echo htmlspecialchars($old['anos_servicio_administracion_publica'] ?? '0'); ?>">
+            </div>
+
+            <div class="field">
+                <label for="nivel_educacion">Nivel de Educación</label>
+                <input type="text" name="nivel_educacion" id="nivel_educacion" maxlength="100" required
+                       placeholder="Ej.: Bachiller, Técnico, Universitario"
+                       value="<?php echo htmlspecialchars($old['nivel_educacion'] ?? ''); ?>">
+            </div>
+
             <!-- Asignar Cargo -->
             <div class="field">
                 <label>Cargo a Asignar</label>

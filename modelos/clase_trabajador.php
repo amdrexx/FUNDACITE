@@ -129,6 +129,9 @@ class Trabajador
         $apellidos,
         $fechaNacimiento,
         $fechaIngreso,
+        $hijos,
+        $anosServicioAdministracionPublica,
+        $nivelEducacion,
         $genero,
         $estadoCivil,
         $telefono,
@@ -146,6 +149,9 @@ class Trabajador
             apellidos,
             fecha_nacimiento,
             fecha_ingreso,
+            hijos,
+            anos_servicio_administracion_publica,
+            nivel_educacion,
             genero,
             estado_civil,
             telefono,
@@ -156,20 +162,22 @@ class Trabajador
         )
         VALUES
         (
-            ?,?,?,?,?,?,?,?,?,?,?,?,?
+            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
         )";
 
         $stmt = $this->conexion->prepare($sql);
 
-        // 11 strings ("s") y 2 enteros ("i") -> "sssssssssssii"
         $stmt->bind_param(
-            "sssssssssssii",
+            "ssssssiisssssssii",
             $tipoDocumento,
             $cedula,
             $nombres,
             $apellidos,
             $fechaNacimiento,
             $fechaIngreso,
+            $hijos,
+            $anosServicioAdministracionPublica,
+            $nivelEducacion,
             $genero,
             $estadoCivil,
             $telefono,
@@ -196,6 +204,9 @@ class Trabajador
                     t.nombres,
                     t.apellidos,
                     t.fecha_ingreso,
+                    t.hijos,
+                    t.anos_servicio_administracion_publica,
+                    t.nivel_educacion,
                     t.status,
                     c.nombre_cargo,
                     co.tipo_contrato
@@ -242,6 +253,9 @@ class Trabajador
                     ) AS edad,
 
                     t.fecha_ingreso,
+                    t.hijos,
+                    t.anos_servicio_administracion_publica,
+                    t.nivel_educacion,
                     t.genero,
                     t.estado_civil AS estadoCivil,
                     t.telefono AS numeroTelefono,
@@ -284,6 +298,9 @@ class Trabajador
         $telefono,
         $correo,
         $status,
+        $hijos,
+        $anosServicioAdministracionPublica,
+        $nivelEducacion,
         $idDir = null,
         $idCargo = null
     ) {
@@ -292,17 +309,23 @@ class Trabajador
                     telefono = ?,
                     correo = ?,
                     status = ?,
+                    hijos = ?,
+                    anos_servicio_administracion_publica = ?,
+                    nivel_educacion = ?,
                     id_dir = ?,
                     id_cargo = ?
                 WHERE id_trabajador = ?";
 
         $stmt = $this->conexion->prepare($sql);
         $stmt->bind_param(
-            "ssssiii",
+            "ssssiiisii",
             $estadoCivil,
             $telefono,
             $correo,
             $status,
+            $hijos,
+            $anosServicioAdministracionPublica,
+            $nivelEducacion,
             $idDir,
             $idCargo,
             $idTrabajador

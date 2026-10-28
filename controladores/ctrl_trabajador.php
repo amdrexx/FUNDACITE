@@ -63,7 +63,10 @@ if (isset($_POST['editar_trabajador'])) {
     $correo       = trim($_POST['correoElectronico'] ?? '');
     $telefono     = trim($_POST['numeroTelefono'] ?? '');
     $status       = trim($_POST['estatus_laboral'] ?? '');
-    $idCargo      = intval($_POST['id_cargo'] ?? 0);
+    $idCargo      = ($_POST['id_cargo'] ?? '') === '' ? null : intval($_POST['id_cargo']);
+    $hijos = filter_var($_POST['hijos'] ?? '', FILTER_VALIDATE_INT);
+    $anosServicio = filter_var($_POST['anos_servicio_administracion_publica'] ?? '', FILTER_VALIDATE_INT);
+    $nivelEducacion = trim($_POST['nivel_educacion'] ?? '');
 
     if ($status === 'Retirado' || $status === 'Suspendido') {
         $status = 'Inactivo';
@@ -81,18 +84,44 @@ if (isset($_POST['editar_trabajador'])) {
 
     if (empty($correo)) {
         $errores[] = "Ingrese el correo electrónico.";
+    } elseif (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+        $errores[] = "El correo electrónico no tiene un formato válido.";
     }
 
     if (empty($telefono)) {
         $errores[] = "Ingrese el número de teléfono.";
+    } elseif (!preg_match('/^\d{11}$/', $telefono)) {
+        $errores[] = "El teléfono debe tener 11 dígitos.";
+    }
+
+    if ($hijos === false || $hijos < 0 || $hijos > 30) {
+        $errores[] = "Ingrese una cantidad de hijos entre 0 y 30.";
+    }
+
+    if ($anosServicio === false || $anosServicio < 0 || $anosServicio > 70) {
+        $errores[] = "Ingrese años de servicio entre 0 y 70.";
+    }
+
+    $trabajadorEditado = $trabajador->obtenerTrabajadorPorId($idTrabajador);
+    if ($trabajadorEditado && $anosServicio !== false) {
+        try {
+            $nacimiento = new DateTime($trabajadorEditado['fecha']);
+            $ingreso = new DateTime($trabajadorEditado['fecha_ingreso']);
+            $edadAlIngreso = $nacimiento->diff($ingreso)->y;
+            if ($ingreso < $nacimiento || $edadAlIngreso < 18 || $anosServicio > ($edadAlIngreso - 18)) {
+                $errores[] = "Los años de servicio no pueden superar el tiempo transcurrido desde que el trabajador cumplió 18 años hasta su ingreso.";
+            }
+        } catch (Exception $e) {
+            $errores[] = "Las fechas de nacimiento e ingreso registradas no son válidas.";
+        }
+    }
+
+    if ($nivelEducacion === '') {
+        $errores[] = "Seleccione el nivel de educación.";
     }
 
     if (empty($status)) {
         $errores[] = "Seleccione el estatus laboral.";
-    }
-
-    if ($idCargo <= 0) {
-        $errores[] = "Seleccione el cargo del trabajador.";
     }
 
     if (empty($codPar)) {
@@ -131,6 +160,9 @@ if (isset($_POST['editar_trabajador'])) {
         $telefono,
         $correo,
         $status,
+        $hijos,
+        $anosServicio,
+        $nivelEducacion,
         $idDir,
         $idCargo
     )) {
@@ -163,6 +195,9 @@ $estadoCivil     = trim($_POST['estadoCivil'] ?? '');
 $correo          = trim($_POST['correoElectronico'] ?? '');
 $telefono        = trim($_POST['numeroTelefono'] ?? '');
 $fechaIngreso    = trim($_POST['fecha_ingreso'] ?? '');
+$hijos = filter_var($_POST['hijos'] ?? '', FILTER_VALIDATE_INT);
+$anosServicio = filter_var($_POST['anos_servicio_administracion_publica'] ?? '', FILTER_VALIDATE_INT);
+$nivelEducacion = trim($_POST['nivel_educacion'] ?? '');
 $status          = trim($_POST['estatus_laboral'] ?? '');
 $idCargo         = intval($_POST['id_cargo'] ?? 0);
 
@@ -188,6 +223,8 @@ if (empty($tipoDocumento))
 
 if (empty($cedula))
     $errores[] = "Ingrese la cédula.";
+elseif (!preg_match('/^\d{6,8}$/', $cedula))
+    $errores[] = "La cédula debe contener entre 6 y 8 dígitos.";
 
 if (empty($nombres))
     $errores[] = "Ingrese los nombres.";
@@ -206,12 +243,51 @@ if (empty($estadoCivil))
 
 if (empty($telefono))
     $errores[] = "Ingrese el teléfono.";
+elseif (!preg_match('/^0\d{10}$/', $telefono))
+    $errores[] = "El teléfono debe tener 11 dígitos y comenzar por 0.";
 
 if (empty($correo))
     $errores[] = "Ingrese el correo.";
+elseif (!filter_var($correo, FILTER_VALIDATE_EMAIL))
+    $errores[] = "El correo electrónico no tiene un formato válido.";
 
 if (empty($fechaIngreso))
     $errores[] = "Ingrese la fecha de ingreso.";
+
+if ($hijos === false || $hijos < 0 || $hijos > 30)
+    $errores[] = "Ingrese una cantidad de hijos entre 0 y 30.";
+
+if ($anosServicio === false || $anosServicio < 0 || $anosServicio > 70)
+    $errores[] = "Ingrese años de servicio entre 0 y 70.";
+
+if ($anosServicio !== false && $fechaNacimiento !== '' && $fechaIngreso !== '') {
+    try {
+        $nacimiento = new DateTime($fechaNacimiento);
+        $ingreso = new DateTime($fechaIngreso);
+        $edadAlIngreso = $nacimiento->diff($ingreso)->y;
+        if ($ingreso < $nacimiento || $edadAlIngreso < 18 || $anosServicio > ($edadAlIngreso - 18)) {
+            $errores[] = "Los años de servicio no pueden superar el tiempo transcurrido desde que el trabajador cumplió 18 años hasta su ingreso.";
+        }
+    } catch (Exception $e) {
+        $errores[] = "Las fechas de nacimiento e ingreso no son válidas.";
+    }
+}
+
+if ($fechaNacimiento !== '' && $fechaIngreso !== '') {
+    try {
+        $nacimiento = new DateTime($fechaNacimiento);
+        $ingreso = new DateTime($fechaIngreso);
+        $edadAlIngreso = $nacimiento->diff($ingreso)->y;
+        if ($ingreso < $nacimiento || $edadAlIngreso < 18) {
+            $errores[] = "El trabajador debe tener al menos 18 años en la fecha de ingreso.";
+        }
+    } catch (Exception $e) {
+        $errores[] = "Las fechas de nacimiento e ingreso no son válidas.";
+    }
+}
+
+if (empty($nivelEducacion))
+    $errores[] = "Seleccione el nivel de educación.";
 
 if (empty($status))
     $errores[] = "Seleccione el estatus laboral.";
@@ -256,6 +332,9 @@ try {
         $apellidos,
         $fechaNacimiento,
         $fechaIngreso,
+        $hijos,
+        $anosServicio,
+        $nivelEducacion,
         $genero,
         $estadoCivil,
         $telefono,
