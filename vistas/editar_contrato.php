@@ -16,7 +16,7 @@ require_once __DIR__ . "/../controladores/ctrl_contrato.php";
 $id_contrato = $_GET['id'] ?? null;
 
 if (!$id_contrato) {
-    header("Location: registrar_contrato.php");
+    header("Location: lista_contrato.php");
     exit;
 }
 
@@ -24,7 +24,7 @@ if (!$id_contrato) {
 $contrato = $controladorContrato->buscarPorId($id_contrato);
 
 if (!$contrato) {
-    header("Location: registrar_contrato.php?status=not_found");
+    header("Location: lista_contrato.php?status=not_found");
     exit;
 }
 
@@ -49,109 +49,140 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
 <?php include "includes/layout.php"; ?>
 
 <div class="main" style="display: block !important; clear: both !important;">
-    <div style="max-width: 600px; width: 100%; margin: 0 auto; display: block; box-sizing: border-box;">
+    <div style="max-width: 900px; width: 100%; margin: 0 auto; display: block; box-sizing: border-box;">
 
         <div style="width: 100%; display: block; margin-bottom: 30px; box-sizing: border-box;">
             <form class="form-card" id="formContratos" action="../controladores/ctrl_contrato.php" method="POST" style="width: 100% !important; max-width: 100% !important; box-sizing: border-box; margin: 0 !important;">
                 
                 <!-- Campo oculto para enrutar la acción en el controlador -->
                 <input type="hidden" name="accion" value="actualizar">
-
-                <center><h2>Modificar Contrato</h2></center>
-
                 <input type="hidden" name="id_contrato" value="<?php echo htmlspecialchars($contrato['id_contrato']); ?>">
                 <input type="hidden" name="id_trabajador" id="id_trabajador" value="<?php echo htmlspecialchars($contrato['id_trabajador']); ?>">
 
-                <!-- TRABAJADOR (INFORMATIVO) -->
-                <div class="field">
-                    <label>Trabajador Asignado</label>
-                    <input type="text" 
-                           value="<?php echo htmlspecialchars(($contrato['cedula_trabajador'] ?? $contrato['cedula'] ?? '') . ' - ' . ($contrato['nombre_trabajador'] ?? ($contrato['nombres'] ?? '') . ' ' . ($contrato['apellidos'] ?? ''))); ?>" 
-                           readonly 
-                           style="background-color: rgba(255, 255, 255, 0.15); cursor: not-allowed; color: #e0e0e0; font-weight: bold;">
-                </div>
+                <div class="form-grid">
+                    <h2 class="full-width" style="text-align: center; margin-bottom: 20px;">Modificar Contrato</h2>
 
-                <!-- CARGO DEL TRABAJADOR (INFORMATIVO) -->
-                <div class="field">
-                    <label>Cargo del Trabajador</label>
-                    <input type="text" 
-                           value="<?php echo htmlspecialchars($contrato['nombre_cargo'] ?? $contrato['cargo'] ?? 'Sin cargo asignado'); ?>" 
-                           readonly 
-                           style="background-color: rgba(255, 255, 255, 0.15); cursor: not-allowed; color: #e0e0e0; font-weight: bold;">
-                </div>
+                    <h3 class="form-section-title full-width">Trabajador Asociado</h3>
 
-                <!-- CAMPOS MODIFICABLES DEL CONTRATO -->
-                <div class="field">
-                    <label>Tipo de Contrato</label>
-                    <select name="tipo_contrato" required>
-                        <?php 
-                        $tipos = ['Indefinido', 'Tiempo determinado', 'Obra determinada', 'Pasantía', 'Suplencia'];
-                        foreach ($tipos as $tipo): 
-                        ?>
-                            <option value="<?php echo $tipo; ?>" style="color: black;" <?php echo ($contrato['tipo_contrato'] === $tipo) ? 'selected' : ''; ?>>
-                                <?php echo $tipo; ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+                    <!-- Cédula del Trabajador (Informativo) -->
+                    <div class="field">
+                        <label>Cédula</label>
+                        <input type="text" 
+                               value="<?php echo htmlspecialchars($contrato['cedula_trabajador'] ?? $contrato['cedula'] ?? 'N/A'); ?>" 
+                               readonly 
+                               style="background-color: rgba(255, 255, 255, 0.05); cursor: not-allowed;">
+                    </div>
 
-                <div class="field">
-                    <label>Fecha de Inicio del Contrato</label>
-                    <input type="date" name="fecha_contrato" value="<?php echo htmlspecialchars($contrato['fecha_contrato'] ?? ''); ?>" required>
-                </div>
+                    <!-- Nombre del Trabajador (Informativo) -->
+                    <div class="field">
+                        <label>Nombres y Apellidos</label>
+                        <input type="text" 
+                               value="<?php echo htmlspecialchars($contrato['nombre_trabajador'] ?? (($contrato['nombres'] ?? '') . ' ' . ($contrato['apellidos'] ?? 'No especificado'))); ?>" 
+                               readonly 
+                               style="background-color: rgba(255, 255, 255, 0.05); cursor: not-allowed;">
+                    </div>
 
-                <!-- NUEVO CAMPO: FECHA FIN -->
-                <div class="field">
-                    <label>Fecha de Finalización</label>
-                    <input type="date" name="fecha_fin" id="fecha_fin" value="<?php echo htmlspecialchars($contrato['fecha_fin'] ?? ''); ?>">
-                </div>
+                    <!-- Cargo del Trabajador (Informativo) -->
+                    <div class="field full-width">
+                        <label>Cargo del Trabajador</label>
+                        <input type="text" 
+                               value="<?php echo htmlspecialchars($contrato['nombre_cargo'] ?? $contrato['cargo'] ?? 'Sin cargo asignado'); ?>" 
+                               readonly 
+                               style="background-color: rgba(255, 255, 255, 0.05); cursor: not-allowed;">
+                    </div>
 
-                <div class="field">
-                    <label>Lugar de Trabajo</label>
-                    <input type="text" name="lugar_trabajo" value="<?php echo htmlspecialchars($contrato['lugar_trabajo'] ?? ''); ?>" required>
-                </div>
+                    <h3 class="form-section-title full-width">Detalles del Contrato</h3>
 
-                <!-- DATOS DEL PRESIDENTE (BLOQUEADOS CON READONLY) -->
-                <div class="field">
-                    <label>Nombre del Presidente</label>
-                    <input type="text" 
-                           name="nombre_presidente" 
-                           value="<?php echo htmlspecialchars($contrato['nombre_presidente'] ?? ''); ?>" 
-                           readonly 
-                           style="background-color: rgba(255, 255, 255, 0.15); cursor: not-allowed; color: #e0e0e0;">
-                </div>
+                    <!-- Tipo de Contrato -->
+                    <div class="field">
+                        <label>Tipo de Contrato</label>
+                        <select name="tipo_contrato" id="tipo_contrato" required>
+                            <?php 
+                            $tipos = ['Tiempo indeterminado', 'Tiempo determinado'];
+                            foreach ($tipos as $tipo): 
+                            ?>
+                                <option value="<?php echo $tipo; ?>" style="color: black;" <?php echo (($contrato['tipo_contrato'] ?? '') === $tipo) ? 'selected' : ''; ?>>
+                                    <?php echo $tipo; ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
-                <div class="field">
-                    <label>Cédula del Presidente</label>
-                    <input type="text" 
-                           name="cedula_presidente" 
-                           value="<?php echo htmlspecialchars($contrato['cedula_presidente'] ?? ''); ?>" 
-                           readonly 
-                           style="background-color: rgba(255, 255, 255, 0.15); cursor: not-allowed; color: #e0e0e0;">
-                </div>
+                    <!-- Tipo de Personal -->
+                    <div class="field">
+                        <label>Tipo de Personal</label>
+                        <select name="tipo_personal" required>
+                            <option value="" disabled>Seleccione el tipo de personal</option>
+                            <?php 
+                            $tiposPersonal = ['Fijo', 'Contratado', 'Obrero', 'Jubilado'];
+                            foreach ($tiposPersonal as $tp): 
+                            ?>
+                                <option value="<?php echo $tp; ?>" style="color: black;" <?php echo (($contrato['tipo_personal'] ?? '') === $tp) ? 'selected' : ''; ?>>
+                                    <?php echo $tp; ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
-                <div class="field">
-                    <label>Gaceta Oficial de Designación</label>
-                    <input type="text" 
-                           name="gaceta_designacion_presidente" 
-                           value="<?php echo htmlspecialchars($contrato['gaceta_designacion_presidente'] ?? ''); ?>" 
-                           readonly 
-                           style="background-color: rgba(255, 255, 255, 0.15); cursor: not-allowed; color: #e0e0e0;">
-                </div>
+                    <!-- Lugar de Trabajo -->
+                    <div class="field">
+                        <label>Lugar de Trabajo</label>
+                        <input type="text" name="lugar_trabajo" value="<?php echo htmlspecialchars($contrato['lugar_trabajo'] ?? ''); ?>" required>
+                    </div>
 
-                <!-- BOTONES DE ACCIÓN -->
-                <div style="display: flex; gap: 10px; width: 100%; margin-top: 25px;">
-                    <button type="submit" 
-                            name="editar_contrato" 
-                            class="btn-guardar" 
-                            style="flex: 1; margin: 0 !important;">
-                        Guardar Cambios
-                    </button>
-                    
-                    <a href="registrar_contrato.php" 
-                       style="background-color: #007bff; color: #ffffff; padding: 10px 22px; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; box-sizing: border-box;">
-                        Cancelar
-                    </a>
+                    <!-- Fecha de Inicio -->
+                    <div class="field">
+                        <label>Fecha de Inicio del Contrato</label>
+                        <input type="date" name="fecha_contrato" value="<?php echo htmlspecialchars($contrato['fecha_contrato'] ?? ''); ?>" required>
+                    </div>
+
+                    <!-- Fecha de Finalización -->
+                    <div class="field">
+                        <label>Fecha de Finalización</label>
+                        <input type="date" name="fecha_fin" id="fecha_fin" value="<?php echo htmlspecialchars($contrato['fecha_fin'] ?? ''); ?>">
+                    </div>
+
+                    <h3 class="form-section-title full-width">Datos del Representante (Presidente)</h3>
+
+                    <!-- Nombre del Presidente -->
+                    <div class="field">
+                        <label>Nombre del Presidente</label>
+                        <input type="text" 
+                               name="nombre_presidente" 
+                               value="<?php echo htmlspecialchars($contrato['nombre_presidente'] ?? ''); ?>" 
+                               readonly 
+                               style="background-color: rgba(255, 255, 255, 0.05); cursor: not-allowed;">
+                    </div>
+
+                    <!-- Cédula del Presidente -->
+                    <div class="field">
+                        <label>Cédula del Presidente</label>
+                        <input type="text" 
+                               name="cedula_presidente" 
+                               value="<?php echo htmlspecialchars($contrato['cedula_presidente'] ?? ''); ?>" 
+                               readonly 
+                               style="background-color: rgba(255, 255, 255, 0.05); cursor: not-allowed;">
+                    </div>
+
+                    <!-- Gaceta Oficial (Editable manualmente) -->
+                    <div class="field full-width">
+                        <label>Gaceta Oficial de Designación</label>
+                        <input type="text" 
+                               name="gaceta_designacion_presidente" 
+                               value="<?php echo htmlspecialchars($contrato['gaceta_designacion_presidente'] ?? ''); ?>" 
+                               required>
+                    </div>
+
+                    <!-- Botones de Acción / Navegación -->
+                    <div class="form-actions full-width" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                        <a href="lista_contrato.php" style="color: #bbb; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 5px;">
+                            <i class="bi bi-arrow-left"></i> Volver a la Lista
+                        </a>
+                        <button type="submit" name="editar_contrato" class="btn-guardar">
+                            Guardar Cambios
+                        </button>
+                    </div>
+
                 </div>
             </form>
         </div>
@@ -159,9 +190,7 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
     </div>
 </div>
 
-<!-- Script JS para manejar dinámicamente habilitar/deshabilitar fecha_fin y validar -->
-<script src="/FUNDACITE/vistas/js/validar_contrato.js"></script>
-
+<script src="/FUNDACITE/vistas/js/valid_contrato.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     let title = '';

@@ -16,6 +16,10 @@ $(document).ready(function(){
         success: function(respuesta){
 
             $("#selectEstado").html(respuesta);
+            const codEstadoGuardado = $("#selectEstado").data("selected");
+            if (codEstadoGuardado) {
+                $("#selectEstado").val(String(codEstadoGuardado)).trigger("change");
+            }
 
         }
 
@@ -49,6 +53,10 @@ $(document).ready(function(){
             success: function(respuesta){
 
                 $("#selectMunicipio").html(respuesta);
+                const codMunicipioGuardado = $("#selectMunicipio").data("selected");
+                if (codMunicipioGuardado) {
+                    $("#selectMunicipio").val(String(codMunicipioGuardado)).trigger("change");
+                }
 
             }
 
@@ -80,6 +88,10 @@ $(document).ready(function(){
             success: function(respuesta){
 
                 $("#selectParroquia").html(respuesta);
+                const codParroquiaGuardado = $("#selectParroquia").data("selected");
+                if (codParroquiaGuardado) {
+                    $("#selectParroquia").val(String(codParroquiaGuardado));
+                }
 
             }
 

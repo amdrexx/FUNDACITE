@@ -1,10 +1,10 @@
 // ============================================================================
 // ARCHIVO: vistas/js/inactividad.js
-// DESCRIPCIÓN: Cierra la sesión tras 1 minuto sin actividad.
+// DESCRIPCIÓN: Cierra la sesión tras 5 minutos sin actividad.
 //
 //   · Actividad = clic, tecla, scroll, toque o mover el mouse.
-//   · A los 45 s sin actividad aparece un aviso con cuenta regresiva; al
-//     llegar a 60 s se cierra la sesión (controladores/logout.php).
+//   · Durante los últimos 15 s sin actividad aparece un aviso con cuenta
+//     regresiva; al llegar a 5 min se cierra la sesión (controladores/logout.php).
 //   · Mientras hay actividad envía un "latido" al servidor (máx. 1 cada 10 s)
 //     para que la sesión de PHP no expire mientras se llena un formulario largo.
 //   · Se sincroniza entre pestañas con localStorage: actividad en una pestaña
@@ -16,7 +16,7 @@
     'use strict';
 
     const script = document.currentScript;
-    const LIMITE_MS = (parseInt(script && script.dataset.limite, 10) || 60) * 1000;
+    const LIMITE_MS = (parseInt(script && script.dataset.limite, 10) || 300) * 1000;
     const AVISO_MS = Math.min(15000, LIMITE_MS / 2);   // duración del aviso
     const LATIDO_MS = Math.min(10000, LIMITE_MS / 6);  // máx. 1 latido por ventana
     const MOVER_MS = 1000;                             // filtro del mousemove

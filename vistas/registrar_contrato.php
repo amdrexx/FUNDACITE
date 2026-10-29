@@ -10,25 +10,87 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Cargamos el controlador oficial de contratos
 require_once("../controladores/ctrl_contrato.php");
+require_once("../modelos/clase_trabajador.php");
 
-// Traemos los contratos reales de la BD
-$contratos = $controladorContrato->mostrarContratos();
+$trabajadorModelo = new Trabajador($conexion);
+
+// El paso anterior conserva los datos del trabajador como borrador de sesión.
+$borradorTrabajador = $_SESSION['trabajador_pendiente'] ?? null;
+$modoTrabajadorExistente = !is_array($borradorTrabajador) || isset($_GET['id_trabajador']);
+$idTrabajadorPreseleccionado = $modoTrabajadorExistente ? (int) ($_GET['id_trabajador'] ?? 0) : 0;
+
+if ($modoTrabajadorExistente) {
+    $infoTrabajador = $idTrabajadorPreseleccionado > 0
+        ? $trabajadorModelo->obtenerTrabajadorPorId($idTrabajadorPreseleccionado)
+        : null;
+    if (!$infoTrabajador) {
+        $_SESSION['error_registro'] = ['Complete primero los datos del trabajador.'];
+        header('Location: registrar_trabajadores.php');
+        exit;
+    }
+    $tipoDocBorrador = $infoTrabajador['tipo_documento'] ?? 'Cédula';
+} else {
+    $tipoDocBorrador = ($borradorTrabajador['tipoDoc'] ?? '') === 'E' ? 'Cédula de Extranjería' : 'Cédula';
+    $infoTrabajador = [
+        'tipo_documento' => $tipoDocBorrador,
+        'cedula' => $borradorTrabajador['cedula'] ?? '',
+        'nombres' => $borradorTrabajador['nombres'] ?? '',
+        'apellidos' => $borradorTrabajador['apellidos'] ?? '',
+        'nombre_cargo' => 'Cargo no disponible',
+    ];
+    foreach ($trabajadorModelo->listarCargos() as $cargoDisponible) {
+        if ((string) ($cargoDisponible['id_cargo'] ?? '') === (string) ($borradorTrabajador['id_cargo'] ?? '')) {
+            $infoTrabajador['nombre_cargo'] = $cargoDisponible['nombre_cargo'];
+            break;
+        }
+    }
+}
+$tokenTrabajadorPendiente = $modoTrabajadorExistente ? '' : ($_SESSION['token_trabajador_pendiente'] ?? '');
+$datosContrato = $_SESSION['old_contrato'] ?? [];
+
+// -----------------------------------------------------------------------------
+// BÚSQUEDA EXCLUSIVA Y DINÁMICA DEL PRESIDENTE EN LA BASE DE DATOS
+// -----------------------------------------------------------------------------
+$nombrePresidenteAuto = "";
+$cedulaPresidenteAuto = "";
+$esPresidentePendienteActivo = !$modoTrabajadorExistente
+    && ($borradorTrabajador['estatus_laboral'] ?? '') === 'Activo'
+    && stripos((string) ($infoTrabajador['nombre_cargo'] ?? ''), 'presidente') !== false;
+
+$sqlPresidente = "SELECT t.nombres, t.apellidos, t.cedula, t.tipo_documento
+                  FROM TRABAJADOR t
+                  INNER JOIN CARGO c ON t.id_cargo = c.id_cargo
+                  WHERE (LOWER(c.nombre_cargo) LIKE '%presidente%' OR LOWER(c.nombre_cargo) LIKE '%presidente(a)%')
+                    AND t.status = 'Activo'
+                  ORDER BY t.id_trabajador DESC
+                  LIMIT 1";
+
+$resPresidente = $esPresidentePendienteActivo ? false : $conexion->query($sqlPresidente);
+
+if ($esPresidentePendienteActivo) {
+    $nombrePresidenteAuto = trim(($borradorTrabajador['nombres'] ?? '') . ' ' . ($borradorTrabajador['apellidos'] ?? ''));
+    $cedulaPresidenteAuto = $tipoDocBorrador . '-' . trim($borradorTrabajador['cedula'] ?? '');
+} elseif ($resPresidente && $resPresidente->num_rows > 0) {
+    $datosPresi = $resPresidente->fetch_assoc();
+    $nombrePresidenteAuto = trim($datosPresi['nombres'] . ' ' . $datosPresi['apellidos']);
+    $tipoDocPresi = !empty($datosPresi['tipo_documento']) ? $datosPresi['tipo_documento'] : 'Cédula';
+    $cedulaPresidenteAuto = $tipoDocPresi . '-' . trim($datosPresi['cedula']);
+}
+// -----------------------------------------------------------------------------
 
 // Determinamos el mensaje y estado para el Modal
 $status = $_GET['status'] ?? null;
 $mensajeExito = $_SESSION['exito_contrato'] ?? null;
 $mensajeError = isset($_SESSION['error_contrato']) && is_array($_SESSION['error_contrato']) ? implode("<br>", $_SESSION['error_contrato']) : null;
 
-// Limpiamos las variables de sesión para que no se repitan
 unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Contratos</title>
+    <title>Datos del Contrato</title>
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
     <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
@@ -40,161 +102,122 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
 
 <div class="main" style="display: block !important; clear: both !important;">
 
-    <div style="max-width: 700px; width: 100%; margin: 0 auto; display: block; box-sizing: border-box;">
+    <div style="max-width: 900px; width: 100%; margin: 0 auto; display: block; box-sizing: border-box;">
 
-        <!-- FORMULARIO DE REGISTRO -->
+        <!-- FORMULARIO DE REGISTRO DE CONTRATO (PASO 2) -->
         <div style="width: 100%; display: block; margin-bottom: 30px; box-sizing: border-box;">
             <form class="form-card" id="formContratos" action="../controladores/ctrl_contrato.php" method="POST" style="width: 100% !important; max-width: 100% !important; box-sizing: border-box; margin: 0 !important;">
                 
-                <!-- Campo oculto para indicar la acción al controlador -->
                 <input type="hidden" name="accion" value="guardar">
+                <?php if ($modoTrabajadorExistente): ?>
+                    <input type="hidden" name="id_trabajador" value="<?php echo $idTrabajadorPreseleccionado; ?>">
+                <?php else: ?>
+                    <input type="hidden" name="token_trabajador_pendiente" value="<?php echo htmlspecialchars($tokenTrabajadorPendiente, ENT_QUOTES, 'UTF-8'); ?>">
+                <?php endif; ?>
 
-                <center><h2>Nuevo Contrato</h2></center>
+                <div class="form-grid">
+                    <h2 class="full-width" style="text-align: center; margin-bottom: 20px;">Datos del Contrato</h2>
 
-                <div class="field">
-                    <label>Cédula del Trabajador</label>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="cedula_trabajador" placeholder="Ej: V-25785010" required style="flex-grow: 1;">
-                        <button type="button" id="btn_buscar_trabajador" style="padding: 10px 15px; border-radius: 5px; background-color: #007bff; color: white; border: none; cursor: pointer; font-weight: bold;">Buscar</button>
+                    <h3 class="form-section-title full-width">Trabajador Asociado</h3>
+
+                    <!-- Cédula del Trabajador -->
+                    <div class="field">
+                        <label>Cédula</label>
+                        <input type="text" value="<?php echo htmlspecialchars(($infoTrabajador['tipo_documento'] ?? 'Cédula') . '-' . ($infoTrabajador['cedula'] ?? 'N/A')); ?>" readonly style="background-color: rgba(255, 255, 255, 0.05); cursor: not-allowed;">
                     </div>
-                </div>
 
-                <input type="hidden" name="id_trabajador" id="id_trabajador" required>
+                    <!-- Nombre del Trabajador -->
+                    <div class="field">
+                        <label>Nombres y Apellidos</label>
+                        <input type="text" value="<?php echo htmlspecialchars(($infoTrabajador['nombres'] ?? '') . ' ' . ($infoTrabajador['apellidos'] ?? 'No especificado')); ?>" readonly style="background-color: rgba(255, 255, 255, 0.05); cursor: not-allowed;">
+                    </div>
 
-                <div class="field">
-                    <label>Trabajador Seleccionado</label>
-                    <input type="text" id="nombre_trabajador" placeholder="Busca un trabajador primero..." readonly style="background-color: rgba(255, 255, 255, 0.1); cursor: not-allowed;">
-                </div>
+                    <div class="field">
+                        <label>Cargo asignado</label>
+                        <input type="text" value="<?php echo htmlspecialchars($infoTrabajador['nombre_cargo'] ?? 'Sin cargo asignado'); ?>" readonly style="background-color: rgba(255, 255, 255, 0.05); cursor: not-allowed;">
+                    </div>
 
-                <!-- CAMPO CARGO DEL TRABAJADOR -->
-                <div class="field">
-                    <label>Cargo Registrado</label>
-                    <input type="text" id="cargo_trabajador" name="cargo_trabajador" placeholder="Cargo asignado al trabajador..." readonly style="background-color: rgba(255, 255, 255, 0.1); cursor: not-allowed;">
-                </div>
+                    <h3 class="form-section-title full-width">Detalles del Contrato</h3>
 
-                <div class="field">
-                    <label>Tipo de Contrato</label>
-                    <select name="tipo_contrato" required>
-                        <option value="Indefinido" style="color: black;">Indefinido</option>
-                        <option value="Tiempo determinado" style="color: black;" selected>Tiempo determinado</option>
-                        <option value="Obra determinada" style="color: black;">Obra determinada</option>
-                        <option value="Pasantía" style="color: black;">Pasantía</option>
-                        <option value="Suplencia" style="color: black;">Suplencia</option>
-                    </select>
-                </div>
+                    <!-- Tipo de Contrato -->
+                    <div class="field">
+                        <label>Tipo de Contrato</label>
+                        <select name="tipo_contrato" id="tipo_contrato" required>
+                            <option value="Tiempo determinado" style="color: black;" <?php echo empty($datosContrato['tipo_contrato']) || ($datosContrato['tipo_contrato'] ?? '') === 'Tiempo determinado' ?  : ''; ?>>Tiempo determinado</option>
+                            <option value="Tiempo indeterminado" style="color: black;" <?php echo ($datosContrato['tipo_contrato'] ?? '') === 'Tiempo indeterminado' ?  : ''; ?>>Tiempo indeterminado</option>
+                        </select>
+                    </div>
 
-                <div class="field">
-                    <label>Fecha de Inicio del Contrato</label>
-                    <input type="date" name="fecha_contrato" required>
-                </div>
+                    <!-- Tipo de Personal -->
+                    <div class="field">
+                        <label>Tipo de Personal</label>
+                        <select name="tipo_personal" required>
+                            <option value="" disabled <?php echo empty($datosContrato['tipo_personal']) ? 'selected' : ''; ?>>Seleccione el tipo de personal</option>
+                            <option value="Fijo" style="color: black;" <?php echo ($datosContrato['tipo_personal'] ?? '') === 'Fijo' ? 'selected' : ''; ?>>Fijo</option>
+                            <option value="Contratado" style="color: black;" <?php echo ($datosContrato['tipo_personal'] ?? '') === 'Contratado' ? 'selected' : ''; ?>>Contratado</option>
+                            <option value="Obrero" style="color: black;" <?php echo ($datosContrato['tipo_personal'] ?? '') === 'Obrero' ? 'selected' : ''; ?>>Obrero</option>
+                            <option value="Jubilado" style="color: black;" <?php echo ($datosContrato['tipo_personal'] ?? '') === 'Jubilado' ? 'selected' : ''; ?>>Jubilado</option>
+                        </select>
+                    </div>
 
-                <!-- CAMPO: FECHA FIN -->
-                <div class="field">
-                    <label>Fecha de Finalización</label>
-                    <input type="date" name="fecha_fin" id="fecha_fin">
-                </div>
+                    <!-- Lugar de Trabajo -->
+                    <div class="field">
+                        <label>Lugar de Trabajo</label>
+                        <input type="text" name="lugar_trabajo" value="<?php echo htmlspecialchars($datosContrato['lugar_trabajo'] ?? 'Zona Industrial, Edificio FUNDACITE, San Felipe', ENT_QUOTES, 'UTF-8'); ?>" placeholder="Ej: Zona Industrial, Edificio FUNDACITE, San Felipe" required>
+                    </div>
 
-                <div class="field">
-                    <label>Lugar de Trabajo</label>
-                    <input type="text" name="lugar_trabajo" placeholder="Ej: Zona Industrial, Edificio FUNDACITE, San Felipe" required>
-                </div>
+                    <!-- Fecha de Ingreso (Contrato) -->
+                    <div class="field">
+                        <label>Fecha de Ingreso</label>
+                        <input type="date" name="fecha_contrato" value="<?php echo htmlspecialchars($datosContrato['fecha_contrato'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" required>
+                    </div>
 
-                <!-- DATOS DEL PRESIDENTE AUTO-COMPLETADOS -->
-                <div class="field">
-                    <label>Nombre del Presidente</label>
-                    <input type="text" name="nombre_presidente" value="Miguel Ángel Solórzano Belizario" placeholder="Ej: Miguel Ángel Solórzano Belizario" required>
-                </div>
+                    <!-- Fecha de Finalización -->
+                    <div class="field">
+                        <label>Fecha de Finalización</label>
+                        <input type="date" name="fecha_fin" id="fecha_fin" value="<?php echo htmlspecialchars($datosContrato['fecha_fin'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                    </div>
 
-                <div class="field">
-                    <label>Cédula del Presidente</label>
-                    <input type="text" name="cedula_presidente" value="V-19.817.987" placeholder="Ej: V-19.817.987" required>
-                </div>
+                    <h3 class="form-section-title full-width">Datos del Representante (Presidente)</h3>
 
-                <div class="field">
-                    <label>Gaceta Oficial de Designación</label>
-                    <input type="text" name="gaceta_designacion_presidente" value="N° 41.823" placeholder="Ej: N° 41.823" required>
-                </div>
+                    <!-- Nombre del Presidente -->
+                    <div class="field">
+                        <label>Nombre del Presidente (Actual en BD)</label>
+                        <input type="text" name="nombre_presidente" value="<?php echo htmlspecialchars($nombrePresidenteAuto); ?>" readonly required style="background-color: rgba(255, 255, 255, 0.05); cursor: not-allowed;" title="Este campo se carga automáticamente del registro del Presidente activo">
+                    </div>
 
-                <div class="form-actions full-width">
-                    <button type="submit" name="registrar_contrato" class="btn-guardar">Registrar Contrato</button>
+                    <!-- Cédula del Presidente -->
+                    <div class="field">
+                        <label>Cédula del Presidente (Actual en BD)</label>
+                        <input type="text" name="cedula_presidente" value="<?php echo htmlspecialchars($cedulaPresidenteAuto); ?>" readonly required style="background-color: rgba(255, 255, 255, 0.05); cursor: not-allowed;" title="Este campo se carga automáticamente del registro del Presidente activo">
+                    </div>
+
+                    <!-- Gaceta Oficial (Manual) -->
+                    <div class="field full-width">
+                        <label>Gaceta Oficial de Designación</label>
+                        <input type="text" name="gaceta_designacion_presidente" value="<?php echo htmlspecialchars($datosContrato['gaceta_designacion_presidente'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" placeholder="Ingrese N° de Gaceta" required>
+                    </div>
+
+                    <!-- Botones de Acción / Navegación -->
+                    <div class="form-actions full-width" style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                        <a href="<?php echo $modoTrabajadorExistente ? 'registrar_trabajadores.php?id=' . $idTrabajadorPreseleccionado . '&flujo=contrato' : 'registrar_trabajadores.php?flujo=contrato'; ?>" onclick="event.stopPropagation();" style="color: #bbb; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 5px;">
+                            <i class="bi bi-arrow-left"></i> Modificar datos del Trabajador
+                        </a>
+                        <div style="display:flex; gap:12px; align-items:center;">
+                            <?php if (!$modoTrabajadorExistente): ?>
+                                <a href="../controladores/ctrl_contrato.php?accion=cancelar_registro" style="color:#bbb; text-decoration:none;">Cancelar registro</a>
+                            <?php endif; ?>
+                            <button type="submit" name="registrar_contrato" class="btn-guardar">Finalizar y Registrar Contrato</button>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
 
-        <!-- TABLA DE CONTRATOS CON COLUMNA DE CARGO -->
-        <div style="width: 100%; display: block; box-sizing: border-box;">
-            <div class="glass tabla-container" style="width: 100% !important; max-width: 100% !important; box-sizing: border-box; margin: 0 !important;">
-                <h2 style="text-align:center; color:white;">Lista de Contratos</h2>
-
-                <div style="text-align:right; margin-bottom:10px;">
-                    <a
-                        href="/FUNDACITE/pdf/reporte_contratos.php"
-                        class="btn-pdf"
-                        target="_blank"
-                        style="text-decoration:none;"
-                    >
-                        <i class="bi bi-file-earmark-pdf"></i>
-                        Exportar PDF
-                    </a>
-                </div>
-
-                <table class="tabla">
-                    <thead>
-                        <tr>
-                            <th>Trabajador</th>
-                            <th>Cargo</th>
-                            <th>Tipo</th>
-                            <th>Fecha Inicio</th>
-                            <th>Fecha Fin</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (!empty($contratos)): ?>
-                            <?php foreach ($contratos as $con): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($con['nombre_trabajador'] ?? ''); ?></td>
-                                    <td><?php echo htmlspecialchars($con['nombre_cargo'] ?? $con['cargo'] ?? 'Sin asignar'); ?></td>
-                                    <td><?php echo htmlspecialchars($con['tipo_contrato'] ?? ''); ?></td>
-                                    <td><?php echo !empty($con['fecha_contrato']) ? date("d/m/Y", strtotime($con['fecha_contrato'])) : ''; ?></td>
-                                    <td>
-                                        <?php 
-                                        if (!empty($con['fecha_fin']) && $con['fecha_fin'] !== '0000-00-00') {
-                                            echo date("d/m/Y", strtotime($con['fecha_fin']));
-                                        } else {
-                                            echo '<span style="opacity: 0.8; font-style: italic;">Indefinido</span>';
-                                        }
-                                        ?>
-                                    </td>
-                                    <td class="acciones">
-                                        <a class="btn-editar" href="ver_contrato.php?id=<?php echo urlencode($con['id_contrato'] ?? ''); ?>"><i class="bi bi-eye"></i> Ver</a>
-                                        <a class="btn-editar" href="editar_contrato.php?id=<?php echo urlencode($con['id_contrato'] ?? ''); ?>">
-                                            <i class="bi bi-pencil-square"></i> Editar
-                                        </a>
-                                        <a href="../controladores/ctrl_contrato.php?accion=eliminar&id=<?php echo urlencode($con['id_contrato'] ?? ''); ?>" 
-                                           class="btn-eliminar" 
-                                           style="text-decoration: none; display: inline-block;" 
-                                           onclick="return confirm('¿Seguro que deseas eliminar este contrato?');">
-                                            <i class="bi bi-trash"></i> Eliminar
-                                        </a>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="6" style="text-align:center;">No se encontraron contratos registrados.</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
     </div>
-
 </div>
 
-<!-- MODAL DE ALERTA PERSONALIZADO -->
+<!-- MODAL DE ALERTA -->
 <div id="customAlert" class="custom-alert-overlay" style="display: none;">
     <div class="custom-alert-box">
         <p id="customAlertText"></p>
@@ -202,39 +225,49 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
     </div>
 </div>
 
-<!-- Carga de los scripts JS -->
-<script src="/FUNDACITE/vistas/js/valid_contrato.js"></script>
 <script src="/FUNDACITE/vistas/js/ajax_contrato.js"></script>
-
-<!-- SCRIPT DE MANEJO DE ALERTA -->
+<script src="/FUNDACITE/vistas/js/valid_contrato.js"></script>
 <script>
 function mostrarCustomAlert(mensaje) {
-    document.getElementById('customAlertText').innerHTML = mensaje;
+    document.getElementById('customAlertText').textContent = mensaje;
     document.getElementById('customAlert').style.display = 'flex';
 }
-
 function cerrarCustomAlert() {
     document.getElementById('customAlert').style.display = 'none';
     window.history.replaceState({}, document.title, window.location.pathname);
 }
-
 document.addEventListener("DOMContentLoaded", function() {
-    let mensaje = '';
+    const formularioContrato = document.getElementById('formContratos');
+    const campoFechaIngreso = formularioContrato?.querySelector('[name="fecha_contrato"]');
+    if (campoFechaIngreso && !campoFechaIngreso.value) {
+        const hoy = new Date();
+        const fechaLocal = [
+            hoy.getFullYear(),
+            String(hoy.getMonth() + 1).padStart(2, '0'),
+            String(hoy.getDate()).padStart(2, '0')
+        ].join('-');
+        campoFechaIngreso.value = fechaLocal;
+    }
 
+    formularioContrato?.addEventListener('submit', function(evento) {
+        const fechaInicio = formularioContrato.querySelector('[name="fecha_contrato"]')?.value || '';
+        const fechaFin = formularioContrato.querySelector('[name="fecha_fin"]')?.value || '';
+        if (fechaFin && fechaInicio && fechaFin < fechaInicio) {
+            evento.preventDefault();
+            mostrarCustomAlert('La fecha de finalización no puede ser anterior a la fecha de inicio del contrato.');
+        }
+    });
+
+    let mensaje = '';
     <?php if ($mensajeExito): ?>
-        mensaje = '<?php echo addslashes($mensajeExito); ?>';
+        mensaje = <?php echo json_encode($mensajeExito, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
     <?php elseif ($mensajeError): ?>
-        mensaje = '<?php echo addslashes($mensajeError); ?>';
+        mensaje = <?php echo json_encode($mensajeError, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
     <?php elseif ($status === 'success'): ?>
-        mensaje = '¡Contrato registrado correctamente!';
-    <?php elseif ($status === 'updated'): ?>
-        mensaje = 'Contrato actualizado correctamente.';
-    <?php elseif ($status === 'deleted'): ?>
-        mensaje = '¡Contrato eliminado correctamente!';
+        mensaje = '¡Contrato registrado correctamente y flujo completado!';
     <?php elseif ($status === 'error'): ?>
         mensaje = 'Hubo un error al procesar la solicitud.';
     <?php endif; ?>
-
     if (mensaje !== '') {
         mostrarCustomAlert(mensaje);
     }
@@ -242,60 +275,20 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 
 <style>
-/* Estilos para el Modal de Alerta Personalizado (#customAlert)
-   Alineado a los tokens de marca de style_dashboard.css para que esta
-   alerta se vea igual que la del resto de los módulos. */
 .custom-alert-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(27,38,44,0.72); /* --fc-navy-900 */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(27,38,44,0.72); display: flex; justify-content: center; align-items: center; z-index: 9999;
 }
-
 .custom-alert-box {
     background: linear-gradient(145deg, #15415f, #1B262C);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-left: 4px solid #0487F3; /* --fc-info-border */
-    padding: 20px 25px;
-    border-radius: 12px;
-    max-width: 380px;
-    width: 90%;
-    text-align: left;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
-    font-family: inherit;
-    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2); border-left: 4px solid #0487F3;
+    padding: 20px 25px; border-radius: 12px; max-width: 380px; width: 90%; color: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.45);
 }
-
-.custom-alert-box p {
-    font-size: 14.5px;
-    font-weight: normal;
-    color: #fff;
-    margin: 0 0 16px 0;
-    line-height: 1.4;
-}
-
+.custom-alert-box p { font-size: 14.5px; color: #fff; margin: 0 0 16px 0; line-height: 1.4; }
 .btn-modal-compacto {
-    font-size: 13px;
-    padding: 8px 18px;
-    border-radius: 8px;
-    background-color: #0487F3; /* --fc-blue-500 */
-    color: white;
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s ease, transform 0.12s ease;
+    font-size: 13px; padding: 8px 18px; border-radius: 8px; background-color: #0487F3; color: white; border: none; font-weight: 600; cursor: pointer;
 }
-
-.btn-modal-compacto:hover {
-    background-color: #3282B8; /* --fc-blue-600 */
-    transform: translateY(-1px);
-}
+.btn-modal-compacto:hover { background-color: #3282B8; }
 </style>
 
 </body>

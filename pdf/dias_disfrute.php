@@ -49,56 +49,51 @@ function numeroDias($desde, $hasta): string
     }
 }
 
-$idSolicitud = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-if (!$idSolicitud || $idSolicitud <= 0) {
+$idDisfrute = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+if (!$idDisfrute || $idDisfrute <= 0) {
     http_response_code(400);
-    exit('Debe indicar una solicitud de días de disfrute válida.');
+    exit('Debe indicar un registro de días de disfrute válido.');
 }
 
 $sql = "SELECT
-            s.id_solicitud,
-            s.codigo_solicitud,
-            s.tipo_solicitud,
-            s.motivo_solicitud,
-            s.fecha_inicio,
-            s.fecha_finalizacion,
-            dv.nombre_cargo,
-            dv.descripcion,
-            dv.desde,
-            dv.hasta,
+            dv.id_dis,
+            dv.codigo_disfrute,
+            dv.motivo,
+            dv.fecha_inicio,
+            dv.fecha_finalizacion,
+            dv.observaciones,
             t.cedula,
             t.nombres,
-            t.apellidos
-        FROM SOLICITUD s
-        INNER JOIN DISFRUTE_DE_VACACIONES dv ON dv.id_solicitud = s.id_solicitud
-        INNER JOIN TRABAJADOR t ON t.id_trabajador = s.id_trabajador
-        WHERE s.id_solicitud = ?
-          AND s.tipo_solicitud = 'Vacaciones'
+            t.apellidos,
+            c.nombre_cargo
+        FROM DISFRUTE_DE_VACACIONES dv
+        INNER JOIN TRABAJADOR t ON t.id_trabajador = dv.id_trabajador
+        LEFT JOIN CARGO c ON c.id_cargo = t.id_cargo
+        WHERE dv.id_dis = ?
         LIMIT 1";
 
 $consulta = $conexion->prepare($sql);
 if (!$consulta) {
     http_response_code(500);
-    exit('No se pudo preparar la consulta de la solicitud.');
+    exit('No se pudo preparar la consulta de días de disfrute.');
 }
 
-$consulta->bind_param('i', $idSolicitud);
+$consulta->bind_param('i', $idDisfrute);
 $consulta->execute();
-$solicitud = $consulta->get_result()->fetch_assoc();
+$datosDisfrute = $consulta->get_result()->fetch_assoc();
 $consulta->close();
 
-if (!$solicitud) {
+if (!$datosDisfrute) {
     http_response_code(404);
-    exit('No se encontró la solicitud de días de disfrute.');
+    exit('No se encontró el registro de días de disfrute.');
 }
 
-registrarBitacora($conexion, 'Días de Disfrute', 'Generar PDF', "Generó el PDF de la solicitud de días de disfrute ID $idSolicitud.");
+registrarBitacora($conexion, 'Días de Disfrute', 'Generar PDF', "Generó el PDF del registro de días de disfrute ID $idDisfrute.");
 
-[$diaSolicitud, $mesSolicitud, $anoSolicitud] = fechaPdf($solicitud['fecha_inicio']);
-[$diaInicio, $mesInicio, $anoInicio] = fechaPdf($solicitud['desde']);
-[$diaRegreso, $mesRegreso, $anoRegreso] = fechaPdf($solicitud['hasta']);
+[$diaInicio, $mesInicio, $anoInicio] = fechaPdf($datosDisfrute['fecha_inicio']);
+[$diaRegreso, $mesRegreso, $anoRegreso] = fechaPdf($datosDisfrute['fecha_finalizacion']);
 
-$nombreTrabajador = trim($solicitud['apellidos'] . ' ' . $solicitud['nombres']);
+$nombreTrabajador = trim($datosDisfrute['apellidos'] . ' ' . $datosDisfrute['nombres']);
 $logoRuta = __DIR__ . '/../vistas/img/logo_doc.png';
 $logo = is_readable($logoRuta)
     ? 'data:image/png;base64,' . base64_encode((string) file_get_contents($logoRuta))
@@ -111,7 +106,7 @@ try {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Solicitud de Días de Disfrute - <?= escaparPdf($nombreTrabajador) ?></title>
+    <title>Días de Disfrute - <?= escaparPdf($nombreTrabajador) ?></title>
     <style>
         @page { margin: 14px; }
         * { box-sizing: border-box; }
@@ -143,27 +138,27 @@ try {
 <body>
     <div class="encabezado">
         <?php if ($logo !== ''): ?><img class="logo" src="<?= $logo ?>" alt="Fundacite Yaracuy"><?php endif; ?>
-        <h1>SOLICITUD DE DÍAS DE DISFRUTE</h1>
+        <h1>REGISTRO DE DÍAS DE DISFRUTE</h1>
     </div>
 
     <table>
         <tr>
             <td class="alto-50" colspan="8"><span class="etiqueta">2. Apellido y Nombres</span><div class="valor"><?= escaparPdf($nombreTrabajador) ?></div></td>
             <td class="fecha-celda" colspan="2">
-                <span class="fecha-titulo">1. Fecha</span>
-                <table class="fecha-partes"><tr><td><strong>Día</strong><?= escaparPdf($diaSolicitud) ?></td><td><strong>Mes</strong><?= escaparPdf($mesSolicitud) ?></td><td><strong>Año</strong><?= escaparPdf($anoSolicitud) ?></td></tr></table>
+                <span class="fecha-titulo">1. Fecha de inicio</span>
+                <table class="fecha-partes"><tr><td><strong>Día</strong><?= escaparPdf($diaInicio) ?></td><td><strong>Mes</strong><?= escaparPdf($mesInicio) ?></td><td><strong>Año</strong><?= escaparPdf($anoInicio) ?></td></tr></table>
             </td>
         </tr>
         <tr>
-            <td class="alto-42" colspan="8"><span class="etiqueta">4. Motivo de los días de disfrute</span><div class="valor"><?= escaparPdf($solicitud['motivo_solicitud'] ?: $solicitud['descripcion']) ?></div></td>
-            <td colspan="2"><span class="etiqueta">3. N° Cédula de identidad</span><div class="valor"><?= escaparPdf($solicitud['cedula']) ?></div></td>
+            <td class="alto-42" colspan="8"><span class="etiqueta">4. Motivo de los días de disfrute</span><div class="valor"><?= escaparPdf($datosDisfrute['motivo']) ?></div></td>
+            <td colspan="2"><span class="etiqueta">3. N° Cédula de identidad</span><div class="valor"><?= escaparPdf($datosDisfrute['cedula']) ?></div></td>
         </tr>
         <tr>
-            <td class="alto-42" colspan="8"><span class="etiqueta">6. Cargo del solicitante</span><div class="valor"><?= escaparPdf($solicitud['nombre_cargo']) ?></div></td>
-            <td colspan="2"><span class="etiqueta">5. Código de solicitud</span><div class="valor"><?= escaparPdf($solicitud['codigo_solicitud']) ?></div></td>
+            <td class="alto-42" colspan="8"><span class="etiqueta">6. Cargo del solicitante</span><div class="valor"><?= escaparPdf($datosDisfrute['nombre_cargo'] ?? '') ?></div></td>
+            <td colspan="2"><span class="etiqueta">5. Código de Permiso</span><div class="valor"><?= escaparPdf($datosDisfrute['codigo_disfrute']) ?></div></td>
         </tr>
         <tr>
-            <td class="alto-76" colspan="2"><span class="etiqueta">7. Duración del disfrute</span><div class="valor">N° de días: <?= escaparPdf(numeroDias($solicitud['desde'], $solicitud['hasta'])) ?></div></td>
+            <td class="alto-76" colspan="2"><span class="etiqueta">7. Duración del disfrute</span><div class="valor">N° de días: <?= escaparPdf(numeroDias($datosDisfrute['fecha_inicio'], $datosDisfrute['fecha_finalizacion'])) ?></div></td>
             <td class="fecha-celda" colspan="3"><span class="fecha-titulo">Iniciación</span><table class="fecha-partes"><tr><td><strong>Día</strong><?= escaparPdf($diaInicio) ?></td><td><strong>Mes</strong><?= escaparPdf($mesInicio) ?></td><td><strong>Año</strong><?= escaparPdf($anoInicio) ?></td></tr></table></td>
             <td class="fecha-celda" colspan="3"><span class="fecha-titulo">Regreso</span><table class="fecha-partes"><tr><td><strong>Día</strong><?= escaparPdf($diaRegreso) ?></td><td><strong>Mes</strong><?= escaparPdf($mesRegreso) ?></td><td><strong>Año</strong><?= escaparPdf($anoRegreso) ?></td></tr></table></td>
             <td><span class="etiqueta">8. Tipo de disfrute</span><div class="valor"><span class="cuadro"></span>Vacaciones</div></td>
@@ -175,15 +170,9 @@ try {
             <td colspan="3"><span class="etiqueta">11. Se requiere suplente</span><div class="valor"><span class="cuadro"></span>Sí&nbsp;&nbsp;&nbsp; <span class="cuadro"></span>No<br><br>De ser afirmativo, favor anexar perfil requerido</div></td>
             <td colspan="5"><span class="etiqueta">12. Firma del supervisor inmediato</span><div class="firma"></div></td>
         </tr>
-        <tr><td class="alto-84" colspan="10"><span class="etiqueta">13. Observaciones</span></td></tr>
-        <tr><td class="seccion" colspan="10">COORDINACIÓN DE RECURSOS HUMANOS</td></tr>
-        <tr>
-            <td class="alto-50" colspan="3"><span class="etiqueta">14. Días disponibles</span></td>
-            <td colspan="3"><span class="etiqueta">15. Recibido por</span></td>
-            <td colspan="4"><span class="etiqueta">16. Procesado por</span></td>
-        </tr>
+        <tr><td class="alto-84" colspan="10"><span class="etiqueta">13. Observaciones</span><div class="valor"><?= nl2br(escaparPdf($datosDisfrute['observaciones'] ?? '')) ?></div></td></tr>
     </table>
-    <div class="pie">Solicitud N° <?= escaparPdf($solicitud['id_solicitud']) ?></div>
+    <div class="pie">Registro N° <?= escaparPdf($datosDisfrute['id_dis']) ?></div>
 </body>
 </html>
 <?php
@@ -197,7 +186,7 @@ try {
     $dompdf->loadHtml($html, 'UTF-8');
     $dompdf->setPaper('letter', 'portrait');
     $dompdf->render();
-    $nombreArchivo = 'Solicitud de ' . $nombreTrabajador . '.pdf';
+    $nombreArchivo = 'Días de disfrute - ' . $nombreTrabajador . '.pdf';
     // Se eliminan caracteres no permitidos en nombres de archivo en la
     // mayoría de sistemas operativos, conservando espacios y acentos.
     $nombreArchivo = preg_replace('/[\/\\\\:*?"<>|]/', '', $nombreArchivo);
@@ -217,7 +206,7 @@ try {
     }
     http_response_code(500);
     header('Content-Type: text/plain; charset=UTF-8');
-    echo "No se pudo generar el PDF de la solicitud de días de disfrute.\n\n";
+    echo "No se pudo generar el PDF de la registro de días de disfrute.\n\n";
     echo 'Detalle técnico: ' . $e->getMessage() . "\n";
     echo 'Archivo: ' . $e->getFile() . ' (línea ' . $e->getLine() . ')';
     exit;

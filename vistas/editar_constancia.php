@@ -7,10 +7,10 @@ if (function_exists('requireAdministradorODirector')) {
 }
 
 require_once '../conexion.php';
-require_once '../modelos/clase_solicitud.php';
+require_once '../modelos/clase_constancia.php';
 require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
-$solicitudObj = new Solicitud($conexion);
+$constanciaModelo = new ConstanciaTrabajo($conexion);
 
 $id_constancia = intval($_GET['id'] ?? 0);
 
@@ -19,7 +19,7 @@ if ($id_constancia <= 0) {
     exit;
 }
 
-$constancia = $solicitudObj->buscarPorId($id_constancia);
+$constancia = $constanciaModelo->buscarPorId($id_constancia);
 
 if (!$constancia) {
     header("Location: lista_constancias.php?status=error");
@@ -35,8 +35,8 @@ unset($_SESSION['errores_constancia']);
 $nombreCompleto = trim(($constancia['apellidos'] ?? '') . ' ' . ($constancia['nombres'] ?? ''));
 $cedula         = $constancia['cedula'] ?? '';
 $cargo          = $constancia['nombre_cargo'] ?? '';
-$fechaIngreso   = !empty($constancia['fecha_ingreso'])
-    ? date('d/m/Y', strtotime($constancia['fecha_ingreso']))
+$fechaIngreso   = !empty($constancia['fecha_primer_contrato'])
+    ? date('d/m/Y', strtotime($constancia['fecha_primer_contrato']))
     : '';
 $salarioMonto   = $constancia['salario_monto'] ?? null;
 $fechaEmision   = !empty($constancia['fecha'])
@@ -115,6 +115,11 @@ $fechaEmision   = !empty($constancia['fecha'])
 <?php include "includes/layout.php"; ?>
 
 <div class="main">
+    <div class="worker-page">
+        <a class="worker-back" href="lista_trabajadores.php" onclick="if (window.history.length > 1) { event.preventDefault(); window.history.back(); }">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            Volver
+        </a>
     <div class="form-card">
 
         <div class="edit-heading">
@@ -182,37 +187,16 @@ $fechaEmision   = !empty($constancia['fecha'])
                 <!-- 7. Tipo de personal -->
                 <div class="field">
                     <label>7. Tipo de Personal</label>
-                    <select name="tipo_personal" required>
-                        <option value="" disabled>Seleccione...</option>
-                        <?php
-                        $tiposPersonal = [
-                            'Fijo'       => 'Empleado Fijo',
-                            'Contratado' => 'Contratado',
-                            'Obrero'     => 'Obrero',
-                            'Empleado'   => 'Empleado',
-                        ];
-                        foreach ($tiposPersonal as $valor => $etiqueta):
-                        ?>
-                            <option value="<?= $valor ?>" <?= ($constancia['tipo_personal'] ?? '') === $valor ? 'selected' : '' ?>>
-                                <?= $etiqueta ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="text" name="tipo_personal" class="campo-auto"
+                           value="<?= htmlspecialchars($constancia['tipo_personal'] ?? '') ?>"
+                           readonly required placeholder="No especificado">
                 </div>
 
-                <!-- 8. Nombre Director -->
+                <!-- 8. Motivo -->
                 <div class="field full-width">
-                    <label>8. Nombre del Director de Departamento (quien firma)</label>
-                    <input type="text" name="nombre_director"
-                           value="<?= htmlspecialchars($constancia['nombre_director'] ?? '') ?>"
-                           required placeholder="Ej: MSc. KARLA Y. MONTANEZ O">
-                </div>
-
-                <!-- 9. Motivo -->
-                <div class="field full-width">
-                    <label>9. Motivo de la Solicitud</label>
+                    <label>9. Motivo</label>
                     <textarea name="motivo" rows="3" required
-                              placeholder="Ej: A solicitud de la parte interesada..."><?= htmlspecialchars($constancia['motivo'] ?? '') ?></textarea>
+                              placeholder="Ej: Indique el motivo de la constancia..."><?= htmlspecialchars($constancia['motivo'] ?? '') ?></textarea>
                 </div>
 
             </div>

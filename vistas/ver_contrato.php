@@ -245,6 +245,7 @@ if (!$contratoActual) {
 <?php include "includes/layout.php"; ?>
 
 <div class="main">
+    
     <div class="contract-page">
         <article class="contract-card">
             <header class="contract-header">
@@ -269,6 +270,7 @@ if (!$contratoActual) {
                     <h3><i class="bi bi-calendar3"></i> Vigencia del contrato</h3>
                     <dl class="contract-details">
                         <div class="contract-detail"><dt>Tipo</dt><dd><?php echo htmlspecialchars($contratoActual['tipo_contrato']); ?></dd></div>
+                        <div class="contract-detail"><dt>Tipo de Personal</dt><dd><?php echo htmlspecialchars($contratoActual['tipo_personal'] ?? 'No especificado'); ?></dd></div>
                         <div class="contract-detail"><dt>Fecha de inicio</dt><dd><?php echo !empty($contratoActual['fecha_contrato']) ? date("d/m/Y", strtotime($contratoActual['fecha_contrato'])) : 'N/A'; ?></dd></div>
                         <div class="contract-detail"><dt>Fecha de finalización</dt><dd><?php echo (!empty($contratoActual['fecha_fin']) && $contratoActual['fecha_fin'] !== '0000-00-00') ? date("d/m/Y", strtotime($contratoActual['fecha_fin'])) : 'Indefinido'; ?></dd></div>
                     </dl>
@@ -292,10 +294,9 @@ if (!$contratoActual) {
             </div>
 
             <footer class="contract-actions no-print">
-                <a href="registrar_contrato.php" class="contract-action contract-action--back"><i class="bi bi-arrow-left"></i> Volver</a>
+                <a href="lista_contrato.php" class="contract-action contract-action--back"><i class="bi bi-arrow-left"></i> Volver</a>
                 <a href="../pdf/contrato.php?id_contrato=<?php echo urlencode($contratoActual['id_contrato']); ?>" target="_blank" class="contract-action contract-action--pdf"><i class="bi bi-printer"></i> Imprimir / Guardar PDF</a>
                 <a href="editar_contrato.php?id=<?php echo urlencode($contratoActual['id_contrato']); ?>" class="contract-action contract-action--edit"><i class="bi bi-pencil-square"></i> Editar</a>
-
             </footer>
         </article>
     </div>

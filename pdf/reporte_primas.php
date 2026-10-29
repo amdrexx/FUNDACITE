@@ -18,7 +18,7 @@ require_once __DIR__ . '/plantilla_reporte.php';
 $buscar = trim($_GET['buscar'] ?? '');
 
 $prima = new Prima($conexion);
-$primas = $prima->mostrarPrimas($buscar);
+$primas = $prima->listar($buscar);
 
 registrarBitacora(
     $conexion,
@@ -31,16 +31,20 @@ $filas = [];
 
 foreach ($primas as $fila) {
     $filas[] = [
+        (string) ($fila['cedula'] ?? ''),
+        (string) ($fila['nombre_completo'] ?? ''),
         (string) ($fila['tipo_prima'] ?? ''),
+        (string) ($fila['condicion'] ?? ''),
         ((string) ($fila['porcentaje'] ?? '')) . '%',
+        number_format((float) ($fila['monto'] ?? 0), 2, ',', '.'),
         reporteFecha($fila['fecha'] ?? ''),
-        (string) ($fila['estado'] ?? ''),
+        (string) ($fila['estatus'] ?? 'Activo'),
     ];
 }
 
 generarReportePdf(
     'REPORTE DE PRIMAS',
-    ['Tipo de Prima', 'Porcentaje', 'Fecha de Creación', 'Estado'],
+    ['Cédula', 'Trabajador', 'Tipo de Prima', 'Condición', 'Porcentaje', 'Monto (Bs.)', 'Fecha', 'Estatus'],
     $filas,
     'Reporte_Primas.pdf'
 );

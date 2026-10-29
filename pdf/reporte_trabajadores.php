@@ -33,7 +33,7 @@ foreach ($trabajadores as $fila) {
     $filas[] = [
         (string) ($fila['cedula'] ?? ''),
         trim(($fila['apellidos'] ?? '') . ' ' . ($fila['nombres'] ?? '')),
-        reporteFecha($fila['fecha_ingreso'] ?? ''),
+        reporteFecha($fila['fecha_primer_contrato'] ?? ''),
         trim((string) ($fila['tipo_contrato'] ?? '')) !== '' ? (string) $fila['tipo_contrato'] : 'Sin contrato',
         (string) ($fila['status'] ?? ''),
     ];

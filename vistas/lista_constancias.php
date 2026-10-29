@@ -7,11 +7,11 @@ $exito_edicion = $_SESSION['exito_edicion'] ?? '';
 unset($_SESSION['error_edicion'], $_SESSION['exito_edicion']);
 
 require_once '../conexion.php';
-require_once '../modelos/clase_solicitud.php';
+require_once '../modelos/clase_constancia.php';
 require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
 $buscar = trim($_GET['buscar'] ?? '');
-$constanciaObj = new Solicitud($conexion);
+$constanciaObj = new ConstanciaTrabajo($conexion);
 $constancias = $constanciaObj->listarConstancias($buscar);
 registrarBitacora($conexion, 'Constancias', 'Consultar', $buscar !== '' ? "Consultó el listado de constancias (búsqueda: \"$buscar\")." : 'Consultó el listado de constancias.');
 ?>
@@ -63,7 +63,6 @@ registrarBitacora($conexion, 'Constancias', 'Consultar', $buscar !== '' ? "Consu
                     <th>Cedula</th>
                     <th>Cargo</th>
                     <th>Tipo Personal</th>
-                    <th>Director</th>
                     <th>Fecha</th>
                     <th>Acciones</th>
                 </tr>
@@ -76,7 +75,6 @@ registrarBitacora($conexion, 'Constancias', 'Consultar', $buscar !== '' ? "Consu
                             <td><?= htmlspecialchars($fila['cedula'] ?? '') ?></td>
                             <td><?= htmlspecialchars($fila['nombre_cargo'] ?? '') ?></td>
                             <td><?= htmlspecialchars($fila['tipo_personal'] ?? '') ?></td>
-                            <td><?= htmlspecialchars($fila['nombre_director_departamento'] ?? '') ?></td>
                             <td><?= htmlspecialchars($fila['fecha_constancia'] ?? '') ?></td>
                             <td class="acciones">
                                 <a class="btn-ver" href="ver_constancia.php?id=<?= urlencode($fila['id_constancia']) ?>">
@@ -99,7 +97,7 @@ registrarBitacora($conexion, 'Constancias', 'Consultar', $buscar !== '' ? "Consu
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="7" style="text-align:center;">No se encontraron constancias registradas.</td>
+                        <td colspan="6" style="text-align:center;">No se encontraron constancias registradas.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

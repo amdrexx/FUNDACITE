@@ -6,6 +6,21 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Al entrar desde el menú a un registro nuevo, descartar el borrador que quedó
+// esperando por el contrato. El enlace "Volver" del contrato lleva flujo=contrato
+// y conserva esos datos intencionalmente.
+$idTrabajadorEdicion = intval($_GET['id'] ?? 0);
+$flujoContrato = $_GET['flujo'] ?? '';
+$vieneDeFlujoContrato = $flujoContrato === 'contrato';
+if ($idTrabajadorEdicion === 0 && !$vieneDeFlujoContrato && isset($_SESSION['trabajador_pendiente'])) {
+    unset(
+        $_SESSION['trabajador_pendiente'],
+        $_SESSION['token_trabajador_pendiente'],
+        $_SESSION['old_input'],
+        $_SESSION['old_contrato']
+    );
+}
+
 $errores = $_SESSION['error_registro'] ?? [];
 $old = $_SESSION['old_input'] ?? [];
 $exito_registro = $_SESSION['exito_registro'] ?? '';
@@ -24,12 +39,19 @@ $direcciones = $trabajador->listarDirecciones();
 
 // Obtenemos los cargos de la base de datos para el desplegable
 $cargos = method_exists($trabajador, 'listarCargos') ? $trabajador->listarCargos() : [];
+
+if ($idTrabajadorEdicion > 0) {
+    $datosEdicion = $trabajador->obtenerTrabajadorPorId($idTrabajadorEdicion);
+    if ($datosEdicion && empty($old)) {
+        $old = $datosEdicion;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Registro de Trabajadores</title>
+    <title><?php echo ($idTrabajadorEdicion > 0) ? 'Modificar Datos del Trabajador' : 'Datos del Trabajador'; ?></title>
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
@@ -44,11 +66,26 @@ $cargos = method_exists($trabajador, 'listarCargos') ? $trabajador->listarCargos
 
 <?php include "includes/layout.php"; ?>
 
-<!-- FORMULARIO -->
+<!-- FORMULARIO DE REGISTRO / EDICIÓN PASO 1 -->
 <div class="main">
-    <form class="form-card" id="formPersonas" method="POST" action="../controladores/ctrl_trabajador.php">
+    <div class="worker-page">
+        <a class="worker-back" href="lista_trabajadores.php" onclick="if (window.history.length > 1) { event.preventDefault(); window.history.back(); }">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            Volver 
+        </a>
+    <form class="form-card" id="formPersonas" method="POST" action="http://localhost/FUNDACITE/controladores/ctrl_trabajador.php">
+        
+        <!-- CAMPOS OCULTOS INTELIGENTES -->
+        <input type="hidden" name="accion" value="<?php echo ($idTrabajadorEdicion > 0) ? 'actualizar' : 'guardar'; ?>">
+        <?php if ($idTrabajadorEdicion > 0): ?>
+            <input type="hidden" name="id_trabajador" value="<?php echo $idTrabajadorEdicion; ?>">
+        <?php endif; ?>
+        <input type="hidden" name="origen_flujo" value="<?php echo htmlspecialchars($flujoContrato); ?>">
+
         <div class="form-grid">
-            <h2 style="text-align: center; margin-bottom: 10px;">Registro de Trabajador</h2>
+            <h2 style="text-align: center; margin-bottom: 10px;" class="full-width">
+                <?php echo ($idTrabajadorEdicion > 0) ? 'Modificar Datos del Trabajador' : 'Datos del Trabajador'; ?>
+            </h2>
 
             <h3 class="form-section-title full-width">Datos personales</h3>
 
@@ -56,14 +93,14 @@ $cargos = method_exists($trabajador, 'listarCargos') ? $trabajador->listarCargos
             <div class="field">
                 <label>Nombres</label>
                 <input type="text" name="nombres" id="nombres" maxlength="50" placeholder="Ingrese nombres"
-                       value="<?php echo htmlspecialchars($old['nombres'] ?? ''); ?>">
+                        value="<?php echo htmlspecialchars($old['nombres'] ?? ''); ?>">
             </div>
 
             <!-- Apellidos -->
             <div class="field">
                 <label>Apellidos</label>
                 <input type="text" name="apellidos" id="apellidos" maxlength="50" placeholder="Ingrese apellidos"
-                       value="<?php echo htmlspecialchars($old['apellidos'] ?? ''); ?>">
+                        value="<?php echo htmlspecialchars($old['apellidos'] ?? ''); ?>">
             </div>
 
             <!-- Tipo Documento -->
@@ -71,8 +108,8 @@ $cargos = method_exists($trabajador, 'listarCargos') ? $trabajador->listarCargos
                 <label>Tipo de Documento</label>
                 <select name="tipoDoc" id="tipoDoc">
                     <option value="" disabled selected>Seleccione...</option>
-                    <option value="V" <?php echo (isset($old['tipoDoc']) && $old['tipoDoc'] == 'V') ? 'selected' : ''; ?>>Venezolano (Cédula)</option>
-                    <option value="E" <?php echo (isset($old['tipoDoc']) && $old['tipoDoc'] == 'E') ? 'selected' : ''; ?>>Extranjero (Cédula de Extranjería)</option>
+                    <option value="V" <?php echo (isset($old['tipoDoc']) && ($old['tipoDoc'] == 'V' || $old['tipoDoc'] == 'Cédula')) ? 'selected' : ''; ?>>Venezolano (Cédula)</option>
+                    <option value="E" <?php echo (isset($old['tipoDoc']) && ($old['tipoDoc'] == 'E' || $old['tipoDoc'] == 'Cédula de Extranjería')) ? 'selected' : ''; ?>>Extranjero (Cédula de Extranjería)</option>
                 </select>
             </div>
 
@@ -80,7 +117,7 @@ $cargos = method_exists($trabajador, 'listarCargos') ? $trabajador->listarCargos
             <div class="field">
                 <label>Cédula</label>
                 <input type="text" name="cedula" id="cedula" maxlength="8" placeholder="Ingrese cédula"
-                       value="<?php echo htmlspecialchars($old['cedula'] ?? ''); ?>">
+                        value="<?php echo htmlspecialchars($old['cedula'] ?? ''); ?>">
             </div>
 
             <!-- Género -->
@@ -116,7 +153,7 @@ $cargos = method_exists($trabajador, 'listarCargos') ? $trabajador->listarCargos
                 <input type="date" name="fecha" id="fecha" value="<?php echo htmlspecialchars($old['fecha'] ?? ''); ?>">
             </div>
 
-            <!-- Edad (no se envía, solo decorativo) -->
+            <!-- Edad (decorativo) -->
             <div class="field">
                 <label>Edad</label>
                 <input type="text" id="edad" placeholder="Se calculará automáticamente" readonly>
@@ -128,41 +165,43 @@ $cargos = method_exists($trabajador, 'listarCargos') ? $trabajador->listarCargos
             <div class="field">
                 <label>Correo Electrónico</label>
                 <input type="text" name="correoElectronico" id="correoElectronico" maxlength="100" placeholder="Ingrese correo electrónico"
-                       value="<?php echo htmlspecialchars($old['correoElectronico'] ?? ''); ?>">
+                        value="<?php echo htmlspecialchars($old['correoElectronico'] ?? ''); ?>">
             </div>
 
             <!-- Número de Teléfono -->
             <div class="field">
                 <label>Número de Teléfono</label>
                 <input type="text" name="numeroTelefono" id="numeroTelefono" maxlength="11" placeholder="Ingrese Número de Teléfono"
-                       value="<?php echo htmlspecialchars($old['numeroTelefono'] ?? ''); ?>">
+                        value="<?php echo htmlspecialchars($old['numeroTelefono'] ?? ''); ?>">
             </div>
 
             <h3 class="form-section-title full-width">Datos laborales</h3>
 
-            <!-- Fecha de Ingreso -->
-            <div class="field">
-                <label>Fecha de Ingreso</label>
-                <input type="date" name="fecha_ingreso" id="fecha_ingreso" value="<?php echo htmlspecialchars($old['fecha_ingreso'] ?? ''); ?>">
-            </div>
-
+            <!-- Cantidad de Hijos -->
             <div class="field">
                 <label for="hijos">Cantidad de Hijos</label>
                 <input type="number" name="hijos" id="hijos" min="0" max="30" step="1" required
-                       value="<?php echo htmlspecialchars($old['hijos'] ?? '0'); ?>">
+                        value="<?php echo htmlspecialchars($old['hijos'] ?? '0'); ?>">
             </div>
 
+            <!-- Años de Servicio -->
             <div class="field">
                 <label for="anos_servicio_administracion_publica">Años de Servicio en la Administración Pública</label>
                 <input type="number" name="anos_servicio_administracion_publica" id="anos_servicio_administracion_publica" min="0" max="70" step="1" required
-                       value="<?php echo htmlspecialchars($old['anos_servicio_administracion_publica'] ?? '0'); ?>">
+                        value="<?php echo htmlspecialchars($old['anos_servicio_administracion_publica'] ?? '0'); ?>">
             </div>
 
+            <!-- Nivel de Educación -->
             <div class="field">
                 <label for="nivel_educacion">Nivel de Educación</label>
-                <input type="text" name="nivel_educacion" id="nivel_educacion" maxlength="100" required
-                       placeholder="Ej.: Bachiller, Técnico, Universitario"
-                       value="<?php echo htmlspecialchars($old['nivel_educacion'] ?? ''); ?>">
+                <select name="nivel_educacion" id="nivel_educacion" required>
+                    <option value="" disabled <?php echo empty($old['nivel_educacion']) ? 'selected' : ''; ?>>Seleccione el nivel de educación...</option>
+                    <?php foreach (['Bachiller','Técnico Superior Universitario', 'Profesional', 'Especialista', 'Maestría', 'Doctor'] as $nivel): ?>
+                        <option value="<?php echo htmlspecialchars($nivel, ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($old['nivel_educacion'] ?? '') === $nivel ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($nivel, ENT_QUOTES, 'UTF-8'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
 
             <!-- Asignar Cargo -->
@@ -179,7 +218,7 @@ $cargos = method_exists($trabajador, 'listarCargos') ? $trabajador->listarCargos
                 </select>
             </div>
 
-            <!-- Estatus Laboral (Valores compatibles con el CHECK de la BD: Activo, Jubilado, Inactivo) -->
+            <!-- Estatus Laboral -->
             <div class="field">
                 <label>Estatus Laboral</label>
                 <select name="estatus_laboral" required>
@@ -195,7 +234,7 @@ $cargos = method_exists($trabajador, 'listarCargos') ? $trabajador->listarCargos
             <!-- Dirección: Estado -->
             <div class="field">
                 <label>Estado</label>
-                <select name="cod_est" id="selectEstado">
+                <select name="cod_est" id="selectEstado" data-selected="<?php echo htmlspecialchars($old['cod_est'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                     <option value="" disabled selected>Seleccione un estado</option>
                 </select>
             </div>
@@ -203,7 +242,7 @@ $cargos = method_exists($trabajador, 'listarCargos') ? $trabajador->listarCargos
             <!-- Dirección: Municipio -->
             <div class="field">
                 <label>Municipio</label>
-                <select name="cod_muni" id="selectMunicipio">
+                <select name="cod_muni" id="selectMunicipio" data-selected="<?php echo htmlspecialchars($old['cod_muni'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                     <option value="" disabled selected>Seleccione un municipio</option>
                 </select>
             </div>
@@ -211,20 +250,32 @@ $cargos = method_exists($trabajador, 'listarCargos') ? $trabajador->listarCargos
             <!-- Dirección: Parroquia -->
             <div class="field">
                 <label>Parroquia</label>
-                <select name="cod_par" id="selectParroquia">
+                <select name="cod_par" id="selectParroquia" data-selected="<?php echo htmlspecialchars($old['cod_par'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
                     <option value="" disabled selected>Seleccione una parroquia</option>
                 </select>
             </div>
 
-            <!-- Dirección exacta (va a DIRECCION.nombre) -->
+            <!-- Dirección exacta -->
             <div class="field full-width">
                 <label>Dirección</label>
                 <textarea name="direccion_texto" id="direccion_texto" maxlength="255"
                     placeholder="Ingrese dirección exacta (calle, avenida, casa, referencia, etc.)"><?php echo htmlspecialchars($old['direccion_texto'] ?? ''); ?></textarea>
             </div>
 
-            <div class="form-actions full-width">
-                <button type="submit" class="btn-guardar">Registrar</button>
+            <!-- BOTONES DE ACCIÓN / RETORNO -->
+            <div class="form-actions full-width" style="display: flex; justify-content: space-between; align-items: center;">
+                <?php if ($idTrabajadorEdicion > 0 && $flujoContrato === 'contrato'): ?>
+                    <a href="registrar_contrato.php?id_trabajador=<?php echo $idTrabajadorEdicion; ?>" style="color: #bbb; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 5px;">
+                        <i class="bi bi-arrow-left"></i> Volver al Contrato sin guardar
+                    </a>
+                <?php else: ?>
+                    <div></div>
+                <?php endif; ?>
+
+                <button type="submit" class="btn-guardar" style="display: flex; align-items: center; gap: 8px;">
+                    <?php echo ($idTrabajadorEdicion > 0 && $flujoContrato === 'contrato') ? 'Guardar cambios y volver al Contrato' : 'Siguiente: Registrar Contrato'; ?>
+                    <i class="bi bi-arrow-right"></i>
+                </button>
             </div>
         </div>
     </form>
@@ -247,19 +298,16 @@ $cargos = method_exists($trabajador, 'listarCargos') ? $trabajador->listarCargos
 <?php if (!empty($exito_registro)): ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-
     var alertDiv = document.getElementById('customAlert');
     var msg = document.getElementById('alertMessage');
 
     msg.textContent = <?php echo json_encode($exito_registro); ?>;
-
     alertDiv.classList.remove('hidden');
 
     const boton = document.querySelector(".alert-box button");
-
     if (boton) {
         boton.onclick = function() {
-            window.location.href = "/FUNDACITE/vistas/lista_trabajadores.php";
+            window.location.href = "/FUNDACITE/vistas/registrar_contrato.php";
         };
     }
 });

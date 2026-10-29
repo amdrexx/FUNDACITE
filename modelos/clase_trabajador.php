@@ -26,7 +26,6 @@ class Trabajador
 
     /**
      * Lista todos los cargos disponibles en la tabla CARGO
-     * para mostrarlos en el desplegable del registro de trabajadores.
      */
     public function listarCargos()
     {
@@ -45,8 +44,6 @@ class Trabajador
 
     /**
      * Lista las direcciones ya registradas en el maestro de direcciones
-     * (tabla DIRECCION), con su ruta completa Estado/Municipio/Parroquia,
-     * para mostrarlas como opciones de selección en el registro de trabajador.
      */
     public function listarDirecciones()
     {
@@ -76,8 +73,7 @@ class Trabajador
     }
 
     /**
-     * Crea (o reutiliza si ya existe una idéntica) un registro en DIRECCION
-     * para la parroquia indicada, y devuelve el id_dir correspondiente.
+     * Crea o reutiliza un registro en DIRECCION
      */
     public function crearDireccion($codPar, $nombreDireccion)
     {
@@ -128,7 +124,6 @@ class Trabajador
         $nombres,
         $apellidos,
         $fechaNacimiento,
-        $fechaIngreso,
         $hijos,
         $anosServicioAdministracionPublica,
         $nivelEducacion,
@@ -148,7 +143,6 @@ class Trabajador
             nombres,
             apellidos,
             fecha_nacimiento,
-            fecha_ingreso,
             hijos,
             anos_servicio_administracion_publica,
             nivel_educacion,
@@ -162,19 +156,23 @@ class Trabajador
         )
         VALUES
         (
-            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
         )";
 
         $stmt = $this->conexion->prepare($sql);
 
+        if (!$stmt) {
+            error_log("Error al preparar el registro de trabajador: " . $this->conexion->error);
+            return false;
+        }
+
         $stmt->bind_param(
-            "ssssssiisssssssii",
+            "sssssiissssssii",
             $tipoDocumento,
             $cedula,
             $nombres,
             $apellidos,
             $fechaNacimiento,
-            $fechaIngreso,
             $hijos,
             $anosServicioAdministracionPublica,
             $nivelEducacion,
@@ -203,16 +201,26 @@ class Trabajador
                     t.cedula,
                     t.nombres,
                     t.apellidos,
-                    t.fecha_ingreso,
                     t.hijos,
                     t.anos_servicio_administracion_publica,
                     t.nivel_educacion,
                     t.status,
                     c.nombre_cargo,
-                    co.tipo_contrato
+                    co.tipo_contrato,
+                    primer.fecha_primer_contrato
                 FROM TRABAJADOR t
                 LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo
-                LEFT JOIN CONTRATO co ON co.id_trabajador = t.id_trabajador";
+                LEFT JOIN (
+                    SELECT id_trabajador, MAX(id_contrato) AS id_contrato
+                    FROM CONTRATO
+                    GROUP BY id_trabajador
+                ) ultimo ON ultimo.id_trabajador = t.id_trabajador
+                LEFT JOIN (
+                    SELECT id_trabajador, MIN(fecha_contrato) AS fecha_primer_contrato
+                    FROM CONTRATO
+                    GROUP BY id_trabajador
+                ) primer ON primer.id_trabajador = t.id_trabajador
+                LEFT JOIN CONTRATO co ON co.id_contrato = ultimo.id_contrato";
 
         if (!empty($buscar)) {
             $buscar = $this->conexion->real_escape_string($buscar);
@@ -252,7 +260,6 @@ class Trabajador
                         CURDATE()
                     ) AS edad,
 
-                    t.fecha_ingreso,
                     t.hijos,
                     t.anos_servicio_administracion_publica,
                     t.nivel_educacion,

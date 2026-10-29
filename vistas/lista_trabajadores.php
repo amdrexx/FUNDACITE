@@ -7,10 +7,12 @@ error_reporting(E_ALL);
 
 $errores = $_SESSION['error_edicion'] ?? [];
 $exito_edicion = $_SESSION['exito_edicion'] ?? '';
+$exito_registro = $_SESSION['exito_registro'] ?? '';
 
 unset(
     $_SESSION['error_edicion'],
-    $_SESSION['exito_edicion']
+    $_SESSION['exito_edicion'],
+    $_SESSION['exito_registro']
 );
 
 require_once '../conexion.php';
@@ -75,7 +77,7 @@ registrarBitacora($conexion, 'Trabajadores', 'Consultar', $buscar !== '' ? "Cons
             <thead>
                 <tr>
                     <th>Persona (Cédula)</th>
-                    <th>Fecha de Ingreso</th>
+                    <th>Cargo</th> <!-- Columna del Cargo integrada -->
                     <th>Tipo de Contratación</th>
                     <th>Estatus Laboral</th>
                     <th>Acciones</th>
@@ -91,23 +93,22 @@ registrarBitacora($conexion, 'Trabajadores', 'Consultar', $buscar !== '' ? "Cons
                                      htmlspecialchars(trim(($fila['nombres'] ?? '') . ' ' . ($fila['apellidos'] ?? '')));
                                 ?>
                             </td>
-                            <td><?php echo htmlspecialchars($fila['fecha_ingreso'] ?? ''); ?></td>
+                            <td><?php echo htmlspecialchars($fila['nombre_cargo'] ?? 'Sin asignar'); ?></td>
                             <td><?php echo htmlspecialchars($fila['tipo_contrato'] ?? 'Sin contrato'); ?></td>
                             <td><?php echo htmlspecialchars($fila['status'] ?? ''); ?></td>
                            <td class="acciones">
-
                             
                         <a class="btn-ver" href="ver_trabajador.php?id=<?php echo urlencode($fila['id_trabajador'] ?? ''); ?>">
                         <i class="bi bi-eye"></i>    
                         Ver
                         </a>
-                           <a class="btn-editar" href="editar_trabajador.php?id=<?php echo urlencode($fila['id_trabajador'] ?? ''); ?>">
-                             <i class="bi bi-pencil-square"></i>
+                            <a class="btn-editar" href="editar_trabajador.php?id=<?php echo urlencode($fila['id_trabajador'] ?? ''); ?>">
+                               <i class="bi bi-pencil-square"></i>
                             Editar
                         </a>
                       
                         <?php if (esAdministradorODirector()): ?> 
-                        <form action="../controladores/ctrl_trabajador.php" method="POST" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas eliminar este trabajador?');">
+                        <form action="../controladores/ctrl_trabajador.php" method="POST" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas inactivar este trabajador?');">
                             <input type="hidden" name="id_trabajador" value="<?php echo htmlspecialchars($fila['id_trabajador'] ?? ''); ?>">
                             <button type="submit" name="eliminar_trabajador" class="btn-eliminar" style="border:none; cursor:pointer;">
                                 <i class="bi bi-trash"></i>
@@ -140,12 +141,12 @@ registrarBitacora($conexion, 'Trabajadores', 'Consultar', $buscar !== '' ? "Cons
 </script>
 <?php endif; ?>
 
-<?php if (!empty($exito_edicion)): ?>
+<?php if (!empty($exito_registro) || !empty($exito_edicion)): ?>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var alertDiv = document.getElementById('customAlert');
         var msg = document.getElementById('alertMessage');
-        msg.textContent = <?php echo json_encode($exito_edicion); ?>;
+        msg.textContent = <?php echo json_encode($exito_registro ?: $exito_edicion); ?>;
         alertDiv.classList.remove('hidden');
     });
 </script>

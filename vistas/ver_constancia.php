@@ -38,8 +38,8 @@ $nombreTrabajador = $constanciaActual['nombre_trabajador']
 $cedulaTrabajador = $constanciaActual['cedula_trabajador'] ?? $constanciaActual['cedula'] ?? 'N/A';
 $cargoTrabajador  = $constanciaActual['nombre_cargo'] ?? $constanciaActual['cargo'] ?? 'Sin cargo asignado';
 
-$fechaIngreso = !empty($constanciaActual['fecha_ingreso'])
-    ? date('d/m/Y', strtotime($constanciaActual['fecha_ingreso']))
+$fechaIngreso = !empty($constanciaActual['fecha_primer_contrato'])
+    ? date('d/m/Y', strtotime($constanciaActual['fecha_primer_contrato']))
     : 'No registrada';
 
 $fechaEmision = !empty($constanciaActual['fecha'])
@@ -52,7 +52,6 @@ $salarioTexto = ($salarioMonto !== null && $salarioMonto !== '')
     : 'No registrado';
 
 $tipoPersonal   = $constanciaActual['tipo_personal'] ?? 'No especificado';
-$nombreDirector = $constanciaActual['nombre_director'] ?? 'No registrado';
 $motivo         = $constanciaActual['motivo'] ?? 'No especificado';
 ?>
 <!DOCTYPE html>
@@ -316,6 +315,11 @@ $motivo         = $constanciaActual['motivo'] ?? 'No especificado';
 <?php include "includes/layout.php"; ?>
 
 <div class="main">
+    <div class="worker-page">
+        <a class="worker-back" href="lista_trabajadores.php" onclick="if (window.history.length > 1) { event.preventDefault(); window.history.back(); }">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            Volver 
+        </a>
     <div class="cert-page">
         <article class="cert-card">
             <header class="cert-header">
@@ -349,20 +353,13 @@ $motivo         = $constanciaActual['motivo'] ?? 'No especificado';
                     <h3><i class="bi bi-calendar3"></i> Detalles de la constancia</h3>
                     <dl class="cert-details">
                         <div class="cert-detail"><dt>Fecha de emisión</dt><dd><?php echo htmlspecialchars($fechaEmision); ?></dd></div>
-                        <div class="cert-detail"><dt>Motivo de la solicitud</dt><dd class="cert-motivo"><?php echo htmlspecialchars($motivo); ?></dd></div>
+                        <div class="cert-detail"><dt>Motivo</dt><dd class="cert-motivo"><?php echo htmlspecialchars($motivo); ?></dd></div>
                     </dl>
                 </section>
 
-                <section class="cert-section cert-section--full">
-                    <h3><i class="bi bi-pen"></i> Responsable de la firma</h3>
-                    <dl class="cert-details">
-                        <div class="cert-detail"><dt>Director de departamento</dt><dd><?php echo htmlspecialchars($nombreDirector); ?></dd></div>
-                    </dl>
-                </section>
             </div>
 
             <footer class="cert-actions no-print">
-                <a href="registrar_constancia.php" class="cert-action cert-action--back"><i class="bi bi-arrow-left"></i> Volver</a>
                 <a href="editar_constancia.php?id=<?php echo urlencode($id_constancia); ?>" class="cert-action cert-action--edit"><i class="bi bi-pencil-square"></i> Editar</a>
             </footer>
         </article>

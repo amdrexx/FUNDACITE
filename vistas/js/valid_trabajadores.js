@@ -94,7 +94,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const correo = document.getElementById("correoElectronico").value.trim();
             const fechaNac = document.getElementById("fecha").value;
             const telefono = document.getElementById("numeroTelefono").value.trim();
-            const fechaIngreso = document.getElementById("fecha_ingreso").value;
             const hijos = Number(document.getElementById("hijos").value);
             const anosServicio = Number(document.getElementById("anos_servicio_administracion_publica").value);
             const nivelEducacion = document.getElementById("nivel_educacion").value.trim();
@@ -117,7 +116,6 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!correo) errores.push("Correo Electrónico");
             if (!fechaNac) errores.push("Fecha de Nacimiento");
             if (!telefono) errores.push("Número de Teléfono");
-            if (!fechaIngreso) errores.push("Fecha de Ingreso");
             if (document.getElementById("hijos").value === "") errores.push("Cantidad de Hijos");
             if (document.getElementById("anos_servicio_administracion_publica").value === "") errores.push("Años de Servicio en la Administración Pública");
             if (!nivelEducacion) errores.push("Nivel de Educación");
@@ -146,20 +144,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (fechaNac && edad < 18) errores.push("Fecha de Nacimiento: el trabajador debe tener al menos 18 años");
 
-            const ingreso = fechaIngreso ? new Date(fechaIngreso + "T00:00:00") : null;
-            if (ingreso && ingreso > hoy) errores.push("Fecha de Ingreso: no puede ser futura");
-
             const hijosValor = document.getElementById("hijos").value;
             const anosServicioValor = document.getElementById("anos_servicio_administracion_publica").value;
             if (hijosValor !== "" && (!Number.isInteger(hijos) || hijos < 0 || hijos > 30)) errores.push("Cantidad de Hijos: indique un entero entre 0 y 30");
             if (anosServicioValor !== "" && (!Number.isInteger(anosServicio) || anosServicio < 0 || anosServicio > 70)) errores.push("Años de Servicio: indique un entero entre 0 y 70");
 
-            if (fechaNac && ingreso) {
-                const edadAlIngreso = edadEnFecha(new Date(fechaNac + "T00:00:00"), ingreso);
-                const maxServicioPorEdad = Math.max(0, edadAlIngreso - 18);
-                if (edadAlIngreso < 18) errores.push("Fecha de Ingreso: el trabajador debía tener al menos 18 años");
-                if (Number.isInteger(anosServicio) && anosServicio > maxServicioPorEdad) errores.push("Años de Servicio: superan el tiempo posible desde los 18 años hasta el ingreso");
-            }
 
             if (errores.length > 0) {
                 e.preventDefault();
@@ -187,7 +176,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const anosServicioInput = document.querySelector('input[name="anos_servicio_administracion_publica"]');
             const hijos = Number(hijosInput?.value);
             const anosServicio = Number(anosServicioInput?.value);
-            const nivelEducacion = document.querySelector('input[name="nivel_educacion"]')?.value.trim() || '';
+            const nivelEducacion = document.querySelector('[name="nivel_educacion"]')?.value.trim() || '';
             const direccion = document.querySelector('textarea[name="direccion_texto"]')?.value.trim() || '';
             const parroquia = document.querySelector('select[name="cod_par"]')?.value || '';
 
@@ -235,13 +224,6 @@ function limitarCaracteresRepetidos(valor, maxRepeticiones = 2) {
     return valor.replace(patron, (coincidencia, caracter) => caracter.repeat(maxRepeticiones));
 }
 
-function edadEnFecha(fechaNacimiento, fechaReferencia) {
-    let edad = fechaReferencia.getFullYear() - fechaNacimiento.getFullYear();
-    const mes = fechaReferencia.getMonth() - fechaNacimiento.getMonth();
-    if (mes < 0 || (mes === 0 && fechaReferencia.getDate() < fechaNacimiento.getDate())) edad--;
-    return edad;
-}
-
 // ==========================
 // ALERTA PERSONALIZADA
 // ==========================
@@ -271,13 +253,3 @@ function closeAlert() {
     }
 }
 
-// ==========================
-// FECHA DE INGRESO AUTOMÁTICA
-// ==========================
-document.addEventListener("DOMContentLoaded", function () {
-    const fechaIngreso = document.getElementById("fecha_ingreso");
-
-    if (fechaIngreso && !fechaIngreso.value) {
-        fechaIngreso.value = new Date().toISOString().split("T")[0];
-    }
-});

@@ -1,13 +1,13 @@
 <?php
 // =============================================================================
 // ARCHIVO: /FUNDACITE/modelos/clase_contrato.php
-// Modelo de acceso a datos para la tabla CONTRATO
-// Compatible con ContratoControlador (ctrl_contrato.php)
+// Modelo de acceso a datos para la tabla CONTRATO (con Gaceta y Tipo de Personal)
 // =============================================================================
 
 class clase_contrato {
 
     private $conexion;
+    public $ultimoError = '';
 
     public function __construct($conexion) {
         $this->conexion = $conexion;
@@ -31,6 +31,7 @@ class clase_contrato {
     public function registrarContrato(
         int $id_trabajador,
         string $tipo_contrato,
+        string $tipo_personal,
         string $fecha_contrato,
         ?string $fecha_fin,
         string $lugar_trabajo,
@@ -38,47 +39,73 @@ class clase_contrato {
         string $cedula_presidente,
         string $gaceta
     ) {
-        $id_cargo = $this->obtenerCargoDeTrabajador($id_trabajador);
+        $esIndeterminado = stripos($tipo_contrato, 'indefinido') !== false || stripos($tipo_contrato, 'indeterminado') !== false;
+        if (!$esIndeterminado && ($fecha_fin === null || trim($fecha_fin) === '')) {
+            $this->ultimoError = 'La fecha de finalización es obligatoria para los contratos a tiempo determinado.';
+            return false;
+        }
+        if ($esIndeterminado) {
+            $fecha_fin = null;
+        }
 
-        if ($id_cargo === null) {
+        if ($fecha_fin !== null && $fecha_fin < $fecha_contrato) {
+            $this->ultimoError = 'La fecha de finalización no puede ser anterior a la fecha de inicio del contrato.';
             return false;
         }
 
-        $sql = "INSERT INTO CONTRATO (
-                    id_trabajador, id_cargo, tipo_contrato, fecha_contrato,
-                    fecha_fin, lugar_trabajo, nombre_presidente,
-                    cedula_presidente, gaceta_designacion_presidente
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try {
+            $id_cargo = $this->obtenerCargoDeTrabajador($id_trabajador);
 
-        $stmt = $this->conexion->prepare($sql);
+            if ($id_cargo === null) {
+                $this->ultimoError = 'El trabajador no tiene un cargo asignado.';
+                return false;
+            }
 
-        if (!$stmt) {
+            $sql = "INSERT INTO CONTRATO (
+                        id_trabajador, id_cargo, tipo_contrato, tipo_personal, fecha_contrato,
+                        fecha_fin, lugar_trabajo, nombre_presidente,
+                        cedula_presidente, gaceta_designacion_presidente
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            $stmt = $this->conexion->prepare($sql);
+            if (!$stmt) {
+                $this->ultimoError = $this->conexion->error;
+                return false;
+            }
+
+            $stmt->bind_param(
+                "iissssssss",
+                $id_trabajador,
+                $id_cargo,
+                $tipo_contrato,
+                $tipo_personal,
+                $fecha_contrato,
+                $fecha_fin,
+                $lugar_trabajo,
+                $nombre_presidente,
+                $cedula_presidente,
+                $gaceta
+            );
+
+            $ok = $stmt->execute();
+            if (!$ok) {
+                $this->ultimoError = $stmt->error;
+            }
+            $stmt->close();
+
+            return $ok;
+        } catch (Throwable $e) {
+            $this->ultimoError = $e->getMessage();
+            error_log('Error al registrar contrato: ' . $e->getMessage());
             return false;
         }
-
-        $stmt->bind_param(
-            "iisssssss",
-            $id_trabajador,
-            $id_cargo,
-            $tipo_contrato,
-            $fecha_contrato,
-            $fecha_fin,
-            $lugar_trabajo,
-            $nombre_presidente,
-            $cedula_presidente,
-            $gaceta
-        );
-
-        $ok = $stmt->execute();
-        $stmt->close();
-
-        return $ok;
     }
 
     public function actualizarContrato(
         int $id_contrato,
         int $id_trabajador,
         string $tipo_contrato,
+        string $tipo_personal,
         string $fecha_contrato,
         ?string $fecha_fin,
         string $lugar_trabajo,
@@ -86,6 +113,20 @@ class clase_contrato {
         string $cedula_presidente,
         string $gaceta
     ) {
+        $esIndeterminado = stripos($tipo_contrato, 'indefinido') !== false || stripos($tipo_contrato, 'indeterminado') !== false;
+        if (!$esIndeterminado && ($fecha_fin === null || trim($fecha_fin) === '')) {
+            $this->ultimoError = 'La fecha de finalización es obligatoria para los contratos a tiempo determinado.';
+            return false;
+        }
+        if ($esIndeterminado) {
+            $fecha_fin = null;
+        }
+
+        if ($fecha_fin !== null && $fecha_fin < $fecha_contrato) {
+            $this->ultimoError = 'La fecha de finalización no puede ser anterior a la fecha de inicio del contrato.';
+            return false;
+        }
+
         $id_cargo = $this->obtenerCargoDeTrabajador($id_trabajador);
 
         if ($id_cargo === null) {
@@ -100,6 +141,7 @@ class clase_contrato {
                     id_trabajador = ?,
                     id_cargo = ?,
                     tipo_contrato = ?,
+                    tipo_personal = ?,
                     fecha_contrato = ?,
                     fecha_fin = ?,
                     lugar_trabajo = ?,
@@ -115,10 +157,11 @@ class clase_contrato {
         }
 
         $stmt->bind_param(
-            "iisssssssi",
+            "iissssssssi",
             $id_trabajador,
             $id_cargo,
             $tipo_contrato,
+            $tipo_personal,
             $fecha_contrato,
             $fecha_fin,
             $lugar_trabajo,
@@ -167,6 +210,7 @@ class clase_contrato {
                     ct.id_trabajador,
                     ct.id_cargo,
                     ct.tipo_contrato,
+                    ct.tipo_personal,
                     ct.fecha_contrato,
                     ct.fecha_fin,
                     ct.lugar_trabajo,
@@ -205,6 +249,7 @@ class clase_contrato {
                     ct.id_trabajador,
                     ct.id_cargo,
                     ct.tipo_contrato,
+                    ct.tipo_personal,
                     ct.fecha_contrato,
                     ct.fecha_fin,
                     ct.lugar_trabajo,
@@ -244,6 +289,7 @@ class clase_contrato {
         $sql = "SELECT
                     ct.id_contrato,
                     ct.tipo_contrato,
+                    ct.tipo_personal,
                     ct.fecha_contrato,
                     ct.fecha_fin,
                     ct.lugar_trabajo,

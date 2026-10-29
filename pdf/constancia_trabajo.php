@@ -6,7 +6,7 @@ require_once __DIR__ . '/../vistas/includes/guardian.php';
 requireAdministradorODirector();
 
 require_once '../conexion.php';
-require_once '../modelos/clase_solicitud.php';
+require_once '../modelos/clase_constancia.php';
 require_once '../vendor/autoload.php';
 require_once '../controladores/helpers/bitacora_helper.php';
 
@@ -21,11 +21,23 @@ if ($id_constancia <= 0) {
     die('Constancia no válida.');
 }
 
-$constanciaObj = new Solicitud($conexion);
+$constanciaObj = new ConstanciaTrabajo($conexion);
 $constancia = $constanciaObj->obtenerPorId($id_constancia);
 
 if (!$constancia) {
     die('No se encontró la constancia solicitada.');
+}
+
+$directorActivo = $constanciaObj->obtenerDirectorActivo();
+if (!$directorActivo) {
+    http_response_code(409);
+    echo '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
+        . '<title>Director activo requerido</title><link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">'
+        . '<style>body{min-height:100vh;display:grid;place-items:center;background:#102f45;color:#fff;font-family:Arial,sans-serif}.alerta{width:min(440px,90vw);padding:28px;border-radius:14px;background:linear-gradient(145deg,#15415f,#1B262C);border:1px solid rgba(255,255,255,.2);border-left:5px solid #e0a800;box-shadow:0 14px 38px rgba(0,0,0,.35)}.alerta h1{font-size:20px;margin:0 0 12px}.alerta p{line-height:1.5;margin:0 0 20px}.alerta a{display:inline-block;padding:10px 18px;border-radius:8px;background:#3282B8;color:#fff;text-decoration:none;font-weight:600}</style>'
+        . '</head><body><section class="alerta" role="alert"><h1>Se requiere un director activo</h1>'
+        . '<p>No hay ningún trabajador activo con un cargo de Director. Registre o active un director antes de generar la constancia.</p>'
+        . '<a href="/FUNDACITE/vistas/lista_trabajadores.php">Ir al módulo de trabajadores</a></section></body></html>';
+    exit;
 }
 
 registrarBitacora($conexion, 'Constancias', 'Generar PDF', "Generó el PDF de la constancia ID $id_constancia.");
@@ -35,49 +47,25 @@ $nombreTrabajador = trim(
 );
 
 $cedulaTrabajador = (string) ($constancia['cedula'] ?? '');
-$fechaIngreso = $constancia['fecha_ingreso'] ?? '';
+$fechaIngreso = $constancia['fecha_primer_contrato'] ?? '';
 $cargo = $constancia['nombre_cargo'] ?? 'No registrado';
 $tipoPersonal = $constancia['tipo_personal'] ?? '';
 $salario = $constancia['salario_monto'] ?? 0;
-$motivo = trim($constancia['motivo_solicitud'] ?? '');
+$motivo = trim($constancia['motivo'] ?? '');
 $fechaConstancia = $constancia['fecha_constancia'] ?? date('Y-m-d');
-$nombreDirector =
-    $constancia['nombre_director_departamento']
-    ?? 'MSc. KARLA Y. MONTANEZ O';
+$nombreDirector = trim(($directorActivo['apellidos'] ?? '') . ' ' . ($directorActivo['nombres'] ?? ''));
 
-// Cédula de quien imprime (usuario en sesión), con puntos de miles.
-$cedulaDirector = '';
-$generoFirmante = null;
-$idTrabajadorSesion = (int) ($_SESSION['id_trabajador'] ?? 0);
-
-if ($idTrabajadorSesion > 0) {
-    $stmtUsr = $conexion->prepare(
-        'SELECT cedula, tipo_documento, genero FROM TRABAJADOR WHERE id_trabajador = ?'
-    );
-    if ($stmtUsr) {
-        $stmtUsr->bind_param('i', $idTrabajadorSesion);
-        $stmtUsr->execute();
-        $filaUsr = $stmtUsr->get_result()->fetch_assoc();
-        $stmtUsr->close();
-
-        if ($filaUsr) {
-            $generoFirmante = $filaUsr['genero'] ?? null;
-            $prefijo = match ($filaUsr['tipo_documento']) {
-                'Cédula de Extranjería' => 'E-',
-                'Pasaporte'             => 'P-',
-                default                 => 'V-',
-            };
-            $soloDigitos = preg_replace('/\D/', '', (string) $filaUsr['cedula']);
-            $cedulaDirector = $prefijo . ($soloDigitos !== ''
-                ? number_format((int) $soloDigitos, 0, '', '.')
-                : (string) $filaUsr['cedula']);
-        }
-    }
-}
-
-if ($cedulaDirector === '') {
-    die('No se pudo determinar la cédula del usuario que emite la constancia.');
-}
+// La firma debe corresponder a la persona activa que ocupa el cargo de Director.
+$generoFirmante = $directorActivo['genero'] ?? null;
+$prefijo = match ($directorActivo['tipo_documento'] ?? '') {
+    'Cédula de Extranjería' => 'E-',
+    'Pasaporte'             => 'P-',
+    default                 => 'V-',
+};
+$soloDigitosDirector = preg_replace('/\D/', '', (string) ($directorActivo['cedula'] ?? ''));
+$cedulaDirector = $prefijo . ($soloDigitosDirector !== ''
+    ? number_format((int) $soloDigitosDirector, 0, '', '.')
+    : (string) ($directorActivo['cedula'] ?? ''));
 
 /**
  * Devuelve la forma gramatical según el género registrado.

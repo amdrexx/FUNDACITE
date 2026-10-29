@@ -68,6 +68,11 @@ unset($_SESSION['errores'], $_SESSION['exito']);
 
 
 <div class="main">
+        <div class="worker-page">
+        <a class="worker-back" href="lista_trabajadores.php" onclick="if (window.history.length > 1) { event.preventDefault(); window.history.back(); }">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            Volver 
+        </a>
   <form class="form-card" id="formEditarTrabajador" method="POST" action="../controladores/ctrl_trabajador.php">
         <div class="form-grid">
 
@@ -131,11 +136,6 @@ unset($_SESSION['errores'], $_SESSION['exito']);
             </div>
 
             <div class="field">
-                <label>Fecha de Ingreso</label>
-                <input type="text" value="<?php echo htmlspecialchars($dato['fecha_ingreso'] ?? ''); ?>" readonly>
-            </div>
-
-            <div class="field">
                 <label for="hijos">Cantidad de Hijos</label>
                 <input type="number" name="hijos" id="hijos" min="0" max="30" step="1" required
                        value="<?php echo htmlspecialchars($dato['hijos'] ?? '0'); ?>">
@@ -149,8 +149,14 @@ unset($_SESSION['errores'], $_SESSION['exito']);
 
             <div class="field">
                 <label for="nivel_educacion">Nivel de Educación</label>
-                <input type="text" name="nivel_educacion" id="nivel_educacion" maxlength="100" required
-                       value="<?php echo htmlspecialchars($dato['nivel_educacion'] ?? ''); ?>">
+                <select name="nivel_educacion" id="nivel_educacion" required>
+                    <option value="" disabled <?php echo empty($dato['nivel_educacion']) ? 'selected' : ''; ?>>Seleccione el nivel de educación...</option>
+                    <?php foreach (['Técnico Superior Universitario', 'Profesional', 'Especialista', 'Maestría', 'Doctor'] as $nivel): ?>
+                        <option value="<?php echo htmlspecialchars($nivel, ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($dato['nivel_educacion'] ?? '') === $nivel ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($nivel, ENT_QUOTES, 'UTF-8'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
 
             <!-- EDITABLES -->
@@ -181,8 +187,8 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                     <option value="">Seleccione...</option>
                     <option value="Activo" <?php echo (($dato['estatus_laboral'] ?? '') == 'Activo') ? 'selected' : ''; ?>>Activo</option>
                     <option value="Jubilado" <?php echo (($dato['estatus_laboral'] ?? '') == 'Jubilado') ? 'selected' : ''; ?>>Jubilado</option>
-                    <option value="Suspendido" <?php echo (($dato['estatus_laboral'] ?? '') == 'Suspendido') ? 'selected' : ''; ?>>Suspendido</option>
-                    <option value="Retirado" <?php echo (($dato['estatus_laboral'] ?? '') == 'Retirado') ? 'selected' : ''; ?>>Retirado</option>
+                    <option value="Inactivo" <?php echo (($dato['estatus_laboral'] ?? '') == 'Inactivo') ? 'selected' : ''; ?>>Inactivo</option>
+                    
                 </select>
             </div>
 

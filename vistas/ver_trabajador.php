@@ -37,7 +37,6 @@ if (!empty($dato['direccion'])) {
 }
 
 $fechaNacimiento = !empty($dato['fecha']) ? date('d/m/Y', strtotime($dato['fecha'])) : 'No registrada';
-$fechaIngreso = !empty($dato['fecha_ingreso']) ? date('d/m/Y', strtotime($dato['fecha_ingreso'])) : 'No registrada';
 $estatus = $dato['estatus_laboral'] ?? 'No registrado';
 $estatusActivo = mb_strtolower($estatus, 'UTF-8') === 'activo';
 ?>
@@ -50,164 +49,6 @@ $estatusActivo = mb_strtolower($estatus, 'UTF-8') === 'activo';
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
     <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
-    <style>
-        .worker-page {
-            max-width: 960px;
-            width: 100%;
-            margin: 0 auto;
-        }
-
-        .worker-card {
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.22);
-            border-radius: 16px;
-            background: rgba(9, 62, 97, 0.9);
-            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
-        }
-
-        .worker-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 28px 30px 24px;
-            background: rgba(15, 76, 117, 0.72);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .worker-avatar {
-            display: grid;
-            place-items: center;
-            flex: 0 0 52px;
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            color: #fff;
-            background: #3282B8;
-            font-size: 23px;
-        }
-
-        .worker-header-content {
-            min-width: 0;
-            flex: 1;
-        }
-
-        .worker-kicker {
-            margin: 0 0 5px;
-            color: #b8dcf5;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-
-        .worker-header h2 {
-            margin: 0;
-            color: #fff;
-            font-size: clamp(22px, 3vw, 28px);
-            line-height: 1.2;
-            overflow-wrap: anywhere;
-        }
-
-        .worker-status {
-            display: inline-flex;
-            align-items: center;
-            flex-shrink: 0;
-            padding: 8px 12px;
-            border: 1px solid rgba(255, 255, 255, 0.34);
-            border-radius: 999px;
-            color: #fff;
-            background: rgba(50, 130, 184, 0.38);
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .worker-status--active {
-            background: rgba(40, 167, 69, 0.38);
-        }
-
-        .worker-content {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 16px;
-            padding: 24px 30px 30px;
-        }
-
-        .worker-section {
-            padding: 19px;
-            border: 1px solid rgba(255, 255, 255, 0.16);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.06);
-        }
-
-        .worker-section--full {
-            grid-column: 1 / -1;
-        }
-
-        .worker-section h3 {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            margin: 0 0 15px;
-            color: #8ecdf5;
-            font-size: 15px;
-        }
-
-        .worker-details {
-            display: grid;
-            gap: 11px;
-            margin: 0;
-        }
-
-        .worker-detail {
-            display: grid;
-            grid-template-columns: minmax(116px, 0.8fr) minmax(0, 1.35fr);
-            gap: 12px;
-            margin: 0;
-            color: #fff;
-            line-height: 1.45;
-        }
-
-        .worker-detail dt {
-            color: #b8dcf5;
-            font-weight: 600;
-        }
-
-        .worker-detail dd {
-            margin: 0;
-            overflow-wrap: anywhere;
-        }
-
-        @media (max-width: 720px) {
-            .worker-header,
-            .worker-content {
-                padding-left: 20px;
-                padding-right: 20px;
-            }
-
-            .worker-header {
-                align-items: flex-start;
-                flex-wrap: wrap;
-            }
-
-            .worker-status {
-                margin-left: 68px;
-                margin-top: -10px;
-            }
-
-            .worker-content {
-                grid-template-columns: 1fr;
-            }
-
-            .worker-section--full {
-                grid-column: auto;
-            }
-
-            .worker-detail {
-                grid-template-columns: 1fr;
-                gap: 2px;
-            }
-        }
-    </style>
 </head>
 <body>
 
@@ -217,6 +58,10 @@ $estatusActivo = mb_strtolower($estatus, 'UTF-8') === 'activo';
 
 <div class="main">
     <div class="worker-page">
+        <a class="worker-back" href="lista_trabajadores.php" onclick="if (window.history.length > 1) { event.preventDefault(); window.history.back(); }">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            Volver 
+        </a>
         <article class="worker-card">
             <header class="worker-header">
                 <div class="worker-avatar" aria-hidden="true"><i class="bi bi-person"></i></div>
@@ -244,7 +89,10 @@ $estatusActivo = mb_strtolower($estatus, 'UTF-8') === 'activo';
                     <h3><i class="bi bi-briefcase"></i> Información laboral</h3>
                     <dl class="worker-details">
                         <div class="worker-detail"><dt>Estatus laboral</dt><dd><?php echo htmlspecialchars($estatus); ?></dd></div>
-                        <div class="worker-detail"><dt>Fecha de ingreso</dt><dd><?php echo htmlspecialchars($fechaIngreso); ?></dd></div>
+                        <div class="worker-detail"><dt>Cargo</dt><dd><?php echo htmlspecialchars($dato['nombre_cargo'] ?? 'Sin cargo asignado'); ?></dd></div>
+                        <div class="worker-detail"><dt>Nivel de educación</dt><dd><?php echo htmlspecialchars($dato['nivel_educacion'] ?? 'No registrado'); ?></dd></div>
+                        <div class="worker-detail"><dt>Cantidad de hijos</dt><dd><?php echo htmlspecialchars((string) ($dato['hijos'] ?? 0)); ?></dd></div>
+                        <div class="worker-detail worker-detail--service"><dt>Años de servicio en la Administración Pública</dt><dd><?php echo htmlspecialchars((string) ($dato['anos_servicio_administracion_publica'] ?? 0)); ?></dd></div>
                     </dl>
                 </section>
 

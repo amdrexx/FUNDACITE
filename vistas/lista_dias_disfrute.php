@@ -14,16 +14,16 @@ unset(
 );
 
 require_once '../conexion.php';
-require_once '../modelos/clase_solicitud.php';
+require_once '../modelos/clase_dias_disfrute.php';
 require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
 $buscar = trim($_GET['buscar'] ?? '');
 
-$solicitud = new Solicitud($conexion);
+$diasDisfruteModelo = new DiasDisfrute($conexion);
 
-// mostrarDiasDisfrute() ya filtra por SQL (trabajador o código de solicitud)
+// mostrarDiasDisfrute() ya filtra por SQL (trabajador o código del registro)
 // y devuelve un array asociativo, no un resultado mysqli.
-$solicitudes = $solicitud->mostrarDiasDisfrute($buscar);
+$registros = $diasDisfruteModelo->mostrarDiasDisfrute($buscar);
 registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', $buscar !== '' ? "Consultó el listado de días de disfrute (búsqueda: \"$buscar\")." : 'Consultó el listado de días de disfrute.');
 ?>
 <!DOCTYPE html>
@@ -52,7 +52,7 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', $buscar !== '' ? 
                 type="text"
                 name="buscar"
                 class="input-busqueda"
-                placeholder="Buscar por trabajador o código de solicitud..."
+                placeholder="Buscar por trabajador o código..."
                 value="<?php echo htmlspecialchars($buscar); ?>"
             >
             <button type="submit" class="btn-buscar">Buscar</button>
@@ -62,6 +62,10 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', $buscar !== '' ? 
             </a>
 
             <?php if (esAdministradorODirector()): ?>
+            <a href="aprobacion_dias_disfrute.php" class="btn-pdf" style="text-decoration:none;">
+                <i class="bi bi-check2-square"></i>
+                Aprobaciones
+            </a>
             <a
                 href="/FUNDACITE/pdf/reporte_dias_disfrute.php<?= $buscar !== '' ? '?buscar=' . urlencode($buscar) : ''; ?>"
                 class="btn-pdf"
@@ -79,37 +83,33 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', $buscar !== '' ? 
                 <tr>
                     <th>Trabajador</th>
                     <th>Código</th>
-                    <th>Tipo de Solicitud</th>
                     <th>Motivo</th>
+                    <th>Observaciones</th>
                     <th>Fecha Inicio</th>
                     <th>Fecha Finalización</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                <?php if (!empty($solicitudes)): ?>
-                    <?php foreach ($solicitudes as $fila): ?>
+                <?php if (!empty($registros)): ?>
+                    <?php foreach ($registros as $fila): ?>
                         <tr>
                             <td><?php echo htmlspecialchars($fila['trabajador'] ?? ''); ?></td>
-                            <td><?php echo htmlspecialchars($fila['codigo_solicitud'] ?? ''); ?></td>
-                            <td><?php echo htmlspecialchars($fila['tipo_solicitud'] ?? ''); ?></td>
-                            <td><?php echo htmlspecialchars($fila['motivo_solicitud'] ?? ''); ?></td>
+                            <td><?php echo htmlspecialchars($fila['codigo_disfrute'] ?? ''); ?></td>
+                            <td><?php echo htmlspecialchars($fila['motivo'] ?? ''); ?></td>
+                            <td><?php echo nl2br(htmlspecialchars($fila['observaciones'] ?? '', ENT_QUOTES, 'UTF-8')); ?></td>
                             <td><?php echo htmlspecialchars($fila['fecha_inicio'] ?? ''); ?></td>
                             <td><?php echo htmlspecialchars($fila['fecha_finalizacion'] ?? ''); ?></td>
                             <td class="acciones">
 
-                                   <a class="btn-editar" target="_blank" href="/FUNDACITE/pdf/solicitud_dias_disfrute.php?id=<?= urlencode($fila['id_solicitud']) ?>&print=1">
+                                   <a class="btn-editar" target="_blank" href="/FUNDACITE/pdf/dias_disfrute.php?id=<?= urlencode($fila['id_dis']) ?>&print=1">
                                     <i class="bi bi-printer"></i> Imprimir
-                                </a>
-                                <a class="btn-editar" href="editar_solicitud.php?id=<?php echo urlencode($fila['id_solicitud'] ?? ''); ?>">
-                                    <i class="bi bi-pencil-square"></i>
-                                    Editar
                                 </a>
 
                                 <?php if (esAdministradorODirector()): ?>
-                                <form action="../controladores/ctrl_dias_disfrute.php" method="POST" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas eliminar esta solicitud?');">
-                                    <input type="hidden" name="id_solicitud" value="<?php echo htmlspecialchars($fila['id_solicitud'] ?? ''); ?>">
-                                    <button type="submit" name="eliminar_solicitud" class="btn-eliminar" style="border:none; cursor:pointer;">
+                                <form action="../controladores/ctrl_dias_disfrute.php" method="POST" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas eliminar este registro?');">
+                                    <input type="hidden" name="id_dis" value="<?php echo htmlspecialchars($fila['id_dis'] ?? ''); ?>">
+                                    <button type="submit" name="eliminar_disfrute" class="btn-eliminar" style="border:none; cursor:pointer;">
                                         <i class="bi bi-trash"></i>
                                         Eliminar
                                     </button>
@@ -120,7 +120,7 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', $buscar !== '' ? 
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="7" style="text-align:center;">No se encontraron solicitudes registradas.</td>
+                        <td colspan="7" style="text-align:center;">No se encontraron registros.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

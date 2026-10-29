@@ -3,10 +3,10 @@ session_start();
 include_once "includes/guardian.php";
 
 require_once '../conexion.php';
-require_once '../modelos/clase_solicitud.php';
+require_once '../modelos/clase_constancia.php';
 
-$solicitudObj = new Solicitud($conexion);
-$trabajadores = $solicitudObj->listarTrabajadoresActivos();
+$constanciaModelo = new ConstanciaTrabajo($conexion);
+$trabajadores = $constanciaModelo->listarTrabajadoresActivos();
 
 $old = $_SESSION['old_constancia'] ?? null;
 $errores = $_SESSION['errores_constancia'] ?? [];
@@ -55,7 +55,7 @@ unset($_SESSION['errores_constancia'], $_SESSION['exito_constancia']);
 
                 <!-- 1. SELECT de trabajadores -->
                 <div class="field full-width">
-                    <label>1. Seleccionar Trabajador</label>
+                    <label>Seleccionar Trabajador</label>
                     <select name="id_trabajador" id="id_trabajador" required>
                         <option value="">Seleccione un trabajador...</option>
                         <?php foreach ($trabajadores as $t): ?>
@@ -69,13 +69,13 @@ unset($_SESSION['errores_constancia'], $_SESSION['exito_constancia']);
 
                 <!-- 2. Fecha emisión -->
                 <div class="field">
-                    <label>2. Fecha de Emisión</label>
+                    <label>Fecha de Emisión</label>
                     <input type="date" name="fecha" value="<?= date('Y-m-d') ?>" required>
                 </div>
 
                 <!-- 3. Nombre completo (auto-rellenado) -->
                 <div class="field full-width">
-                    <label>3. Apellido y Nombres del Trabajador(a)</label>
+                    <label>Apellido y Nombres del Trabajador(a)</label>
                     <input type="text" id="nombre_completo" class="campo-auto"
                            value="<?= $old ? htmlspecialchars($old['nombre_completo'] ?? '') : '' ?>"
                            readonly placeholder="Se auto-rellena al seleccionar trabajador...">
@@ -83,7 +83,7 @@ unset($_SESSION['errores_constancia'], $_SESSION['exito_constancia']);
 
                 <!-- 4. Cédula (auto-rellenado) -->
                 <div class="field">
-                    <label>4. N° Cédula de Identidad</label>
+                    <label>N° Cédula de Identidad</label>
                     <input type="text" id="cedula_display" class="campo-auto"
                            value="<?= $old ? htmlspecialchars($old['cedula'] ?? '') : '' ?>"
                            readonly placeholder="---">
@@ -91,7 +91,7 @@ unset($_SESSION['errores_constancia'], $_SESSION['exito_constancia']);
 
                 <!-- 5. Cargo (auto-rellenado) -->
                 <div class="field">
-                    <label>5. Cargo Actual</label>
+                    <label>Cargo Actual</label>
                     <input type="text" id="cargo_display" class="campo-auto"
                            value="<?= $old ? htmlspecialchars($old['cargo'] ?? '') : '' ?>"
                            readonly placeholder="---">
@@ -99,15 +99,15 @@ unset($_SESSION['errores_constancia'], $_SESSION['exito_constancia']);
 
                 <!-- 6. Fecha de ingreso (auto-rellenado) -->
                 <div class="field">
-                    <label>6. Fecha de Ingreso</label>
-                    <input type="text" id="fecha_ingreso_display" class="campo-auto"
-                           value="<?= $old ? htmlspecialchars($old['fecha_ingreso'] ?? '') : '' ?>"
+                    <label>Fecha de Ingreso</label>
+                    <input type="text" id="fecha_primer_contrato_display" class="campo-auto"
+                           value="<?= $old ? htmlspecialchars($old['fecha_primer_contrato'] ?? '') : '' ?>"
                            readonly placeholder="---">
                 </div>
 
                 <!-- 7. Salario (auto-rellenado) -->
                 <div class="field">
-                    <label>7. Salario Mensual (Bs.)</label>
+                    <label>Salario Mensual (Bs.)</label>
                     <input type="text" id="salario_display" class="campo-auto"
                            value="<?= $old && isset($old['salario_monto']) ? number_format($old['salario_monto'], 2, ',', '.') : '' ?>"
                            readonly placeholder="---">
@@ -115,29 +115,17 @@ unset($_SESSION['errores_constancia'], $_SESSION['exito_constancia']);
 
                 <!-- 8. Tipo de personal -->
                 <div class="field">
-                    <label>8. Tipo de Personal</label>
-                    <select name="tipo_personal" required>
-                        <option value="" disabled selected>Seleccione...</option>
-                        <option value="Fijo">Empleado Fijo</option>
-                        <option value="Contratado">Contratado</option>
-                        <option value="Obrero">Obrero</option>
-                        <option value="Empleado">Empleado</option>
-                    </select>
+                    <label>Tipo de Personal</label>
+                    <input type="text" id="tipo_personal" name="tipo_personal" class="campo-auto"
+                           value="<?= htmlspecialchars($old['tipo_personal'] ?? '') ?>"
+                           readonly required placeholder="Se completa al seleccionar trabajador...">
                 </div>
 
-                <!-- 9. Nombre Director -->
+                <!-- 9. Motivo -->
                 <div class="field full-width">
-                    <label>9. Nombre del Director de Departamento (quien firma)</label>
-                    <input type="text" name="nombre_director"
-                           value="<?= htmlspecialchars($_POST['nombre_director'] ?? '') ?>"
-                           required placeholder="Ej: MSc. KARLA Y. MONTANEZ O">
-                </div>
-
-                <!-- 10. Motivo -->
-                <div class="field full-width">
-                    <label>10. Motivo de la Solicitud</label>
+                    <label>Motivo</label>
                     <textarea name="motivo" rows="3" required
-                              placeholder="Ej: A solicitud de la parte interesada..."><?= htmlspecialchars($_POST['motivo'] ?? '') ?></textarea>
+                              placeholder="Ej: Indique el motivo de la constancia..."><?= htmlspecialchars($_POST['motivo'] ?? '') ?></textarea>
                 </div>
 
             </div>
@@ -165,8 +153,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var nombreCompleto   = document.getElementById('nombre_completo');
     var cedulaDisplay    = document.getElementById('cedula_display');
     var cargoDisplay     = document.getElementById('cargo_display');
-    var fechaIngresoDisp = document.getElementById('fecha_ingreso_display');
+    var fechaIngresoDisp = document.getElementById('fecha_primer_contrato_display');
     var salarioDisplay   = document.getElementById('salario_display');
+    var tipoPersonal     = document.getElementById('tipo_personal');
 
     selectTrabajador.addEventListener('change', function() {
         var id = this.value;
@@ -177,6 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cargoDisplay.value   = '';
             fechaIngresoDisp.value = '';
             salarioDisplay.value = '';
+            tipoPersonal.value = '';
             return;
         }
 
@@ -187,10 +177,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     nombreCompleto.value   = data.nombre_completo;
                     cedulaDisplay.value    = data.cedula;
                     cargoDisplay.value     = data.cargo;
-                    fechaIngresoDisp.value = data.fecha_ingreso;
+                    fechaIngresoDisp.value = data.fecha_primer_contrato || 'Sin contrato registrado';
                     salarioDisplay.value   = data.salario_monto
                         ? parseFloat(data.salario_monto).toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})
                         : 'No registrado';
+                    tipoPersonal.value = data.tipo_personal || '';
 
                     nombreCompleto.classList.add('campo-ok');
                     setTimeout(function() { nombreCompleto.classList.remove('campo-ok'); }, 1500);

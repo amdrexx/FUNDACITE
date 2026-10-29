@@ -3,10 +3,10 @@ session_start();
 include_once "includes/guardian.php";
 
 require_once '../conexion.php';
-require_once '../modelos/clase_solicitud.php';
+require_once '../modelos/clase_dias_disfrute.php';
 
-$solicitudObj = new Solicitud($conexion);
-$trabajadores = $solicitudObj->listarTrabajadoresActivos();
+$diasDisfruteModelo = new DiasDisfrute($conexion);
+$trabajadores = $diasDisfruteModelo->listarTrabajadoresDiasDisfrute();
 
 $old = $_SESSION['old'] ?? null;
 $errores = $_SESSION['errores'] ?? [];
@@ -53,29 +53,36 @@ unset($_SESSION['errores'], $_SESSION['exito']);
             <div class="form-grid full-width">
                 <h2>DIAS DE DISFRUTE</h2>
 
-                <!-- 1. SELECT de trabajadores -->
+                <!-- 1. SELECT de trabajadores con validación de elegibilidad -->
                 <div class="field full-width">
-                    <label>1. Seleccionar Trabajador</label>
+                    <label>Seleccionar Trabajador</label>
                     <select name="id_trabajador" id="id_trabajador" required>
                         <option value="">Seleccione un trabajador...</option>
                         <?php foreach ($trabajadores as $t): ?>
-                            <option value="<?= $t['id_trabajador'] ?>"
-                                <?= ($old && ($old['id_trabajador'] ?? '') == $t['id_trabajador']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($t['cedula'] . ' - ' . $t['nombre_completo']) ?>
+                            <?php
+                                $elegible = !empty($t['elegible_disfrute']);
+                                $motivoNoElegible = $t['motivo_inelegibilidad'] ?? '';
+                                $seleccionado = $old && ($old['id_trabajador'] ?? '') == $t['id_trabajador'];
+                            ?>
+                            <option value="<?= (int) $t['id_trabajador'] ?>"
+                                <?= !$elegible ? 'disabled' : '' ?>
+                                <?= ($seleccionado && $elegible) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($t['cedula'] . ' - ' . $t['nombre_completo'], ENT_QUOTES, 'UTF-8') ?><?= !$elegible ? ' — No elegible: ' . htmlspecialchars($motivoNoElegible, ENT_QUOTES, 'UTF-8') : '' ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
+
                 </div>
 
                 <!-- 2. Fecha actual -->
                 <div class="field">
-                    <label>2. Fecha</label>
+                    <label>Fecha De Emision</label>
                     <input type="text" value="<?= date('d/m/Y') ?>" readonly>
                 </div>
 
                 <!-- 3. Nombre completo (auto-rellenado) -->
                 <div class="field full-width">
-                    <label>3. Apellido y Nombres del Trabajador(a)</label>
+                    <label>Apellido y Nombres del Trabajador(a)</label>
                     <input type="text" id="nombre_completo" name="nombre_completo" class="campo-auto"
                            value="<?= $old ? htmlspecialchars($old['nombre_completo'] ?? '') : '' ?>"
                            readonly placeholder="Se auto-rellena al seleccionar trabajador...">
@@ -83,7 +90,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
 
                 <!-- 4. Cedula (auto-rellenado) -->
                 <div class="field">
-                    <label>4. N° Cedula de Identidad</label>
+                    <label>N° Cedula de Identidad</label>
                     <input type="text" id="cedula_display" class="campo-auto"
                            value="<?= $old ? htmlspecialchars($old['cedula'] ?? '') : '' ?>"
                            readonly placeholder="---">
@@ -91,7 +98,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
 
                 <!-- 5. Cargo (auto-rellenado) -->
                 <div class="field">
-                    <label>5. Cargo del Solicitante</label>
+                    <label>Cargo del Solicitante</label>
                     <input type="text" id="cargo_display" name="cargo_display" class="campo-auto"
                            value="<?= $old ? htmlspecialchars($old['cargo'] ?? '') : '' ?>"
                            readonly placeholder="---">
@@ -99,46 +106,28 @@ unset($_SESSION['errores'], $_SESSION['exito']);
 
                 <!-- 6. Fecha de Inicio -->
                 <div class="field">
-                    <label>6. Fecha de Inicio</label>
+                    <label>Fecha de Inicio</label>
                     <input type="date" name="fecha_inicio" required>
                 </div>
 
                 <!-- 7. Fecha de Finalizacion -->
                 <div class="field">
-                    <label>7. Fecha de Finalizacion</label>
+                    <label>Fecha de Finalizacion</label>
                     <input type="date" name="fecha_finalizacion">
                 </div>
 
                 <!-- 8. Descripcion / Motivo -->
                 <div class="field full-width">
-                    <label>8. Descripcion / Motivo</label>
+                    <label>Descripcion / Motivo</label>
                     <textarea name="descripcion" rows="3" required
                               placeholder="Detalle del motivo de los dias de disfrute..."><?= htmlspecialchars($old['descripcion'] ?? '') ?></textarea>
                 </div>
 
-                <!-- 9. Desde -->
-                <div class="field">
-                    <label>9. Desde</label>
-                    <input type="date" name="desde" required>
-                </div>
 
-                <!-- 10. Hasta -->
-                <div class="field">
-                    <label>10. Hasta</label>
-                    <input type="date" name="hasta" required>
-                </div>
-
-                <!-- 11. Firma del trabajador -->
-                <div class="field">
-                    <label>11. Firma del Trabajador(a)</label>
-                    <input type="text" readonly class="campo-auto">
-                </div>
-
-                <center>APROBACION Y AUTORIZACION (PARA SER LLENADO POR EL SUPERVISOR INMEDIATO)</center>
 
                 <!-- 12. Permiso remunerado -->
                 <div class="field">
-                    <label>12. Permiso</label>
+                    <label>Permiso</label>
                     <div class="radio-group">
                         <label class="radio-option">
                             <input type="radio" name="tipo_remuneracion" value="remunerado">
@@ -153,7 +142,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
 
                 <!-- 13. Se requiere suplente -->
                 <div class="field">
-                    <label>13. Se requiere suplente</label>
+                    <label>Se requiere suplente</label>
                     <div class="radio-group">
                         <label class="radio-option">
                             <input type="radio" name="requiere_suplente" value="si">
@@ -164,34 +153,18 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                             No
                         </label>
                     </div>
-                    <small>De ser afirmativo, favor anexar perfil requerido</small>
+
                 </div>
 
-                <!-- 14. Firma del supervisor -->
-                <div class="field">
-                    <label>14. Firma del Supervisor Inmediato</label>
-                    <input type="text" readonly class="campo-auto">
-                </div>
+
 
                 <!-- 15. Observaciones -->
                 <div class="field full-width">
-                    <label>15. Observaciones</label>
-                    <textarea name="observaciones" rows="3"><?= htmlspecialchars($old['observaciones'] ?? '') ?></textarea>
+                    <label>Observaciones</label>
+                    <textarea name="observaciones" rows="3" required><?= htmlspecialchars($old['observaciones'] ?? '') ?></textarea>
                 </div>
 
-                <center>COORDINACION DE RECURSOS HUMANOS</center>
 
-                <!-- 16. Recibido por -->
-                <div class="field">
-                    <label>16. Recibido por</label>
-                    <input type="text" readonly class="campo-auto">
-                </div>
-
-                <!-- 17. Procesado por -->
-                <div class="field">
-                    <label>17. Procesado por</label>
-                    <input type="text" readonly class="campo-auto">
-                </div>
 
             </div>
 

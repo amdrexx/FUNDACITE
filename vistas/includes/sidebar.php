@@ -13,7 +13,7 @@ style="display:flex;flex-direction:column;">
         <li>
             <a href="/FUNDACITE/vistas/lista_trabajadores.php" class="submenu-link">
                 <i class="bi bi-person-workspace"></i>
-                <b>TRABAJADORES</b>
+                <b>TRABAJADOR</b>
             </a>
         </li>
 
@@ -22,14 +22,6 @@ style="display:flex;flex-direction:column;">
             <a href="/FUNDACITE/vistas/registrar_cargo.php" class="submenu-link">
                 <i class="bi bi-briefcase-fill"></i>
                 <b>CARGO</b>
-            </a>
-        </li>
-
-
-        <li>
-            <a href="/FUNDACITE/vistas/asignar_cargo.php" class="submenu-link">
-                <i class="bi bi-briefcase-fill"></i> 
-                <b>ASIGNAR CARGO</b>
             </a>
         </li>
        
@@ -73,7 +65,7 @@ style="display:flex;flex-direction:column;">
 
         <?php if (esAdministradorODirector()): ?>
         <li>
-            <a href="/FUNDACITE/vistas/registrar_contrato.php" class="submenu-link">
+            <a href="/FUNDACITE/vistas/lista_contrato.php" class="submenu-link">
                 <i class="bi bi-file-earmark-text-fill"></i>
                 <b>CONTRATOS</b>
             </a>
@@ -105,29 +97,23 @@ style="display:flex;flex-direction:column;">
         </li>
         
         <?php if (esAdministradorODirector()): ?>
-        <li class="submenu" id="menuSolicitudes">
-            <div class="submenu-btn" id="btnSolicitudes">
-                <span>
-                    <i class="bi bi-calendar2-check-fill"></i>
-                    <b>SOLICITUDES</b>
-                </span>
-                <i class="bi bi-chevron-down arrow"></i>
-            </div>
-
-            <ul class="submenu-content" id="submenuSolicitudes">
-                <li>
-                    <a href="/FUNDACITE/vistas/lista_constancias.php" class="submenu-link">
-                        <i class="bi bi-file-earmark-medical"></i>
-                        Constancia de Trabajo
-                    </a>
-                </li>
-                <li>
-                    <a href="/FUNDACITE/vistas/lista_dias_disfrute.php" class="submenu-link">
-                        <i class="bi bi-calendar2-heart"></i>
-                        Dias de Disfrute
-                    </a>
-                </li>
-            </ul>
+        <li>
+            <a href="/FUNDACITE/vistas/lista_constancias.php" class="submenu-link">
+                <i class="bi bi-file-earmark-medical"></i>
+                <b>CONSTANCIA DE TRABAJO</b>
+            </a>
+        </li>
+        <li>
+            <a href="/FUNDACITE/vistas/lista_dias_disfrute.php" class="submenu-link">
+                <i class="bi bi-calendar2-heart"></i>
+                <b>DÍAS DE DISFRUTE</b>
+            </a>
+        </li>
+        <li>
+            <a href="/FUNDACITE/vistas/aprobacion_dias_disfrute.php" class="submenu-link">
+                <i class="bi bi-check2-square"></i>
+                <b>APROBACIÓN DE DISFRUTE</b>
+            </a>
         </li>
         <?php endif; ?>
        

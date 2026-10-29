@@ -5,10 +5,10 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/../vistas/includes/guardian.php';
 require_once '../conexion.php';
-require_once '../modelos/clase_solicitud.php';
+require_once '../modelos/clase_constancia.php';
 require_once __DIR__ . '/helpers/bitacora_helper.php';
 
-$constanciaModelo = new Solicitud($conexion);
+$constanciaModelo = new ConstanciaTrabajo($conexion);
 
 // Alias esperado por otras vistas (p.ej. ver_constancia.php) que llaman
 // a $controladorConstancia->buscarPorId(...)
@@ -72,19 +72,15 @@ if ($accion === 'limpiar') {
 if ($accion === 'guardar') {
 
     $id_trabajador     = (int) ($_POST['id_trabajador'] ?? 0);
-    $nombre_director   = trim($_POST['nombre_director'] ?? '');
     $tipo_personal     = trim($_POST['tipo_personal'] ?? '');
     $fecha             = trim($_POST['fecha'] ?? '');
     $motivo            = trim($_POST['motivo'] ?? '');
 
-    $TIPOS_PERSONAL_VALIDOS = ['Fijo', 'Contratado', 'Obrero', 'Empleado'];
+    $TIPOS_PERSONAL_VALIDOS = ['Fijo', 'Contratado', 'Obrero', 'Empleado', 'Jubilado'];
     $errores = [];
 
     if ($id_trabajador <= 0) {
         $errores[] = 'Debes seleccionar un trabajador.';
-    }
-    if ($nombre_director === '') {
-        $errores[] = 'El nombre del director es obligatorio.';
     }
     if (!in_array($tipo_personal, $TIPOS_PERSONAL_VALIDOS, true)) {
         $errores[] = 'Debes seleccionar un tipo de personal válido.';
@@ -93,7 +89,7 @@ if ($accion === 'guardar') {
         $errores[] = 'La fecha de emisión es obligatoria.';
     }
     if ($motivo === '') {
-        $errores[] = 'El motivo de la solicitud es obligatorio.';
+        $errores[] = 'El motivo es obligatorio.';
     }
 
     if (!empty($errores)) {
@@ -102,15 +98,13 @@ if ($accion === 'guardar') {
         exit;
     }
 
-    $codigo_solicitud = 'SOL-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(2)), 0, 4));
+    $codigo_constancia = 'CON-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(2)), 0, 4));
 
     try {
-        $resultado = $constanciaModelo->registrar(
+        $resultado = $constanciaModelo->registrarConstancia(
             $id_trabajador,
-            $codigo_solicitud,
+            $codigo_constancia,
             $motivo,
-            $fecha,
-            $nombre_director,
             $tipo_personal,
             $fecha
         );
@@ -120,7 +114,7 @@ if ($accion === 'guardar') {
             // Mensaje de éxito para mostrar en la lista de constancias
             $_SESSION['exito_edicion'] = 'Constancia registrada correctamente.';
 
-            registrarBitacora($conexion, 'Constancias', 'Crear', "Registró la constancia (código $codigo_solicitud) para el trabajador \"" . bitacoraNombreDe($conexion, 'trabajador', $id_trabajador) . "\".");
+            registrarBitacora($conexion, 'Constancias', 'Crear', "Registró la constancia (código $codigo_constancia) para el trabajador \"" . bitacoraNombreDe($conexion, 'trabajador', $id_trabajador) . "\".");
 
             unset($_SESSION['old_constancia']);
 
@@ -147,12 +141,11 @@ if ($accion === 'actualizar') {
 
     $id_constancia     = (int) ($_POST['id_constancia'] ?? 0);
     $id_trabajador     = (int) ($_POST['id_trabajador'] ?? 0);
-    $nombre_director   = trim($_POST['nombre_director'] ?? '');
     $tipo_personal     = trim($_POST['tipo_personal'] ?? '');
     $fecha             = trim($_POST['fecha'] ?? '');
     $motivo            = trim($_POST['motivo'] ?? '');
 
-    $TIPOS_PERSONAL_VALIDOS = ['Fijo', 'Contratado', 'Obrero', 'Empleado'];
+    $TIPOS_PERSONAL_VALIDOS = ['Fijo', 'Contratado', 'Obrero', 'Empleado', 'Jubilado'];
     $errores = [];
 
     if ($id_constancia <= 0) {
@@ -161,9 +154,6 @@ if ($accion === 'actualizar') {
     if ($id_trabajador <= 0) {
         $errores[] = 'Debes seleccionar un trabajador.';
     }
-    if ($nombre_director === '') {
-        $errores[] = 'El nombre del director es obligatorio.';
-    }
     if (!in_array($tipo_personal, $TIPOS_PERSONAL_VALIDOS, true)) {
         $errores[] = 'Debes seleccionar un tipo de personal válido.';
     }
@@ -171,7 +161,7 @@ if ($accion === 'actualizar') {
         $errores[] = 'La fecha de emisión es obligatoria.';
     }
     if ($motivo === '') {
-        $errores[] = 'El motivo de la solicitud es obligatorio.';
+        $errores[] = 'El motivo es obligatorio.';
     }
 
     if (!empty($errores)) {
@@ -187,8 +177,6 @@ if ($accion === 'actualizar') {
             $id_constancia,
             $id_trabajador,
             $motivo,
-            $fecha,
-            $nombre_director,
             $tipo_personal,
             $fecha
         );

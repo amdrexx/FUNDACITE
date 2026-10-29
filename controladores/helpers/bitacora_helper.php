@@ -152,25 +152,21 @@ if (!function_exists('bitacoraDefinicion')) {
                                LEFT JOIN CARGO c ON c.id_cargo = k.id_cargo
                                WHERE k.id_contrato = ?",
 
-                // Solicitud (también cubre "días de disfrute", que cuelgan de una solicitud)
-                'solicitud' => "SELECT CONCAT(s.tipo_solicitud, ' ', IFNULL(s.codigo_solicitud, ''), ' de ',
-                                              t.nombres, ' ', t.apellidos) AS _nombre,
-                                       $trabajador AS `Trabajador`, s.tipo_solicitud AS `Tipo`,
-                                       s.motivo_solicitud AS `Motivo`,
-                                       s.fecha_inicio AS `Fecha de inicio`, s.fecha_finalizacion AS `Fecha de fin`
-                                FROM SOLICITUD s
-                                LEFT JOIN TRABAJADOR t ON t.id_trabajador = s.id_trabajador
-                                WHERE s.id_solicitud = ?",
+                'dias_disfrute' => "SELECT CONCAT('días de disfrute ', IFNULL(d.codigo_disfrute, ''), ' de ',
+                                                  t.nombres, ' ', t.apellidos) AS _nombre,
+                                           $trabajador AS `Trabajador`, d.motivo AS `Motivo`,
+                                           d.fecha_inicio AS `Fecha de registro`, d.fecha_finalizacion AS `Fecha final`
+                                    FROM DISFRUTE_DE_VACACIONES d
+                                    LEFT JOIN TRABAJADOR t ON t.id_trabajador = d.id_trabajador
+                                    WHERE d.id_dis = ?",
 
-                'constancia' => "SELECT CONCAT('constancia ', IFNULL(s.codigo_solicitud, ''), ' de ',
+                'constancia' => "SELECT CONCAT('constancia ', IFNULL(k.codigo_constancia, ''), ' de ',
                                                t.nombres, ' ', t.apellidos) AS _nombre,
                                         $trabajador AS `Trabajador`,
-                                        k.nombre_director_departamento AS `Director`,
                                         k.tipo_personal AS `Tipo de personal`,
-                                        k.fecha AS `Fecha`, s.motivo_solicitud AS `Motivo`
+                                        k.fecha AS `Fecha`, k.motivo AS `Motivo`
                                  FROM CONSTANCIA_DE_TRABAJO k
-                                 LEFT JOIN SOLICITUD s ON s.id_solicitud = k.id_solicitud
-                                 LEFT JOIN TRABAJADOR t ON t.id_trabajador = s.id_trabajador
+                                 LEFT JOIN TRABAJADOR t ON t.id_trabajador = k.id_trabajador
                                  WHERE k.id_constancia = ?",
             ];
         }
@@ -285,7 +281,6 @@ if (!function_exists('bitacoraModuloDeUrl')) {
             'contrato'     => 'Contratos',
             'constancia'   => 'Constancias',
             'dias_disfrute'=> 'Días de Disfrute',
-            'solicitud'    => 'Solicitudes',
             'salario'      => 'Salarios',
             'prima'        => 'Primas',
             'asignar_cargo'=> 'Asignación de Cargos',

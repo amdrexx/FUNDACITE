@@ -7,8 +7,15 @@ require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
 $buscar = trim($_GET['buscar'] ?? '');
 
+// Mensajes enviados por ctrl_primas.php (los usa includes/alerta.php)
+$errores = $_SESSION['errores'] ?? [];
+$exito   = $_SESSION['exito'] ?? '';
+$exito_edicion = $_SESSION['exito_edicion'] ?? '';
+unset($_SESSION['errores'], $_SESSION['exito'], $_SESSION['exito_edicion']);
+if (!is_array($errores)) { $errores = [$errores]; }
+
 $prima = new Prima($conexion);
-$primas = $prima->mostrarPrimas($buscar);
+$primas = $prima->listar($buscar);
 registrarBitacora($conexion, 'Primas', 'Consultar', $buscar !== '' ? "Consultó el listado de primas (búsqueda: \"$buscar\")." : 'Consultó el listado de primas.');
 ?>
 <!DOCTYPE html>
@@ -37,7 +44,7 @@ registrarBitacora($conexion, 'Primas', 'Consultar', $buscar !== '' ? "Consultó 
                     type="text"
                     name="buscar"
                     class="input-busqueda"
-                    placeholder="Buscar por tipo de prima o estado..."
+                    placeholder="Buscar por trabajador, cédula, tipo o condición..."
                     value="<?= htmlspecialchars($buscar) ?>"
                 >
                 <button type="submit" class="btn-buscar">Buscar</button>
@@ -62,10 +69,15 @@ registrarBitacora($conexion, 'Primas', 'Consultar', $buscar !== '' ? "Consultó 
             <table class="tabla">
                 <thead>
                     <tr>
+                        <th>Cédula</th>
+                        <th>Trabajador</th>
                         <th>Tipo prima</th>
-                        <th>porcentaje</th>
-                        <th>Fecha creaciòn</th>
-                        <th>Estado</th>
+                        <th>Condición</th>
+                        <th>Porcentaje</th>
+                        <th>Monto (Bs.)</th>
+                        <th>Monto total (Bs.)</th>
+                        <th>Fecha registro</th>
+                        <th>Estatus</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -74,18 +86,28 @@ registrarBitacora($conexion, 'Primas', 'Consultar', $buscar !== '' ? "Consultó 
 
     <?php foreach ($primas as $p): ?>
         <tr>
-             <td><?= htmlspecialchars($p['tipo_prima'] ?? '') ?></td>
+<td><?= htmlspecialchars($p['cedula'] ?? '') ?></td>
+
+<td><?= htmlspecialchars($p['nombre_completo'] ?? '') ?></td>
+
+<td><?= htmlspecialchars($p['tipo_prima'] ?? '') ?></td>
+
+<td><?= htmlspecialchars($p['condicion'] ?? '') ?></td>
 
 <td><?= htmlspecialchars($p['porcentaje'] ?? '') ?>%</td>
 
+<td><?= number_format((float) ($p['monto'] ?? 0), 2, ',', '.') ?></td>
+
+<td><?= number_format((float) ($p['monto_total'] ?? 0), 2, ',', '.') ?></td>
+
 <td><?= htmlspecialchars($p['fecha'] ?? '') ?></td>
 
-<td><?= htmlspecialchars($p['estado'] ?? '') ?></td>
+<td><span style="display:inline-block;padding:4px 9px;border-radius:12px;font-weight:600;color:#fff;background:<?= ($p['estatus'] ?? 'Activo') === 'Activo' ? '#198754' : '#6c757d' ?>;"><?= htmlspecialchars($p['estatus'] ?? 'Activo') ?></span></td>
 
             <td class="acciones">
 
                 <a class="btn-editar"
-                   href="../controladores/ctrl_primas.php?accion=editar&id=<?= $p['id_prima'] ?>">
+                   href="registrar_prima.php?accion=editar&id=<?= (int) $p['id_prima'] ?>">
                     Editar
                 </a>
 
@@ -110,7 +132,7 @@ registrarBitacora($conexion, 'Primas', 'Consultar', $buscar !== '' ? "Consultó 
 <?php else: ?>
 
     <tr>
-        <td colspan="5" style="text-align:center;">
+        <td colspan="9" style="text-align:center;">
             No hay primas registradas.
         </td>
     </tr>

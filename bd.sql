@@ -67,7 +67,6 @@ CREATE TABLE TRABAJADOR (
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
     fecha_nacimiento DATE NOT NULL,
-    fecha_ingreso DATE NOT NULL,
     hijos TINYINT UNSIGNED NOT NULL DEFAULT 0,
     anos_servicio_administracion_publica SMALLINT UNSIGNED NOT NULL DEFAULT 0,
     nivel_educacion VARCHAR(100),
@@ -94,6 +93,8 @@ CREATE TABLE TRABAJADOR (
 
 -- ================================================================================
 -- 3. TABLAS DE PROCESOS Y GESTIÓN LABORAL
+-- Para actualizar una instalación anterior, ejecutar primero
+-- migrar_constancia_disfrute.sql; este archivo define el esquema para una BD nueva.
 -- ================================================================================
 
 CREATE TABLE CONTRATO (
@@ -101,6 +102,7 @@ CREATE TABLE CONTRATO (
     id_trabajador INT UNSIGNED NOT NULL,
     id_cargo INT UNSIGNED NOT NULL,
     tipo_contrato VARCHAR(50) NOT NULL,
+    tipo_personal VARCHAR(50) NOT NULL,
     fecha_contrato DATE NOT NULL,
     fecha_fin DATE NULL,
     lugar_trabajo VARCHAR(255) NOT NULL,
@@ -115,45 +117,35 @@ CREATE TABLE CONTRATO (
     CONSTRAINT chk_periodo_contrato CHECK (fecha_fin IS NULL OR fecha_fin >= fecha_contrato)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE SOLICITUD (
-    id_solicitud INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    id_trabajador INT UNSIGNED NOT NULL,
-    codigo_solicitud VARCHAR(50),
-    tipo_solicitud VARCHAR(50) NOT NULL,
-    motivo_solicitud TEXT,
-    fecha_inicio DATE NOT NULL,
-    fecha_finalizacion DATE,
-    PRIMARY KEY (id_solicitud),
-    INDEX idx_solicitud_trabajador (id_trabajador),
-    INDEX idx_solicitud_tipo (tipo_solicitud),
-    FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR(id_trabajador) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT chk_tipo_solicitud CHECK (tipo_solicitud IN ('Vacaciones', 'Permiso', 'Constancia de trabajo', 'Reposo', 'Otro')),
-    CONSTRAINT chk_fechas_solicitud CHECK (fecha_finalizacion IS NULL OR fecha_finalizacion >= fecha_inicio)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 CREATE TABLE CONSTANCIA_DE_TRABAJO (
     id_constancia INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    id_solicitud INT UNSIGNED NOT NULL,
-    nombre_director_departamento VARCHAR(150),
-    tipo_personal VARCHAR(50),
+    id_trabajador INT UNSIGNED NOT NULL,
+    codigo_constancia VARCHAR(50) NOT NULL,
+    motivo TEXT NOT NULL,
+    tipo_personal VARCHAR(50) NOT NULL,
     fecha DATE NOT NULL,
     PRIMARY KEY (id_constancia),
-    INDEX idx_constancia_solicitud (id_solicitud),
-    FOREIGN KEY (id_solicitud) REFERENCES SOLICITUD(id_solicitud) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT chk_tipo_personal CHECK (tipo_personal IS NULL OR tipo_personal IN ('Fijo', 'Contratado', 'Obrero', 'Empleado'))
+    INDEX idx_constancia_codigo (codigo_constancia),
+    INDEX idx_constancia_trabajador (id_trabajador),
+    FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR(id_trabajador) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT chk_tipo_personal CHECK (tipo_personal IN ('Fijo', 'Contratado', 'Obrero', 'Empleado', 'Jubilado'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE DISFRUTE_DE_VACACIONES (
     id_dis INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    id_solicitud INT UNSIGNED NOT NULL,
-    nombre_cargo VARCHAR(100),
-    descripcion TEXT,
-    desde DATE NOT NULL,
-    hasta DATE NOT NULL,
+    id_trabajador INT UNSIGNED NOT NULL,
+    codigo_disfrute VARCHAR(50) NOT NULL,
+    motivo TEXT NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_finalizacion DATE NULL,
+    observaciones TEXT NOT NULL,
+    estado ENUM('Pendiente', 'Aprobado', 'Desaprobado') NOT NULL DEFAULT 'Pendiente',
     PRIMARY KEY (id_dis),
-    INDEX idx_dis_vacaciones_solicitud (id_solicitud),
-    FOREIGN KEY (id_solicitud) REFERENCES SOLICITUD(id_solicitud) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT chk_periodo_vacaciones CHECK (hasta >= desde)
+    INDEX idx_disfrute_codigo (codigo_disfrute),
+    INDEX idx_disfrute_trabajador (id_trabajador),
+    INDEX idx_disfrute_estado (estado),
+    FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR(id_trabajador) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT chk_fechas_disfrute CHECK (fecha_finalizacion IS NULL OR fecha_finalizacion >= fecha_inicio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ================================================================================
@@ -203,20 +195,48 @@ CREATE TABLE SALARIO (
     CONSTRAINT chk_salario_monto CHECK (monto >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- PRIMA: primas asignadas por trabajador. Esta estructura reemplaza el catálogo
+-- genérico PRIMA del ZIP independiente, que no guardaba trabajador ni monto.
+-- Mantener UNIQUE(id_trabajador, tipo_prima) para evitar duplicados por trabajador.
 CREATE TABLE PRIMA (
     id_prima INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    id_trabajador INT UNSIGNED NOT NULL,
     tipo_prima VARCHAR(100) NOT NULL,
-    porcentaje DECIMAL(10,2) NOT NULL,
-    estado VARCHAR(20) NOT NULL DEFAULT 'Activo',
+    condicion VARCHAR(150) NOT NULL DEFAULT '',
+    porcentaje DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    monto DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    monto_total DECIMAL(12,2) NOT NULL DEFAULT 0.00,
     fecha DATE NOT NULL,
+    estatus ENUM('Activo', 'Inactivo') NOT NULL DEFAULT 'Activo',
     PRIMARY KEY (id_prima),
-    UNIQUE KEY uq_prima_tipo_prima (tipo_prima),
-    CONSTRAINT chk_prima_estado CHECK (estado IN ('Activo', 'Inactivo')),
-    CONSTRAINT chk_prima_porcentaje CHECK (porcentaje >= 0)
+    UNIQUE KEY uq_prima_trabajador_tipo (id_trabajador, tipo_prima),
+    CONSTRAINT fk_prima_trabajador FOREIGN KEY (id_trabajador)
+        REFERENCES TRABAJADOR(id_trabajador) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ================================================================================
--- 6. VISTAS
+-- 6. TABLA DE AUDITORÍA
+-- ================================================================================
+
+CREATE TABLE BITACORA (
+    id_bitacora INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    id_usuario INT UNSIGNED NULL,
+    usuario VARCHAR(100) NULL,
+    modulo VARCHAR(100) NOT NULL,
+    accion VARCHAR(50) NOT NULL,
+    descripcion VARCHAR(500) NULL,
+    fecha_hora DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_bitacora),
+    INDEX idx_bitacora_usuario (id_usuario),
+    INDEX idx_bitacora_modulo (modulo),
+    INDEX idx_bitacora_fecha (fecha_hora),
+    CONSTRAINT fk_bitacora_usuario
+        FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario)
+        ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ================================================================================
+-- 7. VISTAS
 -- ================================================================================
 
 CREATE OR REPLACE VIEW V_TRABAJADOR_DETALLE AS
@@ -226,7 +246,6 @@ SELECT
     nombres,
     apellidos,
     fecha_nacimiento,
-    fecha_ingreso,
     TIMESTAMPDIFF(YEAR, fecha_nacimiento, CURDATE()) AS edad,
     genero,
     estado_civil,
@@ -245,7 +264,6 @@ SELECT
     t.nombres,
     t.apellidos,
     t.fecha_nacimiento,
-    t.fecha_ingreso,
     TIMESTAMPDIFF(YEAR, t.fecha_nacimiento, CURDATE()) AS edad,
     t.genero,
     t.estado_civil,
@@ -265,8 +283,6 @@ LEFT JOIN PARROQUIA p ON d.cod_par = p.cod_par
 LEFT JOIN MUNICIPIO m ON p.cod_muni = m.cod_muni
 LEFT JOIN ESTADO e ON m.cod_est = e.cod_est;
 
-
-
 -- ================================================================================
 -- 7. DATOS INICIALES
 -- ================================================================================
@@ -274,7 +290,8 @@ LEFT JOIN ESTADO e ON m.cod_est = e.cod_est;
 INSERT INTO CARGO (nombre_cargo) VALUES
 ('Administrador'),
 ('Analista'),
-('Técnico');
+('Técnico'),
+('Presidente');
 
 
 INSERT INTO ESTADO (nombre) VALUES
@@ -1791,7 +1808,6 @@ INSERT INTO TRABAJADOR (
     nombres,
     apellidos,
     fecha_nacimiento,
-    fecha_ingreso,
     genero,
     estado_civil,
     nacionalidad,
@@ -1806,7 +1822,6 @@ INSERT INTO TRABAJADOR (
     'Admin',
     'Sistema',
     '1980-01-01',
-    CURDATE(),
     'Masculino',
     'Soltero(a)',
     'Venezolano(a)',
@@ -1846,30 +1861,3 @@ INNER JOIN MUNICIPIO AS municipio
     ON estado.cod_est = municipio.cod_est
 
 ORDER BY estado.cod_est, municipio.cod_muni;
-
--- 6. BITÁCORA DE AUDITORÍA DEL SISTEMA
--- ================================================================================
--- Registra las acciones relevantes que realizan los usuarios dentro del
--- sistema (creación, edición, eliminación, inicio/cierre de sesión, consultas
--- de listados y generación de reportes/PDF), para fines de trazabilidad y
--- auditoría.
--- ================================================================================
-
-CREATE TABLE BITACORA (
-    id_bitacora INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    id_usuario INT UNSIGNED NULL,
-    usuario VARCHAR(100) NULL,
-    modulo VARCHAR(100) NOT NULL,
-    accion VARCHAR(50) NOT NULL,
-    descripcion VARCHAR(500) NULL,
-    fecha_hora DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id_bitacora),
-    INDEX idx_bitacora_usuario (id_usuario),
-    INDEX idx_bitacora_modulo (modulo),
-    INDEX idx_bitacora_fecha (fecha_hora),
-    CONSTRAINT fk_bitacora_usuario
-        FOREIGN KEY (id_usuario)
-        REFERENCES USUARIO(id_usuario)
-        ON DELETE SET NULL
-        ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

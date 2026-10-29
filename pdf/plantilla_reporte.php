@@ -2,7 +2,7 @@
 // ============================================================================
 // ARCHIVO: pdf/plantilla_reporte.php
 // DESCRIPCIÓN: Plantilla institucional compartida para los reportes PDF en
-//              formato de listado (trabajadores, usuarios y solicitudes).
+//              formato de listado (trabajadores, usuarios y registros).
 //              Cada generador concreto consulta su información y llama a
 //              generarReportePdf() con el título, las columnas y las filas.
 // ============================================================================
@@ -351,7 +351,7 @@ if (!function_exists('reporteImagenBase64')) {
             $dompdf->stream($nombreArchivo, ['Attachment' => false]);
             exit;
         } catch (\Throwable $e) {
-            // Mismo criterio de solicitud_dias_disfrute.php: nunca se muestra
+            // Mismo criterio del PDF de días de disfrute: nunca se muestra
             // HTML a medias; se informa el error real como texto plano.
             while (ob_get_level() > 0) {
                 ob_end_clean();
