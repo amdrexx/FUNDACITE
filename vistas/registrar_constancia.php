@@ -71,8 +71,8 @@ unset($_SESSION['errores_constancia'], $_SESSION['exito_constancia']);
                 <div class="field full-width">
                     <label for="tipo_constancia">Tipo de constancia</label>
                     <select name="tipo_constancia" id="tipo_constancia" required>
-                        <option value="primas_detalladas" <?= (($old['tipo_constancia'] ?? '') === 'primas_detalladas') ? 'selected' : '' ?>>Constancia con primas detalladas</option>
                         <option value="normal" <?= (($old['tipo_constancia'] ?? 'normal') === 'normal') ? 'selected' : '' ?>>Constancia normal</option>
+                        <option value="primas_detalladas" <?= (($old['tipo_constancia'] ?? '') === 'primas_detalladas') ? 'selected' : '' ?>>Constancia con primas detalladas</option>
                     </select>
                 </div>
 

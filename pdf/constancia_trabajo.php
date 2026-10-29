@@ -579,18 +579,69 @@ body {
 
 // El formato normal reproduce la distribución de la referencia: título espaciado,
 // párrafo introductorio, conceptos mensuales, total de asignación y alimentación.
-$filasConceptos = '<tr><td>SUELDO BÁSICO</td><td class="monto">' . e(number_format((float)$salario, 2, ',', '.')) . '</td></tr>';
-foreach ($primasDetalladas as $prima) {
-    $nombrePrima = mb_strtoupper(trim((string)($prima['tipo_prima'] ?? 'PRIMA')), 'UTF-8');
-    if (!empty($prima['porcentaje']) && (float)$prima['porcentaje'] > 0) {
-        $nombrePrima .= ' (' . rtrim(rtrim(number_format((float)$prima['porcentaje'], 2, ',', '.'), '0'), ',') . '%)';
-    }
-    $filasConceptos .= '<tr><td>' . e($nombrePrima) . '</td><td class="monto">' . e(number_format((float)($prima['monto'] ?? 0), 2, ',', '.')) . '</td></tr>';
-}
+// La constancia normal muestra únicamente el monto total de la remuneración;
+// el desglose de salario y primas queda reservado al formato detallado.
+$totalNumero = number_format($totalDevengado, 2, ',', '.');
+$totalLetras = numeroALetras($totalDevengado);
 $alimentacionTexto = numeroALetras($alimentacion);
-$htmlNormal = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><style>
-@page{margin:24px 24px 28px}*{box-sizing:border-box}body{font-family:DejaVu Sans,sans-serif;background:#1d1d1b;color:#f8f8f8;font-size:11pt;line-height:1.18;margin:0;padding:0}.titulo{text-align:center;font-size:24pt;font-weight:bold;letter-spacing:7px;margin:0 0 35px;padding-top:0}.intro{text-align:justify;margin:0 0 35px}.conceptos{width:82%;margin:0 auto 18px;border-collapse:collapse}.conceptos th{font-weight:bold;text-align:center;padding:0 4px 3px}.conceptos td{padding:2px 4px;vertical-align:top}.conceptos .monto{text-align:right;white-space:nowrap;width:32%}.total td{font-weight:bold;padding-top:10px}.total .linea{border-top:1px solid #eee}.alimentacion{text-align:justify;margin:20px 0 34px}.cierre{text-align:justify;margin-top:0}
-</style></head><body><h1 class="titulo">CONSTANCIA</h1><p class="intro">Quien suscribe, <strong>' . e($cargoFirmante) . '</strong> de la <strong>FUNDACIÓN PARA EL DESARROLLO DE LA CIENCIA Y TECNOLOGÍA (FUNDACITE YARACUY)</strong>, hace constar que ' . e($ciudadanoTexto) . ' <strong>' . e($nombreTrabajador) . '</strong>, titular de la cédula de identidad <strong>' . e($prefijo . $cedulaTrabajador) . '</strong>, presta sus servicios en este organismo desde el <strong>' . e(fechaCorta($fechaIngreso)) . '</strong>, en calidad de <strong>' . e($tipoPersonal) . '</strong>, con una remuneración mensual discriminada de la siguiente manera:</p><table class="conceptos"><thead><tr><th>CONCEPTOS</th><th>MENSUAL Bs.</th></tr></thead><tbody>' . $filasConceptos . '<tr class="total"><td>TOTAL ASIGNACIÓN</td><td class="monto linea">' . e(number_format($totalDevengado, 2, ',', '.')) . '</td></tr></tbody></table><p class="alimentacion">Percibe por beneficio de alimentación la cantidad de ' . e(mb_strtolower($alimentacionTexto, 'UTF-8')) . ' bolívares exactos (Bs. ' . e(number_format($alimentacion, 2, ',', '.')) . ') mensuales.</p><p class="cierre">Constancia que se expide a solicitud de la parte interesada' . (!empty($motivo) ? ', ' . e($motivo) : '') . ', en Independencia, a los ' . e(fechaConstanciaLarga($fechaConstancia)) . '.</p></body></html>';
+
+$htmlNormal = '
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+@page { margin: 28px 54px 112px 54px; }
+* { box-sizing: border-box; }
+body { font-family: DejaVu Sans, sans-serif; color: #000; font-size: 10pt; line-height: 1.5; margin: 0; }
+.contenedor { width: 100%; }
+.encabezado { width: 100%; border-bottom: 2px solid #1b3d6d; padding: 0 0 10px; margin-bottom: 20px; }
+.encabezado table { width: 100%; border-collapse: collapse; }
+.encabezado td { vertical-align: middle; width: 50%; }
+.logo-izq { text-align: left; }
+.logo-der { text-align: right; }
+.encabezado img { max-height: 48px; max-width: 220px; }
+.logo-texto { font-size: 8pt; font-weight: bold; line-height: 1.25; color: #1b3d6d; }
+.logo-texto-der { color: #7a1f2b; text-align: right; }
+.rif { font-size: 9pt; font-weight: bold; text-align: right; margin: 0 0 22px; }
+.titulo { text-align: center; font-size: 15pt; font-weight: bold; letter-spacing: 1.5px; margin: 0 0 28px; }
+.parrafo { text-align: justify; margin: 0 0 18px; }
+.conceptos { width: 84%; margin: 24px auto 18px; border-collapse: collapse; }
+.conceptos th { text-align: center; font-weight: bold; padding: 3px 5px 7px; }
+.conceptos td { padding: 5px; }
+.conceptos .monto { text-align: right; white-space: nowrap; }
+.total td { font-weight: bold; padding-top: 12px; }
+.total .linea { border-top: 1px solid #000; text-align: center; }
+.alimentacion { text-align: justify; margin: 20px 0 30px; }
+.firma { margin-top: 38px; text-align: center; line-height: 1.25; font-weight: bold; page-break-inside: avoid; }
+.linea-firma { width: 220px; border-top: 1px solid #000; margin: 0 auto 5px; }
+.director { font-weight: bold; }
+.cargo-firma { font-weight: bold; font-size: 8.5pt; }
+.gaceta-firma { font-size: 8pt; margin-top: 2px; }
+.pie-texto { position: fixed; bottom: 74px; left: 0; right: 0; text-align: center; font-size: 6.7pt; line-height: 1.25; color: #000; }
+.pie-franja { position: fixed; bottom: -1px; left: -54px; right: -54px; width: auto; line-height: 0; text-align: center; }
+.pie-franja img { display: block; width: 100%; max-height: 125px; }
+.franja-amarilla { height: 8px; background: #ffcc00; }
+.franja-azul { height: 8px; background: #263780; }
+.franja-roja { height: 8px; background: #a71930; }
+</style>
+</head>
+<body>
+<div class="contenedor">
+  <div class="encabezado"><table><tr>
+    <td class="logo-izq">' . $logoMinisterioHtml . '</td>
+    <td class="logo-der">' . $logoFundaciteHtml . '</td>
+  </tr></table></div>
+  <div class="rif">RIF: ' . e($rif) . '</div>
+  <h1 class="titulo">CONSTANCIA DE TRABAJO</h1>
+  <p class="parrafo">Quien suscribe: <strong>' . e($nombreDirector) . '</strong>, Titular de la cédula de identidad <strong>' . e($cedulaDirector) . '</strong>, en mi carácter de ' . e($cargoFirmante) . ' de la <strong>FUNDACIÓN PARA EL DESARROLLO DE LA CIENCIA Y TECNOLOGÍA (FUNDACITE YARACUY)</strong>, hago constar por medio de la presente que ' . e($ciudadanoTexto) . ': <strong>' . e($nombreTrabajador) . '</strong>, Titular de la C.I. <strong>' . e($cedulaTrabajador) . '</strong>, presta sus servicios en esta Institución desde el <strong>' . e(fechaCorta($fechaIngreso)) . '</strong>, actualmente ocupando el cargo de <strong>' . e($cargo) . '</strong> en calidad de <strong>' . e($tipoPersonal) . '</strong>, devengando un Salario Mensual de <strong>' . e($totalLetras) . ' (' . e($totalNumero) . ' Bs.)</strong> y una Subvención de Alimentación que corresponde a lo aprobado por el Ejecutivo Nacional.</p>
+  <p class="parrafo">Constancia que se expide a solicitud de la parte interesada' . (!empty($motivo) ? ', ' . e($motivo) : '') . ' en Independencia, a los <strong>' . e(fechaConstanciaLarga($fechaConstancia)) . '</strong>.</p>
+  <div class="firma"><div class="linea-firma"></div><div class="director">' . e($nombreDirector) . '</div><div class="cargo-firma">' . e($cargoFirmante) . '.</div><div class="cargo-firma">Providencia Administrativa FY-004 de fecha 15/09/2025</div><div class="gaceta-firma">Gaceta Oficial N.º 43.254 de Fecha 12/11/2025</div></div>
+</div>
+<div class="pie-texto">Providencia Administrativa FY-004 de fecha 15/09/2025<br>Zona Industrial "Agustín Rivero", Calle 1-A con Avenida 4, Edificio Fundacite Yaracuy, Municipio Independencia, Estado Yaracuy,<br>Teléfonos 0424-5447057 (Activo) / 0254-2315616</div>
+<div class="pie-franja">' . $banderaHtml . '</div>
+</body>
+</html>';
 
 $html = ($tipoConstancia === 'normal') ? $htmlNormal : $htmlDetallada;
 

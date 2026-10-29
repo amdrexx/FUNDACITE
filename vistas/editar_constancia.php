@@ -141,8 +141,8 @@ $fechaEmision   = !empty($constancia['fecha'])
                 <div class="field full-width">
                     <label for="tipo_constancia">Tipo de constancia</label>
                     <select name="tipo_constancia" id="tipo_constancia" required>
-                        <option value="primas_detalladas" <?= (($constancia['tipo_constancia'] ?? 'primas_detalladas') === 'primas_detalladas') ? 'selected' : '' ?>>Constancia con primas detalladas</option>
                         <option value="normal" <?= (($constancia['tipo_constancia'] ?? 'normal') === 'normal') ? 'selected' : '' ?>>Constancia normal</option>
+                        <option value="primas_detalladas" <?= (($constancia['tipo_constancia'] ?? '') === 'primas_detalladas') ? 'selected' : '' ?>>Constancia con primas detalladas</option>
                     </select>
                     <small>Esta selección determina el formato del reporte PDF.</small>
                 </div>
