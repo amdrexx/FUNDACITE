@@ -123,6 +123,7 @@ CREATE TABLE CONSTANCIA_DE_TRABAJO (
     codigo_constancia VARCHAR(50) NOT NULL,
     motivo TEXT NOT NULL,
     tipo_personal VARCHAR(50) NOT NULL,
+    tipo_constancia ENUM('normal', 'primas_detalladas') NOT NULL DEFAULT 'normal',
     fecha DATE NOT NULL,
     PRIMARY KEY (id_constancia),
     INDEX idx_constancia_codigo (codigo_constancia),
@@ -139,6 +140,7 @@ CREATE TABLE DISFRUTE_DE_VACACIONES (
     fecha_inicio DATE NOT NULL,
     fecha_finalizacion DATE NULL,
     observaciones TEXT NOT NULL,
+    justificacion_desaprobacion TEXT NULL,
     estado ENUM('Pendiente', 'Aprobado', 'Desaprobado') NOT NULL DEFAULT 'Pendiente',
     PRIMARY KEY (id_dis),
     INDEX idx_disfrute_codigo (codigo_disfrute),
@@ -291,6 +293,7 @@ INSERT INTO CARGO (nombre_cargo) VALUES
 ('Administrador'),
 ('Analista'),
 ('Técnico'),
+('Director'),
 ('Presidente');
 
 

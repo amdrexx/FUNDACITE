@@ -162,7 +162,7 @@ unset($_SESSION['errores'], $_SESSION['exito'], $_SESSION['old']);
     <input type="number" id="cantidad_hijos" name="cantidad_hijos" min="1" max="20">
 </div>
 
-<!-- MONTO DEL HIJO 1 (Queda al lado de Cantidad de hijos) -->
+<!-- MONTO DEL HIJO 1 -->
 <div class="field" id="campoMontoHijo1" style="display:none;">
     <label for="monto_hijo_0">Monto del hijo 1</label>
     <select id="monto_hijo_0" name="monto_hijo[]" class="monto-hijo-select" required>
@@ -171,7 +171,7 @@ unset($_SESSION['errores'], $_SESSION['exito'], $_SESSION['old']);
     </select>
 </div>
 
-<!-- CONTENEDOR PARA LOS HIJOS RESTANTES (Hijo 2 en adelante en 2 columnas) -->
+<!-- CONTENEDOR PARA LOS HIJOS RESTANTES -->
 <div id="contenedorHijos" style="display:none; grid-column: 1 / -1; grid-template-columns: repeat(2, 1fr); gap: 15px 25px;">
 </div>
 
@@ -239,9 +239,6 @@ unset($_SESSION['errores'], $_SESSION['exito'], $_SESSION['old']);
         readonly
         aria-live="polite"
     >
-    <small id="detalle_origen_salario" style="display:block;margin-top:5px;color:#666;">
-        Seleccione un trabajador para conocer si corresponde sueldo base, sueldo por cargo o ambos.
-    </small>
 </div>
 
 <div class="field">
@@ -289,9 +286,44 @@ unset($_SESSION['errores'], $_SESSION['exito'], $_SESSION['old']);
 
 </div>
         
-
-
 <script src="/FUNDACITE/vistas/js/valid_primas.js"></script>
+
+<!-- Script para restringir tipos de prima según el trabajador (Obrero -> Solo Antigüedad e Hijos) -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectTrabajador = document.getElementById('id_trabajador');
+    const selectTipoPrima = document.getElementById('tipo_prima');
+
+    function actualizarOpcionesPrimas() {
+        const optionSeleccionada = selectTrabajador.options[selectTrabajador.selectedIndex];
+        const tipoPersonal = optionSeleccionada ? optionSeleccionada.getAttribute('data-tipo-personal') : '';
+        const opciones = selectTipoPrima.querySelectorAll('option');
+
+        const esObrero = tipoPersonal && tipoPersonal.toLowerCase().includes('obrero');
+
+        opciones.forEach(opcion => {
+            if (opcion.value === "") return; // Mantener la opción por defecto
+
+            if (esObrero && opcion.value === 'Prima por profesionalización') {
+                opcion.style.display = 'none';
+                opcion.disabled = true;
+                
+                if (selectTipoPrima.value === 'Prima por profesionalización') {
+                    selectTipoPrima.value = '';
+                }
+            } else {
+                opcion.style.display = 'block';
+                opcion.disabled = false;
+            }
+        });
+    }
+
+    if (selectTrabajador) {
+        selectTrabajador.addEventListener('change', actualizarOpcionesPrimas);
+        actualizarOpcionesPrimas();
+    }
+});
+</script>
 
 <!-- Alertas de errores/éxito -->
 <?php if (!empty($errores)): ?>
@@ -316,5 +348,6 @@ unset($_SESSION['errores'], $_SESSION['exito'], $_SESSION['old']);
 </script>
 <?php endif; ?>
 
+<script src="/FUNDACITE/vistas/js/valid_primas_extra.js"></script>
 </body>
 </html>

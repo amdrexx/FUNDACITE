@@ -67,6 +67,15 @@ unset($_SESSION['errores_constancia'], $_SESSION['exito_constancia']);
                     </select>
                 </div>
 
+                <!-- Tipo de constancia: define únicamente el formato del PDF -->
+                <div class="field full-width">
+                    <label for="tipo_constancia">Tipo de constancia</label>
+                    <select name="tipo_constancia" id="tipo_constancia" required>
+                        <option value="primas_detalladas" <?= (($old['tipo_constancia'] ?? '') === 'primas_detalladas') ? 'selected' : '' ?>>Constancia con primas detalladas</option>
+                        <option value="normal" <?= (($old['tipo_constancia'] ?? 'normal') === 'normal') ? 'selected' : '' ?>>Constancia normal</option>
+                    </select>
+                </div>
+
                 <!-- 2. Fecha emisión -->
                 <div class="field">
                     <label>Fecha de Emisión</label>
@@ -105,11 +114,24 @@ unset($_SESSION['errores_constancia'], $_SESSION['exito_constancia']);
                            readonly placeholder="---">
                 </div>
 
-                <!-- 7. Salario (auto-rellenado) -->
+                <!-- 7. Remuneración calculada desde salario vigente + primas activas -->
                 <div class="field">
-                    <label>Salario Mensual (Bs.)</label>
+                    <label>Salario aplicado (Bs.)</label>
                     <input type="text" id="salario_display" class="campo-auto"
-                           value="<?= $old && isset($old['salario_monto']) ? number_format($old['salario_monto'], 2, ',', '.') : '' ?>"
+                           value="<?= $old && isset($old['salario_monto']) ? number_format((float)$old['salario_monto'], 2, ',', '.') : '' ?>"
+                           readonly placeholder="---">
+                    <small id="origen_salario_display"><?= htmlspecialchars($old['origen_salario'] ?? '') ?></small>
+                </div>
+                <div class="field">
+                    <label>Total de primas activas (Bs.)</label>
+                    <input type="text" id="primas_display" class="campo-auto"
+                           value="<?= $old && isset($old['total_primas']) ? number_format((float)$old['total_primas'], 2, ',', '.') : '' ?>"
+                           readonly placeholder="---">
+                </div>
+                <div class="field full-width">
+                    <label>Total mensual devengado (salario + primas) (Bs.)</label>
+                    <input type="text" id="total_devengado_display" class="campo-auto"
+                           value="<?= $old && isset($old['total_devengado']) ? number_format((float)$old['total_devengado'], 2, ',', '.') : '' ?>"
                            readonly placeholder="---">
                 </div>
 
@@ -134,7 +156,7 @@ unset($_SESSION['errores_constancia'], $_SESSION['exito_constancia']);
                 <button type="submit" name="accion" value="limpiar" class="btn-secundario">
                     Limpiar
                 </button>
-                <button type="submit" name="accion" value="guardar" class="btn-guardar">
+                <button type="submit" name="accion" value="guardar" id="btnGuardarConstancia" class="btn-guardar" disabled>
                     Guardar
                 </button>
             </div>
@@ -155,21 +177,31 @@ document.addEventListener('DOMContentLoaded', function() {
     var cargoDisplay     = document.getElementById('cargo_display');
     var fechaIngresoDisp = document.getElementById('fecha_primer_contrato_display');
     var salarioDisplay   = document.getElementById('salario_display');
+    var primasDisplay    = document.getElementById('primas_display');
+    var totalDevengadoDisplay = document.getElementById('total_devengado_display');
+    var origenSalarioDisplay = document.getElementById('origen_salario_display');
     var tipoPersonal     = document.getElementById('tipo_personal');
+    var botonGuardar     = document.getElementById('btnGuardarConstancia');
 
     selectTrabajador.addEventListener('change', function() {
         var id = this.value;
 
         if (!id) {
+            botonGuardar.disabled = true;
             nombreCompleto.value = '';
             cedulaDisplay.value  = '';
             cargoDisplay.value   = '';
             fechaIngresoDisp.value = '';
             salarioDisplay.value = '';
+            primasDisplay.value = '';
+            totalDevengadoDisplay.value = '';
+            origenSalarioDisplay.textContent = '';
             tipoPersonal.value = '';
             return;
         }
 
+        botonGuardar.disabled = true;
+        origenSalarioDisplay.textContent = 'Verificando salario registrado...';
         fetch('../ajax/ajax_constancia_trabajador.php?id_trabajador=' + encodeURIComponent(id))
             .then(function(resp) { return resp.json(); })
             .then(function(data) {
@@ -178,20 +210,32 @@ document.addEventListener('DOMContentLoaded', function() {
                     cedulaDisplay.value    = data.cedula;
                     cargoDisplay.value     = data.cargo;
                     fechaIngresoDisp.value = data.fecha_primer_contrato || 'Sin contrato registrado';
-                    salarioDisplay.value   = data.salario_monto
-                        ? parseFloat(data.salario_monto).toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2})
-                        : 'No registrado';
+                    var formatoBs = function(valor) {
+                        return parseFloat(valor || 0).toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    };
+                    salarioDisplay.value = formatoBs(data.salario_monto);
+                    primasDisplay.value = formatoBs(data.total_primas);
+                    totalDevengadoDisplay.value = formatoBs(data.total_devengado);
+                    origenSalarioDisplay.textContent = data.origen_salario || 'Sin salario registrado';
                     tipoPersonal.value = data.tipo_personal || '';
+                    botonGuardar.disabled = !data.tiene_salario;
+                    if (!data.tiene_salario) {
+                        origenSalarioDisplay.textContent = 'SIN SALARIO REGISTRADO: no se puede emitir la constancia.';
+                        alert('No se puede registrar la constancia. El trabajador no tiene un salario vigente registrado por cargo ni salario base.');
+                    }
 
                     nombreCompleto.classList.add('campo-ok');
                     setTimeout(function() { nombreCompleto.classList.remove('campo-ok'); }, 1500);
                 } else {
-                    alert('No se encontraron datos del trabajador.');
+                    botonGuardar.disabled = true;
+                    alert(data.message || 'No se encontraron datos del trabajador.');
                 }
             })
             .catch(function(err) {
                 console.error('Error AJAX:', err);
-                alert('Error al consultar datos del trabajador.');
+                botonGuardar.disabled = true;
+                origenSalarioDisplay.textContent = 'No se pudo verificar el salario.';
+                alert('Error al consultar los datos y verificar el salario del trabajador. Intente nuevamente.');
             });
     });
 
@@ -219,5 +263,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <?php endif; ?>
 
+<script src="/FUNDACITE/vistas/js/valid_constancia_extra.js"></script>
 </body>
 </html>

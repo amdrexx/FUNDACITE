@@ -28,7 +28,11 @@ if (isset($_GET['id_trabajador'])) {
                 'cargo'            => $trabajador['cargo'] ?? '',
                 'tipo_personal'    => $trabajador['tipo_personal'] ?? '',
                 'fecha_primer_contrato' => $trabajador['fecha_primer_contrato'],
-                'salario_monto'    => $trabajador['salario_monto'] ?? '',
+                'salario_monto'    => $trabajador['salario_monto'] ?? 0,
+                'total_primas'     => $trabajador['total_primas'] ?? 0,
+                'total_devengado'  => $trabajador['total_devengado'] ?? 0,
+                'origen_salario'   => $trabajador['origen_salario'] ?? 'Sin salario registrado',
+                'tiene_salario'     => ((float) ($trabajador['salario_monto'] ?? 0) > 0 && ($trabajador['origen_salario'] ?? 'Sin salario registrado') !== 'Sin salario registrado'),
             ];
         }
     }

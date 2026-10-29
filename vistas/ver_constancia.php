@@ -47,6 +47,8 @@ $fechaEmision = !empty($constanciaActual['fecha'])
     : 'No registrada';
 
 $salarioMonto = $constanciaActual['salario_monto'] ?? $constanciaActual['salario'] ?? null;
+$primasMonto = (float) ($constanciaActual['total_primas'] ?? 0);
+$totalDevengado = (float) ($constanciaActual['total_devengado'] ?? $salarioMonto ?? 0);
 $salarioTexto = ($salarioMonto !== null && $salarioMonto !== '')
     ? 'Bs. ' . number_format((float)$salarioMonto, 2, ',', '.')
     : 'No registrado';
@@ -344,7 +346,9 @@ $motivo         = $constanciaActual['motivo'] ?? 'No especificado';
                     <h3><i class="bi bi-briefcase"></i> Datos laborales</h3>
                     <dl class="cert-details">
                         <div class="cert-detail"><dt>Fecha de ingreso</dt><dd><?php echo htmlspecialchars($fechaIngreso); ?></dd></div>
-                        <div class="cert-detail"><dt>Salario mensual</dt><dd><?php echo htmlspecialchars($salarioTexto); ?></dd></div>
+                        <div class="cert-detail"><dt>Salario aplicado (<?= htmlspecialchars($constanciaActual['origen_salario'] ?? ''); ?>)</dt><dd><?php echo htmlspecialchars($salarioTexto); ?></dd></div>
+                        <div class="cert-detail"><dt>Total de primas activas</dt><dd><?= 'Bs. ' . number_format($primasMonto, 2, ',', '.') ?></dd></div>
+                        <div class="cert-detail"><dt>Total mensual devengado (salario + primas)</dt><dd><strong><?= 'Bs. ' . number_format($totalDevengado, 2, ',', '.') ?></strong></dd></div>
                         <div class="cert-detail"><dt>Tipo de personal</dt><dd><?php echo htmlspecialchars($tipoPersonal); ?></dd></div>
                     </dl>
                 </section>

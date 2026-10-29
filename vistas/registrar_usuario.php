@@ -131,5 +131,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <?php endif; ?>
+<script src="/FUNDACITE/vistas/js/valid_usuarios.js"></script>
 </body>
 </html>

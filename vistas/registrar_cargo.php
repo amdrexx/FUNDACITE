@@ -160,5 +160,6 @@ if (isset($_GET['status'])) {
 </script>
 <?php endif; ?>
 
+<script src="/FUNDACITE/vistas/js/valid_cargo.js"></script>
 </body>
 </html>

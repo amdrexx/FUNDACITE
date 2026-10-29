@@ -64,7 +64,7 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', $buscar !== '' ? 
             <?php if (esAdministradorODirector()): ?>
             <a href="aprobacion_dias_disfrute.php" class="btn-pdf" style="text-decoration:none;">
                 <i class="bi bi-check2-square"></i>
-                Aprobaciones
+                Aprobaciones/Desaprobaciones
             </a>
             <a
                 href="/FUNDACITE/pdf/reporte_dias_disfrute.php<?= $buscar !== '' ? '?buscar=' . urlencode($buscar) : ''; ?>"
@@ -85,8 +85,6 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', $buscar !== '' ? 
                     <th>Código</th>
                     <th>Motivo</th>
                     <th>Observaciones</th>
-                    <th>Fecha Inicio</th>
-                    <th>Fecha Finalización</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -98,13 +96,17 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', $buscar !== '' ? 
                             <td><?php echo htmlspecialchars($fila['codigo_disfrute'] ?? ''); ?></td>
                             <td><?php echo htmlspecialchars($fila['motivo'] ?? ''); ?></td>
                             <td><?php echo nl2br(htmlspecialchars($fila['observaciones'] ?? '', ENT_QUOTES, 'UTF-8')); ?></td>
-                            <td><?php echo htmlspecialchars($fila['fecha_inicio'] ?? ''); ?></td>
-                            <td><?php echo htmlspecialchars($fila['fecha_finalizacion'] ?? ''); ?></td>
                             <td class="acciones">
 
-                                   <a class="btn-editar" target="_blank" href="/FUNDACITE/pdf/dias_disfrute.php?id=<?= urlencode($fila['id_dis']) ?>&print=1">
-                                    <i class="bi bi-printer"></i> Imprimir
+                                <a class="btn-ver" href="ver_dias_disfrute.php?id=<?= urlencode($fila['id_dis']) ?>">
+                                    <i class="bi bi-eye"></i> Ver
                                 </a>
+
+                                <?php if (($fila['estado'] ?? 'Pendiente') === 'Aprobado'): ?>
+                                    <a class="btn-editar" target="_blank" href="/FUNDACITE/pdf/dias_disfrute.php?id=<?= urlencode($fila['id_dis']) ?>&print=1">
+                                        <i class="bi bi-printer"></i> Imprimir
+                                    </a>
+                                <?php endif; ?>
 
                                 <?php if (esAdministradorODirector()): ?>
                                 <form action="../controladores/ctrl_dias_disfrute.php" method="POST" style="display:inline;" onsubmit="return confirm('¿Seguro que deseas eliminar este registro?');">
@@ -120,7 +122,7 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', $buscar !== '' ? 
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="7" style="text-align:center;">No se encontraron registros.</td>
+                        <td colspan="5" style="text-align:center;">No se encontraron registros.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

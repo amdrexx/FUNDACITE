@@ -237,6 +237,12 @@ if ($trab === null) {
     fallo('El trabajador seleccionado no existe.', $idPrima);
 }
 
+// VALIDACIÓN DE SEGURIDAD: Los obreros no pueden recibir prima por profesionalización
+$tipoPersonalTrabajador = strtolower(trim((string) ($trab['tipo_personal'] ?? '')));
+if (strpos($tipoPersonalTrabajador, 'obrero') !== false && $tipo === TIPO_PROFESIONALIZACION) {
+    fallo('Los trabajadores con estatus u ocupación de obrero no pueden recibir prima por profesionalización.', $idPrima);
+}
+
 if (!$editando && strtolower(trim((string) $trab['status'])) !== 'activo') {
     fallo('Solo se pueden registrar primas a trabajadores con estatus Activo.');
 }

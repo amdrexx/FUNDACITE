@@ -272,5 +272,6 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 <?php endif; ?>
 
+<script src="/FUNDACITE/vistas/js/valid_actualizar_salario.js"></script>
 </body>
 </html>

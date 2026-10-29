@@ -75,7 +75,9 @@ if ($accion === 'guardar') {
     $tipo_personal     = trim($_POST['tipo_personal'] ?? '');
     $fecha             = trim($_POST['fecha'] ?? '');
     $motivo            = trim($_POST['motivo'] ?? '');
+    $tipo_constancia   = trim($_POST['tipo_constancia'] ?? 'normal');
 
+    $TIPOS_CONSTANCIA_VALIDOS = ['normal', 'primas_detalladas'];
     $TIPOS_PERSONAL_VALIDOS = ['Fijo', 'Contratado', 'Obrero', 'Empleado', 'Jubilado'];
     $errores = [];
 
@@ -85,11 +87,17 @@ if ($accion === 'guardar') {
     if (!in_array($tipo_personal, $TIPOS_PERSONAL_VALIDOS, true)) {
         $errores[] = 'Debes seleccionar un tipo de personal válido.';
     }
+    if (!in_array($tipo_constancia, $TIPOS_CONSTANCIA_VALIDOS, true)) {
+        $errores[] = 'Debes seleccionar un tipo de constancia válido.';
+    }
     if ($fecha === '') {
         $errores[] = 'La fecha de emisión es obligatoria.';
     }
     if ($motivo === '') {
         $errores[] = 'El motivo es obligatorio.';
+    }
+    if ($id_trabajador > 0 && !$constanciaModelo->tieneSalarioRegistrado($id_trabajador)) {
+        $errores[] = 'No se puede registrar la constancia porque el trabajador no tiene un salario vigente registrado. Registre primero un salario por cargo o un salario base mayor que cero.';
     }
 
     if (!empty($errores)) {
@@ -106,7 +114,8 @@ if ($accion === 'guardar') {
             $codigo_constancia,
             $motivo,
             $tipo_personal,
-            $fecha
+            $fecha,
+            $tipo_constancia
         );
 
         if ($resultado) {
@@ -144,7 +153,9 @@ if ($accion === 'actualizar') {
     $tipo_personal     = trim($_POST['tipo_personal'] ?? '');
     $fecha             = trim($_POST['fecha'] ?? '');
     $motivo            = trim($_POST['motivo'] ?? '');
+    $tipo_constancia   = trim($_POST['tipo_constancia'] ?? 'normal');
 
+    $TIPOS_CONSTANCIA_VALIDOS = ['normal', 'primas_detalladas'];
     $TIPOS_PERSONAL_VALIDOS = ['Fijo', 'Contratado', 'Obrero', 'Empleado', 'Jubilado'];
     $errores = [];
 
@@ -157,11 +168,17 @@ if ($accion === 'actualizar') {
     if (!in_array($tipo_personal, $TIPOS_PERSONAL_VALIDOS, true)) {
         $errores[] = 'Debes seleccionar un tipo de personal válido.';
     }
+    if (!in_array($tipo_constancia, $TIPOS_CONSTANCIA_VALIDOS, true)) {
+        $errores[] = 'Debes seleccionar un tipo de constancia válido.';
+    }
     if ($fecha === '') {
         $errores[] = 'La fecha de emisión es obligatoria.';
     }
     if ($motivo === '') {
         $errores[] = 'El motivo es obligatorio.';
+    }
+    if ($id_trabajador > 0 && !$constanciaModelo->tieneSalarioRegistrado($id_trabajador)) {
+        $errores[] = 'No se puede actualizar la constancia porque el trabajador no tiene un salario vigente registrado. Registre primero un salario por cargo o un salario base mayor que cero.';
     }
 
     if (!empty($errores)) {
@@ -178,7 +195,8 @@ if ($accion === 'actualizar') {
             $id_trabajador,
             $motivo,
             $tipo_personal,
-            $fecha
+            $fecha,
+            $tipo_constancia
         );
 
         if ($ok) {

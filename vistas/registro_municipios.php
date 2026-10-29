@@ -6,25 +6,34 @@ error_reporting(E_ALL);
 include_once "includes/roles.php";
 include_once "includes/guardian.php";
 require_once("../controladores/ctrl_municipio.php");
+require_once("includes/validar_ubicacion.php");
 
 $controlador = new MunicipioController();
 
 // Estado que llega por URL: sirve para enfocar el filtro de la tabla
 $estadoSeleccionado = isset($_GET['estado']) ? (int) $_GET['estado'] : 0;
 
+// Mensaje de validación (si el nombre no cumple las reglas)
+$errorValidacion = '';
+
 // Guardar
 if (isset($_POST['guardar'])) {
 
-    $cod_est = $_POST['cod_est'];
-    $nombre  = trim($_POST['nombre']);
+    $cod_est = $_POST['cod_est'] ?? '';
+    $nombre  = normalizarNombreUbicacion($_POST['nombre'] ?? '');
 
-    if (!empty($cod_est) && !empty($nombre)) {
+    $errorValidacion = validarNombreUbicacion($nombre, 'del municipio');
+
+    if ($errorValidacion === '' && !empty($cod_est)) {
 
         $controlador->guardar($cod_est, $nombre);
 
         header("Location: registro_municipios.php?estado=" . (int) $cod_est);
         exit();
     }
+
+    // Si hubo error, se mantiene el estado elegido en el formulario
+    $estadoSeleccionado = (int) $cod_est;
 }
 
 // Actualizar
@@ -32,16 +41,21 @@ if (isset($_POST['actualizar'])) {
 
     $id      = $_POST['cod_muni'];
     $cod_est = $_POST['cod_est'];
-    $nombre  = trim($_POST['nombre']);
+    $nombre  = normalizarNombreUbicacion($_POST['nombre'] ?? '');
 
-    $controlador->actualizar($id, $cod_est, $nombre);
+    $errorValidacion = validarNombreUbicacion($nombre, 'del municipio');
 
-    if (ctype_digit((string) $cod_est) && (int) $cod_est > 0) {
-        header("Location: registro_municipios.php?estado=" . (int) $cod_est);
-    } else {
-        header("Location: registro_municipios.php");
+    if ($errorValidacion === '') {
+
+        $controlador->actualizar($id, $cod_est, $nombre);
+
+        if (ctype_digit((string) $cod_est) && (int) $cod_est > 0) {
+            header("Location: registro_municipios.php?estado=" . (int) $cod_est);
+        } else {
+            header("Location: registro_municipios.php");
+        }
+        exit();
     }
-    exit();
 }
 
 // Eliminar
@@ -76,6 +90,9 @@ if (isset($_GET['editar'])) {
 
     $municipioEditar = $controlador->buscar($_GET['editar']);
 }
+
+// Valor que se muestra en el campo: lo digitado (si hubo error) o lo guardado
+$nombreForm = $_POST['nombre'] ?? ($municipioEditar['nombre'] ?? '');
 
 // Listar Estados (formulario de registro y filtro de la tabla)
 $estados = $controlador->obtenerEstados();
@@ -183,7 +200,11 @@ $municipios = $controlador->listar();
                             type="text"
                             name="nombre"
                             placeholder="Ingrese el municipio"
-                            value="<?= $municipioEditar['nombre'] ?? ''; ?>"
+                            value="<?= htmlspecialchars($nombreForm); ?>"
+                            maxlength="50"
+                            autocomplete="off"
+                            data-validar-ubicacion
+                            data-etiqueta="del municipio"
                             required
                         >
 
@@ -383,7 +404,8 @@ $municipios = $controlador->listar();
     <script src="/FUNDACITE/vistas/js/select2.min.js"></script>
     <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
     <script src="/FUNDACITE/vistas/js/boton_desplegable.js"></script>
-    <script src="/FUNDACITE/vistas/js/valid_trabajadores.js"></script>
+    
+    <script src="/FUNDACITE/vistas/js/validar_ubicacion.js"></script>
 
     <!-- BUSCADOR, FILTRO POR ESTADO Y PAGINACIÓN DE LA TABLA -->
     <script src="/FUNDACITE/vistas/js/filtrar_tabla_ubicacion.js"></script>
@@ -408,6 +430,20 @@ $municipios = $controlador->listar();
 </script>
 <?php endif; ?>
 
+<?php if (!empty($errorValidacion)): ?>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const mensaje = document.getElementById("alertMessage");
+    const alerta  = document.getElementById("customAlert");
+    if (mensaje && alerta) {
+        mensaje.innerText = <?= json_encode($errorValidacion) ?>;
+        alerta.classList.remove("hidden");
+    }
+});
+</script>
+<?php endif; ?>
+
+<script src="/FUNDACITE/vistas/js/valid_municipios.js?v=20261029"></script>
 </body>
 
 </html>

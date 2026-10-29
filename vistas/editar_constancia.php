@@ -138,6 +138,15 @@ $fechaEmision   = !empty($constancia['fecha'])
                 <!-- Trabajador fijo: no se puede reasignar desde la edición -->
                 <input type="hidden" name="id_trabajador" value="<?= (int)($constancia['id_trabajador'] ?? 0) ?>">
 
+                <div class="field full-width">
+                    <label for="tipo_constancia">Tipo de constancia</label>
+                    <select name="tipo_constancia" id="tipo_constancia" required>
+                        <option value="primas_detalladas" <?= (($constancia['tipo_constancia'] ?? 'primas_detalladas') === 'primas_detalladas') ? 'selected' : '' ?>>Constancia con primas detalladas</option>
+                        <option value="normal" <?= (($constancia['tipo_constancia'] ?? 'normal') === 'normal') ? 'selected' : '' ?>>Constancia normal</option>
+                    </select>
+                    <small>Esta selección determina el formato del reporte PDF.</small>
+                </div>
+
                 <!-- 1. Fecha emisión -->
                 <div class="field">
                     <label>1. Fecha de Emisión</label>
@@ -176,12 +185,25 @@ $fechaEmision   = !empty($constancia['fecha'])
                            readonly placeholder="---">
                 </div>
 
-                <!-- 6. Salario -->
+                <!-- 6. Remuneración vigente -->
                 <div class="field">
-                    <label>6. Salario Mensual (Bs.)</label>
+                    <label>6. Salario aplicado (Bs.)</label>
                     <input type="text" id="salario_display" class="campo-auto"
                            value="<?= $salarioMonto !== null ? number_format((float)$salarioMonto, 2, ',', '.') : '' ?>"
                            readonly placeholder="---">
+                    <small><?= htmlspecialchars($constancia['origen_salario'] ?? '') ?></small>
+                </div>
+                <div class="field">
+                    <label>Total de primas activas (Bs.)</label>
+                    <input type="text" class="campo-auto"
+                           value="<?= number_format((float)($constancia['total_primas'] ?? 0), 2, ',', '.') ?>"
+                           readonly>
+                </div>
+                <div class="field full-width">
+                    <label>Total mensual devengado (salario + primas) (Bs.)</label>
+                    <input type="text" class="campo-auto"
+                           value="<?= number_format((float)($constancia['total_devengado'] ?? $salarioMonto ?? 0), 2, ',', '.') ?>"
+                           readonly>
                 </div>
 
                 <!-- 7. Tipo de personal -->
@@ -228,5 +250,6 @@ $fechaEmision   = !empty($constancia['fecha'])
 </script>
 <?php endif; ?>
 
+<script src="/FUNDACITE/vistas/js/valid_constancia_extra.js"></script>
 </body>
 </html>

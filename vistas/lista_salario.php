@@ -70,7 +70,7 @@ if (
 
     }
 
-    header('Location: lista_salarios.php');
+    header('Location: lista_salario.php');
     exit;
 
 }

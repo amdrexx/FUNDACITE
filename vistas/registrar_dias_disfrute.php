@@ -245,5 +245,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <?php endif; ?>
 
+<script src="/FUNDACITE/vistas/js/valid_dias_disfrute.js"></script>
 </body>
 </html>

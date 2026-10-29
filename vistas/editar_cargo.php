@@ -100,5 +100,6 @@ if (isset($_GET['status']) && $_GET['status'] == 'duplicate') {
 </script>
 <?php endif; ?>
 
+<script src="/FUNDACITE/vistas/js/valid_cargo.js"></script>
 </body>
 </html>

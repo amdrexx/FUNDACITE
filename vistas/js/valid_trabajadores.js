@@ -10,29 +10,47 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const fechaNacimiento = document.getElementById("fecha");
         const edadInput = document.getElementById("edad");
+        const EDAD_MINIMA = 18;
+        const EDAD_MAXIMA = 75;
 
-        // ==========================
-        // CALCULAR EDAD
-        // ==========================
-        if (fechaNacimiento && edadInput) {
+        // El trabajador debe tener entre 18 y 75 años. Se restringe también
+        // el calendario para evitar fechas futuras o demasiado antiguas.
+        function fechaISO(fecha) {
+            return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}-${String(fecha.getDate()).padStart(2, "0")}`;
+        }
+        function calcularEdad(valor) {
+            const nacimiento = new Date(valor + "T00:00:00");
+            const hoy = new Date();
+            let edad = hoy.getFullYear() - nacimiento.getFullYear();
+            const mes = hoy.getMonth() - nacimiento.getMonth();
+            if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) edad--;
+            return edad;
+        }
+        if (fechaNacimiento) {
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            const fechaMaxima = new Date(hoy);
+            fechaMaxima.setFullYear(fechaMaxima.getFullYear() - EDAD_MINIMA);
+            const fechaMinima = new Date(hoy);
+            fechaMinima.setFullYear(fechaMinima.getFullYear() - EDAD_MAXIMA);
+            fechaNacimiento.min = fechaISO(fechaMinima);
+            fechaNacimiento.max = fechaISO(fechaMaxima);
+
             fechaNacimiento.addEventListener("change", function () {
-
                 if (!this.value) {
-                    edadInput.value = "";
+                    if (edadInput) edadInput.value = "";
+                    this.setCustomValidity("");
                     return;
                 }
-
-                const nacimiento = new Date(this.value + "T00:00:00");
-                const hoy = new Date();
-
-                let edad = hoy.getFullYear() - nacimiento.getFullYear();
-                const mes = hoy.getMonth() - nacimiento.getMonth();
-
-                if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-                    edad--;
+                const edad = calcularEdad(this.value);
+                if (edad < EDAD_MINIMA || edad > EDAD_MAXIMA || this.value > fechaISO(hoy)) {
+                    this.setCustomValidity(`La edad debe estar entre ${EDAD_MINIMA} y ${EDAD_MAXIMA} años; la fecha de nacimiento no puede ser futura.`);
+                    this.reportValidity();
+                    if (edadInput) edadInput.value = "";
+                    return;
                 }
-
-                edadInput.value = edad + " años";
+                this.setCustomValidity("");
+                if (edadInput) edadInput.value = edad + " años";
             });
         }
 
@@ -132,17 +150,14 @@ document.addEventListener("DOMContentLoaded", function () {
             const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (correo && !regexCorreo.test(correo)) errores.push("Correo Electrónico: formato no válido");
 
-            const nacimiento = new Date(fechaNac);
-            const hoy = new Date();
-
-            let edad = hoy.getFullYear() - nacimiento.getFullYear();
-            const mes = hoy.getMonth() - nacimiento.getMonth();
-
-            if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-                edad--;
+            if (fechaNac) {
+                const hoyFecha = new Date();
+                hoyFecha.setHours(0, 0, 0, 0);
+                const fechaNacimientoDate = new Date(fechaNac + "T00:00:00");
+                const edad = calcularEdad(fechaNac);
+                if (fechaNacimientoDate > hoyFecha) errores.push("Fecha de Nacimiento: no puede ser futura");
+                if (edad < EDAD_MINIMA || edad > EDAD_MAXIMA) errores.push(`Edad: debe estar entre ${EDAD_MINIMA} y ${EDAD_MAXIMA} años`);
             }
-
-            if (fechaNac && edad < 18) errores.push("Fecha de Nacimiento: el trabajador debe tener al menos 18 años");
 
             const hijosValor = document.getElementById("hijos").value;
             const anosServicioValor = document.getElementById("anos_servicio_administracion_publica").value;
@@ -253,3 +268,50 @@ function closeAlert() {
     }
 }
 
+
+
+// Reglas adicionales por módulo: edad válida (18–75 años), fecha de nacimiento
+// no futura y límites de longitud/repetición en datos personales.
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("formPersonas") || document.getElementById("formEditarTrabajador");
+    const nacimiento = form?.querySelector('#fecha, [name="fecha"], [name="fecha_nacimiento"]');
+    const edad = form?.querySelector('#edad, [name="edad"]');
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const fechaISO = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const fechaMin = new Date(hoy); fechaMin.setFullYear(fechaMin.getFullYear()-75);
+    const fechaMax = new Date(hoy); fechaMax.setFullYear(fechaMax.getFullYear()-18);
+    if (nacimiento) {
+        nacimiento.max = fechaISO(fechaMax);
+        nacimiento.min = fechaISO(fechaMin);
+        nacimiento.addEventListener('change', function () {
+            if (!this.value) { if (edad) edad.value=''; this.setCustomValidity(''); return; }
+            const f = new Date(this.value+'T00:00:00');
+            let years = hoy.getFullYear()-f.getFullYear();
+            if (hoy.getMonth()<f.getMonth() || (hoy.getMonth()===f.getMonth() && hoy.getDate()<f.getDate())) years--;
+            if (f > hoy) this.setCustomValidity('La fecha de nacimiento no puede ser futura.');
+            else if (years < 18) this.setCustomValidity('La edad mínima permitida es 18 años.');
+            else if (years > 75) this.setCustomValidity('La edad máxima permitida es 75 años.');
+            else this.setCustomValidity('');
+            if (edad) edad.value = `${years} años`;
+        });
+    }
+    const textos = form?.querySelectorAll('#nombres, #apellidos, [name="nombres"], [name="apellidos"]') || [];
+    textos.forEach(el => { el.maxLength=100; el.minLength=2; });
+    const correo = form?.querySelector('#correoElectronico, [name="correoElectronico"]');
+    if (correo) correo.maxLength=150;
+    const direccion = form?.querySelector('#direccion_texto, [name="direccion_texto"]');
+    if (direccion) direccion.maxLength=255;
+    form?.addEventListener('submit', function(e) {
+        if (nacimiento && nacimiento.value) {
+            const f = new Date(nacimiento.value+'T00:00:00');
+            let years = hoy.getFullYear()-f.getFullYear();
+            if (hoy.getMonth()<f.getMonth() || (hoy.getMonth()===f.getMonth() && hoy.getDate()<f.getDate())) years--;
+            if (f > hoy || years < 18 || years > 75) {
+                e.preventDefault(); nacimiento.reportValidity();
+            }
+        }
+        const invalid = Array.from(textos).find(el => el.value.trim().length < 2 || el.value.trim().length > 100 || /(.)\1{2,}/i.test(el.value.trim()));
+        if (invalid) { e.preventDefault(); invalid.setCustomValidity('Use entre 2 y 100 caracteres y no repita el mismo carácter más de 2 veces seguidas.'); invalid.reportValidity(); }
+    });
+    textos.forEach(el => el.addEventListener('input', function(){ this.setCustomValidity(''); this.value=this.value.slice(0,100).replace(/(.)\1{2,}/gi, '$1$1'); }));
+});

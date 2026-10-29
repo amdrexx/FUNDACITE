@@ -188,6 +188,7 @@ class DiasDisfrute {
                     d.fecha_inicio,
                     d.fecha_finalizacion,
                     d.observaciones,
+                    d.justificacion_desaprobacion,
                     d.estado,
                     CONCAT(t.apellidos, ' ', t.nombres) AS trabajador,
                     t.cedula,
@@ -233,24 +234,56 @@ class DiasDisfrute {
     }
 
     /**
-     * Alterna el estado de un registro entre 'Aprobado' y 'Desaprobado'.
-     * Devuelve el nuevo estado en caso de éxito, o false si falla.
+     * Obtiene todos los datos de un único registro de días de disfrute
+     * (para la vista de detalle "Ver").
      */
-    public function cambiarEstadoDiasDisfrute($id_dis, $nuevoEstado) {
+    public function obtenerDiasDisfrutePorId($id_dis) {
+        $sql = "SELECT
+                    d.id_dis,
+                    d.codigo_disfrute,
+                    d.motivo,
+                    d.motivo AS descripcion,
+                    d.fecha_inicio,
+                    d.fecha_finalizacion,
+                    d.observaciones,
+                    d.justificacion_desaprobacion,
+                    d.estado,
+                    CONCAT(t.apellidos, ' ', t.nombres) AS trabajador,
+                    t.cedula,
+                    c.nombre_cargo AS cargo
+                FROM DISFRUTE_DE_VACACIONES d
+                INNER JOIN TRABAJADOR t ON d.id_trabajador = t.id_trabajador
+                LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo
+                WHERE d.id_dis = ?
+                LIMIT 1";
+
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) return null;
+
+        $stmt->bind_param("i", $id_dis);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc();
+    }
+
+    /** Actualiza estado y justificación de desaprobación. */
+    public function cambiarEstadoDiasDisfrute($id_dis, $nuevoEstado, $justificacion = '') {
         if (!in_array($nuevoEstado, ['Aprobado', 'Desaprobado'], true)) {
             return false;
         }
-
-        $sql = "UPDATE DISFRUTE_DE_VACACIONES SET estado = ? WHERE id_dis = ?";
+        $justificacion = trim((string) $justificacion);
+        if ($nuevoEstado === 'Desaprobado' && $justificacion === '') {
+            $this->ultimoError = 'La justificación de desaprobación es obligatoria.';
+            return false;
+        }
+        if ($nuevoEstado === 'Aprobado') {
+            $justificacion = '';
+        }
+        $sql = "UPDATE DISFRUTE_DE_VACACIONES SET estado = ?, justificacion_desaprobacion = ? WHERE id_dis = ?";
         $stmt = $this->db->prepare($sql);
         if (!$stmt) return false;
-
-        $stmt->bind_param("si", $nuevoEstado, $id_dis);
-
+        $stmt->bind_param("ssi", $nuevoEstado, $justificacion, $id_dis);
         try {
-            if (!$stmt->execute()) {
-                return false;
-            }
+            if (!$stmt->execute() || $stmt->affected_rows < 0) return false;
             return $nuevoEstado;
         } catch (mysqli_sql_exception $e) {
             error_log("Cambiar estado dias de disfrute id_dis={$id_dis}: " . $e->getMessage());

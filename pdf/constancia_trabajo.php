@@ -52,6 +52,10 @@ $cargo = $constancia['nombre_cargo'] ?? 'No registrado';
 $tipoPersonal = $constancia['tipo_personal'] ?? '';
 $salario = $constancia['salario_monto'] ?? 0;
 $motivo = trim($constancia['motivo'] ?? '');
+$tipoConstancia = in_array(($constancia['tipo_constancia'] ?? 'normal'), ['normal', 'primas_detalladas'], true) ? $constancia['tipo_constancia'] : 'normal';
+$primasDetalladas = $constanciaObj->listarPrimasActivas((int)($constancia['id_trabajador'] ?? 0));
+$totalDevengado = (float)($constancia['total_devengado'] ?? $salario);
+$alimentacion = 400000.00; // Beneficio ilustrado en el formato de referencia; no forma parte del total asignado.
 $fechaConstancia = $constancia['fecha_constancia'] ?? date('Y-m-d');
 $nombreDirector = trim(($directorActivo['apellidos'] ?? '') . ' ' . ($directorActivo['nombres'] ?? ''));
 
@@ -352,7 +356,16 @@ function e($valor)
     );
 }
 
-$html = '
+$filasPrimasDetalladas = '<tr><td>Salario aplicado (' . e($constancia['origen_salario'] ?? 'salario vigente') . ')</td><td style="text-align:right">' . e(number_format((float)$salario, 2, ',', '.')) . ' Bs.</td></tr>';
+foreach ($primasDetalladas as $prima) {
+    $etiquetaPrima = trim((string)($prima['tipo_prima'] ?? 'Prima'));
+    if (trim((string)($prima['condicion'] ?? '')) !== '') $etiquetaPrima .= ' - ' . trim((string)$prima['condicion']);
+    $filasPrimasDetalladas .= '<tr><td>' . e($etiquetaPrima) . '</td><td style="text-align:right">' . e(number_format((float)($prima['monto'] ?? 0), 2, ',', '.')) . ' Bs.</td></tr>';
+}
+$filasPrimasDetalladas .= '<tr><th>Total mensual devengado</th><th style="text-align:right">' . e(number_format($totalDevengado, 2, ',', '.')) . ' Bs.</th></tr>';
+$tablaPrimasDetalladasHtml = '<table style="width:100%;border-collapse:collapse;margin:14px 0 20px;font-size:10pt"><thead><tr><th style="text-align:left;border-bottom:1px solid #1b3d6d;padding:6px">Concepto de remuneración</th><th style="text-align:right;border-bottom:1px solid #1b3d6d;padding:6px">Mensual</th></tr></thead><tbody>' . $filasPrimasDetalladas . '</tbody></table>';
+
+$htmlDetallada = '
 <!DOCTYPE html>
 <title>Constancia de Trabajo</title>
 <html lang="es">
@@ -524,6 +537,7 @@ body {
         y una Subvención de Alimentación que corresponde a lo aprobado
         por el Ejecutivo Nacional.
     </div>
+    ' . $tablaPrimasDetalladasHtml . '
        <div class="parrafo">
         Constancia que se expide a solicitud de la parte interesada' . (!empty($motivo) ? ', ' . e($motivo) : '') . '
         en Independencia, a los
@@ -562,6 +576,23 @@ body {
 </body>
 </html>
 ';
+
+// El formato normal reproduce la distribución de la referencia: título espaciado,
+// párrafo introductorio, conceptos mensuales, total de asignación y alimentación.
+$filasConceptos = '<tr><td>SUELDO BÁSICO</td><td class="monto">' . e(number_format((float)$salario, 2, ',', '.')) . '</td></tr>';
+foreach ($primasDetalladas as $prima) {
+    $nombrePrima = mb_strtoupper(trim((string)($prima['tipo_prima'] ?? 'PRIMA')), 'UTF-8');
+    if (!empty($prima['porcentaje']) && (float)$prima['porcentaje'] > 0) {
+        $nombrePrima .= ' (' . rtrim(rtrim(number_format((float)$prima['porcentaje'], 2, ',', '.'), '0'), ',') . '%)';
+    }
+    $filasConceptos .= '<tr><td>' . e($nombrePrima) . '</td><td class="monto">' . e(number_format((float)($prima['monto'] ?? 0), 2, ',', '.')) . '</td></tr>';
+}
+$alimentacionTexto = numeroALetras($alimentacion);
+$htmlNormal = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><style>
+@page{margin:24px 24px 28px}*{box-sizing:border-box}body{font-family:DejaVu Sans,sans-serif;background:#1d1d1b;color:#f8f8f8;font-size:11pt;line-height:1.18;margin:0;padding:0}.titulo{text-align:center;font-size:24pt;font-weight:bold;letter-spacing:7px;margin:0 0 35px;padding-top:0}.intro{text-align:justify;margin:0 0 35px}.conceptos{width:82%;margin:0 auto 18px;border-collapse:collapse}.conceptos th{font-weight:bold;text-align:center;padding:0 4px 3px}.conceptos td{padding:2px 4px;vertical-align:top}.conceptos .monto{text-align:right;white-space:nowrap;width:32%}.total td{font-weight:bold;padding-top:10px}.total .linea{border-top:1px solid #eee}.alimentacion{text-align:justify;margin:20px 0 34px}.cierre{text-align:justify;margin-top:0}
+</style></head><body><h1 class="titulo">CONSTANCIA</h1><p class="intro">Quien suscribe, <strong>' . e($cargoFirmante) . '</strong> de la <strong>FUNDACIÓN PARA EL DESARROLLO DE LA CIENCIA Y TECNOLOGÍA (FUNDACITE YARACUY)</strong>, hace constar que ' . e($ciudadanoTexto) . ' <strong>' . e($nombreTrabajador) . '</strong>, titular de la cédula de identidad <strong>' . e($prefijo . $cedulaTrabajador) . '</strong>, presta sus servicios en este organismo desde el <strong>' . e(fechaCorta($fechaIngreso)) . '</strong>, en calidad de <strong>' . e($tipoPersonal) . '</strong>, con una remuneración mensual discriminada de la siguiente manera:</p><table class="conceptos"><thead><tr><th>CONCEPTOS</th><th>MENSUAL Bs.</th></tr></thead><tbody>' . $filasConceptos . '<tr class="total"><td>TOTAL ASIGNACIÓN</td><td class="monto linea">' . e(number_format($totalDevengado, 2, ',', '.')) . '</td></tr></tbody></table><p class="alimentacion">Percibe por beneficio de alimentación la cantidad de ' . e(mb_strtolower($alimentacionTexto, 'UTF-8')) . ' bolívares exactos (Bs. ' . e(number_format($alimentacion, 2, ',', '.')) . ') mensuales.</p><p class="cierre">Constancia que se expide a solicitud de la parte interesada' . (!empty($motivo) ? ', ' . e($motivo) : '') . ', en Independencia, a los ' . e(fechaConstanciaLarga($fechaConstancia)) . '.</p></body></html>';
+
+$html = ($tipoConstancia === 'normal') ? $htmlNormal : $htmlDetallada;
 
 $options = new Options();
 $options->set('isRemoteEnabled', true);

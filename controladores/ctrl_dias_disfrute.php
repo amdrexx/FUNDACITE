@@ -46,53 +46,47 @@ if (isset($_POST['eliminar_disfrute'])) {
 }
 
 // =====================================================
-// APROBAR / DESAPROBAR (viene de aprobacion_dias_disfrute.php)
+// APROBAR / DESAPROBAR (acción explícita y justificación obligatoria)
 // =====================================================
 if (isset($_POST['cambiar_estado_disfrute'])) {
-
     $id_dis = (int) ($_POST['id_dis'] ?? 0);
+    $accion = $_POST['accion_estado'] ?? '';
+    $justificacion = trim((string) ($_POST['justificacion_desaprobacion'] ?? ''));
 
-    // Esta acción se usa desde dos pantallas (lista completa y catálogo de
-    // aprobaciones); 'origen' indica a cuál volver. Se valida contra una
-    // lista blanca para evitar un redirect abierto.
     $vistasPermitidas = ['lista_dias_disfrute.php', 'aprobacion_dias_disfrute.php'];
     $origen = $_POST['origen'] ?? 'lista_dias_disfrute.php';
-    if (!in_array($origen, $vistasPermitidas, true)) {
-        $origen = 'lista_dias_disfrute.php';
-    }
-    $redirigirA = '/FUNDACITE/vistas/' . $origen . (isset($_POST['query']) ? '?' . $_POST['query'] : '');
+    if (!in_array($origen, $vistasPermitidas, true)) $origen = 'lista_dias_disfrute.php';
+    $query = (string) ($_POST['query'] ?? '');
+    // Solo se aceptan parámetros de búsqueda/estado conocidos.
+    parse_str($query, $parametrosQuery);
+    $query = http_build_query(array_intersect_key($parametrosQuery, array_flip(['buscar', 'estado'])));
+    $redirigirA = '/FUNDACITE/vistas/' . $origen . ($query !== '' ? '?' . $query : '');
 
-    if ($id_dis <= 0) {
-        $_SESSION['error_edicion'] = ['No se especificó un registro válido.'];
-        header('Location: ' . $redirigirA);
-        exit;
+    if ($id_dis <= 0 || !in_array($accion, ['Aprobar', 'Desaprobar'], true)) {
+        $_SESSION['error_edicion'] = ['La acción o el registro indicado no es válido.'];
+        header('Location: ' . $redirigirA); exit;
+    }
+    if ($accion === 'Desaprobar' && $justificacion === '') {
+        $_SESSION['error_edicion'] = ['Debe escribir la justificación para desaprobar la solicitud.'];
+        header('Location: ' . $redirigirA); exit;
     }
 
     $estadoActual = $diasDisfruteModelo->obtenerEstadoDiasDisfrute($id_dis);
-
     if ($estadoActual === null) {
         $_SESSION['error_edicion'] = ['No se encontró el registro de días de disfrute.'];
-        header('Location: ' . $redirigirA);
-        exit;
+        header('Location: ' . $redirigirA); exit;
     }
 
-    $nuevoEstado = $estadoActual === 'Aprobado' ? 'Desaprobado' : 'Aprobado';
-    $resultado = $diasDisfruteModelo->cambiarEstadoDiasDisfrute($id_dis, $nuevoEstado);
-
+    $nuevoEstado = $accion === 'Aprobar' ? 'Aprobado' : 'Desaprobado';
+    $resultado = $diasDisfruteModelo->cambiarEstadoDiasDisfrute($id_dis, $nuevoEstado, $justificacion);
     if ($resultado) {
         $nombreRegistro = bitacoraNombreDe($conexion, 'dias_disfrute', $id_dis);
-        $accionBitacora = $nuevoEstado === 'Aprobado' ? 'Aprobar' : 'Desaprobar';
-        $verboBitacora = $nuevoEstado === 'Aprobado' ? 'Aprobó' : 'Desaprobó';
-        registrarBitacora($conexion, 'Días de Disfrute', $accionBitacora, $verboBitacora . ' el registro de ' . $nombreRegistro . '.');
-        $_SESSION['exito_edicion'] = $nuevoEstado === 'Aprobado'
-            ? 'Registro aprobado correctamente.'
-            : 'Registro desaprobado correctamente.';
+        registrarBitacora($conexion, 'Días de Disfrute', $accion, ($accion === 'Aprobar' ? 'Aprobó' : 'Desaprobó') . ' el registro de ' . $nombreRegistro . ($accion === 'Desaprobar' ? '. Justificación: ' . $justificacion : '.') );
+        $_SESSION['exito_edicion'] = $accion === 'Aprobar' ? 'Registro aprobado correctamente.' : 'Registro desaprobado correctamente.';
     } else {
-        $_SESSION['error_edicion'] = ['No se pudo actualizar el estado del registro.'];
+        $_SESSION['error_edicion'] = ['No se pudo actualizar el estado del registro.' . (!empty($diasDisfruteModelo->ultimoError) ? ' ' . $diasDisfruteModelo->ultimoError : '')];
     }
-
-    header('Location: ' . $redirigirA);
-    exit;
+    header('Location: ' . $redirigirA); exit;
 }
 
 /**

@@ -128,5 +128,6 @@ unset($_SESSION['error_registro'], $_SESSION['exito_registro']);
 </script>
 <?php endif; ?>
 
+<script src="/FUNDACITE/vistas/js/valid_usuarios.js"></script>
 </body>
 </html>

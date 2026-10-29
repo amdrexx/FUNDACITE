@@ -4,6 +4,10 @@ include_once "includes/guardian.php";
 require_once("../controladores/ctrl_parroquia.php");
 $controller = new ParroquiaController();
 
+// Mensaje de validación enviado por el controlador (si el nombre no cumple las reglas)
+$errorValidacion = $_SESSION['error_validacion'] ?? '';
+unset($_SESSION['error_validacion']);
+
 // Estado que llega por URL: sirve para enfocar el filtro de la tabla
 $estadoSeleccionado = isset($_GET['estado']) ? (int) $_GET['estado'] : 0;
 
@@ -132,6 +136,10 @@ $parroquias = mysqli_fetch_all($resultado, MYSQLI_ASSOC);
                                 type="text"
                                 name="parroquia[]"
                                 placeholder="Ingrese la parroquia"
+                                maxlength="50"
+                                autocomplete="off"
+                                data-validar-ubicacion
+                                data-etiqueta="de la parroquia"
                                 required
                             >
 
@@ -322,7 +330,10 @@ $parroquias = mysqli_fetch_all($resultado, MYSQLI_ASSOC);
 <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
 
 <script src="/FUNDACITE/vistas/js/boton_desplegable.js"></script>
-<script src="/FUNDACITE/vistas/js/valid_trabajadores.js"></script>
+
+
+<!-- VALIDACIÓN DE NOMBRES (caracteres, mínimo, máximo y repetidos) -->
+<script src="/FUNDACITE/vistas/js/validar_ubicacion.js"></script>
 
 <!-- AJAX PARA CARGAR MUNICIPIOS -->
 <script src="/FUNDACITE/vistas/js/ajax_parroquia.js"></script>
@@ -352,6 +363,20 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 <?php endif; ?>
 
+<?php if (!empty($errorValidacion)): ?>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const mensaje = document.getElementById("alertMessage");
+    const alerta  = document.getElementById("customAlert");
+    if (mensaje && alerta) {
+        mensaje.innerText = <?= json_encode($errorValidacion) ?>;
+        alerta.classList.remove("hidden");
+    }
+});
+</script>
+<?php endif; ?>
+
+<script src="/FUNDACITE/vistas/js/valid_parroquias.js?v=20261029"></script>
 </body>
 
 </html>

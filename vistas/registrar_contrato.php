@@ -118,24 +118,10 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                 <div class="form-grid">
                     <h2 class="full-width" style="text-align: center; margin-bottom: 20px;">Datos del Contrato</h2>
 
-                    <h3 class="form-section-title full-width">Trabajador Asociado</h3>
+                    <h3 class="form-section-title full-width">
+                    Trabajador Asociado: <?php echo htmlspecialchars($infoTrabajador['nombres'] ?? '') . ' ' . htmlspecialchars($infoTrabajador['apellidos'] ?? ''); ?> - Tipo De Documento: <?php echo htmlspecialchars(($infoTrabajador['tipo_documento'] ?? 'Cédula') . '-' . ($infoTrabajador['cedula'] ?? 'N/A')); ?>
+                    </h3>
 
-                    <!-- Cédula del Trabajador -->
-                    <div class="field">
-                        <label>Cédula</label>
-                        <input type="text" value="<?php echo htmlspecialchars(($infoTrabajador['tipo_documento'] ?? 'Cédula') . '-' . ($infoTrabajador['cedula'] ?? 'N/A')); ?>" readonly style="background-color: rgba(255, 255, 255, 0.05); cursor: not-allowed;">
-                    </div>
-
-                    <!-- Nombre del Trabajador -->
-                    <div class="field">
-                        <label>Nombres y Apellidos</label>
-                        <input type="text" value="<?php echo htmlspecialchars(($infoTrabajador['nombres'] ?? '') . ' ' . ($infoTrabajador['apellidos'] ?? 'No especificado')); ?>" readonly style="background-color: rgba(255, 255, 255, 0.05); cursor: not-allowed;">
-                    </div>
-
-                    <div class="field">
-                        <label>Cargo asignado</label>
-                        <input type="text" value="<?php echo htmlspecialchars($infoTrabajador['nombre_cargo'] ?? 'Sin cargo asignado'); ?>" readonly style="background-color: rgba(255, 255, 255, 0.05); cursor: not-allowed;">
-                    </div>
 
                     <h3 class="form-section-title full-width">Detalles del Contrato</h3>
 
@@ -143,8 +129,8 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                     <div class="field">
                         <label>Tipo de Contrato</label>
                         <select name="tipo_contrato" id="tipo_contrato" required>
-                            <option value="Tiempo determinado" style="color: black;" <?php echo empty($datosContrato['tipo_contrato']) || ($datosContrato['tipo_contrato'] ?? '') === 'Tiempo determinado' ?  : ''; ?>>Tiempo determinado</option>
-                            <option value="Tiempo indeterminado" style="color: black;" <?php echo ($datosContrato['tipo_contrato'] ?? '') === 'Tiempo indeterminado' ?  : ''; ?>>Tiempo indeterminado</option>
+                            <option value="Tiempo determinado" style="color: black;" <?php echo empty($datosContrato['tipo_contrato']) || ($datosContrato['tipo_contrato'] ?? '') === 'Tiempo determinado' ? '' : ''; ?>>Tiempo determinado</option>
+                            <option value="Tiempo indeterminado" style="color: black;" <?php echo ($datosContrato['tipo_contrato'] ?? '') === 'Tiempo indeterminado' ? '' : ''; ?>>Tiempo indeterminado</option>
                         </select>
                     </div>
 
@@ -195,7 +181,7 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                     <!-- Gaceta Oficial (Manual) -->
                     <div class="field full-width">
                         <label>Gaceta Oficial de Designación</label>
-                        <input type="text" name="gaceta_designacion_presidente" value="<?php echo htmlspecialchars($datosContrato['gaceta_designacion_presidente'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" placeholder="Ingrese N° de Gaceta" required>
+                        <input type="text" id="gaceta_designacion_presidente" name="gaceta_designacion_presidente" value="<?php echo htmlspecialchars($datosContrato['gaceta_designacion_presidente'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" placeholder="Ingrese N° de Gaceta" required>
                     </div>
 
                     <!-- Botones de Acción / Navegación -->
@@ -237,6 +223,22 @@ function cerrarCustomAlert() {
     window.history.replaceState({}, document.title, window.location.pathname);
 }
 document.addEventListener("DOMContentLoaded", function() {
+    // Bloqueo de letras en tiempo real para el campo de Gaceta (Opción 1)
+    const inputGaceta = document.getElementById('gaceta_designacion_presidente');
+    if (inputGaceta) {
+        inputGaceta.addEventListener('keypress', function(e) {
+            if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                return;
+            }
+            if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+        inputGaceta.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    }
+
     const formularioContrato = document.getElementById('formContratos');
     const campoFechaIngreso = formularioContrato?.querySelector('[name="fecha_contrato"]');
     if (campoFechaIngreso && !campoFechaIngreso.value) {
@@ -291,5 +293,6 @@ document.addEventListener("DOMContentLoaded", function() {
 .btn-modal-compacto:hover { background-color: #3282B8; }
 </style>
 
+<script src="/FUNDACITE/vistas/js/valid_contrato_extra.js"></script>
 </body>
 </html>

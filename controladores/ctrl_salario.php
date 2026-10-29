@@ -11,14 +11,45 @@ require_once __DIR__ . "/helpers/bitacora_helper.php";
 $modelo = new clase_salario($conexion);
 
 // =====================================
+// AUXILIARES
+// =====================================
+
+/**
+ * Indica si ya existe un salario registrado con la misma fecha
+ * (sin importar el tipo de salario ni el cargo).
+ * $excluirId sirve al editar, para no compararse contra el propio registro.
+ */
+function existeSalarioConFecha($conexion, $fecha, $excluirId = 0) {
+    $stmt = $conexion->prepare(
+        "SELECT COUNT(*) FROM SALARIO WHERE fecha = ? AND id_salario <> ?"
+    );
+    if (!$stmt) {
+        return false;
+    }
+
+    $stmt->bind_param('si', $fecha, $excluirId);
+    $stmt->execute();
+    $stmt->bind_result($total);
+    $stmt->fetch();
+    $stmt->close();
+
+    return $total > 0;
+}
+
+/** Acepta coma o punto como separador y devuelve el monto con punto. */
+function normalizarMonto($monto) {
+    return str_replace(',', '.', trim($monto));
+}
+
+// =====================================
 // GUARDAR
 // =====================================
 if (isset($_POST['accion']) && $_POST['accion'] == "guardar") {
 
-    $tipo_salario = trim($_POST['tipo_salario'] ?? '');
-    $id_cargo     = trim($_POST['id_cargo'] ?? '');
-    $fecha        = trim($_POST['fecha'] ?? '');
-    $monto        = trim($_POST['monto'] ?? '');
+    $tipo_salario       = trim($_POST['tipo_salario'] ?? '');
+    $id_cargo           = trim($_POST['id_cargo'] ?? '');
+    $fecha              = trim($_POST['fecha'] ?? '');
+    $monto              = normalizarMonto($_POST['monto'] ?? '');
 
     $errores = [];
 
@@ -34,25 +65,30 @@ if (isset($_POST['accion']) && $_POST['accion'] == "guardar") {
         $errores[] = "Debe seleccionar una fecha.";
     }
 
-    if (empty($monto)) {
+    if ($monto === '') {
         $errores[] = "Debe ingresar un monto.";
-    } elseif (!is_numeric($monto) || $monto <= 0) {
-        $errores[] = "El monto debe ser mayor que cero.";
+    } elseif (!preg_match('/^\d+(\.\d{1,2})?$/', $monto) || (float) $monto <= 0) {
+        $errores[] = "El monto debe ser un número válido mayor que cero (máximo 2 decimales).";
+    }
+
+    $id_cargo_final = ($tipo_salario === 'cargo' && ctype_digit($id_cargo)) ? intval($id_cargo) : null;
+
+    // No permitir dos salarios con la misma fecha
+    if (empty($errores) && existeSalarioConFecha($conexion, $fecha)) {
+        $errores[] = "Ya existe un salario registrado con esa fecha. No se permiten dos salarios con la misma fecha.";
     }
 
     if (!empty($errores)) {
         $_SESSION['errores'] = $errores;
         $_SESSION['old'] = [
-            'fecha'        => $fecha,
-            'monto'        => $monto,
-            'tipo_salario' => $tipo_salario,
-            'id_cargo'     => $id_cargo,
+            'fecha'              => $fecha,
+            'monto'              => $monto,
+            'tipo_salario'       => $tipo_salario,
+            'id_cargo'           => $id_cargo,
         ];
         header("Location: ../vistas/registrar_salario.php");
         exit();
     }
-
-    $id_cargo_final = ($tipo_salario === 'cargo') ? intval($id_cargo) : null;
 
     if ($modelo->registrarSalario($fecha, $monto, $tipo_salario, $id_cargo_final)) {
         $detalleCargo = $id_cargo_final !== null ? ' del cargo "' . bitacoraNombreDe($conexion, 'cargo', $id_cargo_final) . '"' : '';
@@ -62,10 +98,10 @@ if (isset($_POST['accion']) && $_POST['accion'] == "guardar") {
     } else {
         $_SESSION['errores'] = ["Ocurrió un error al registrar el salario."];
         $_SESSION['old'] = [
-            'fecha'        => $fecha,
-            'monto'        => $monto,
-            'tipo_salario' => $tipo_salario,
-            'id_cargo'     => $id_cargo,
+            'fecha'              => $fecha,
+            'monto'              => $monto,
+            'tipo_salario'       => $tipo_salario,
+            'id_cargo'           => $id_cargo,
         ];
     }
 
@@ -78,11 +114,11 @@ if (isset($_POST['accion']) && $_POST['accion'] == "guardar") {
 // =====================================
 if (isset($_POST['accion']) && $_POST['accion'] == "actualizar") {
 
-    $id           = intval($_POST['id_salario'] ?? 0);
-    $tipo_salario = trim($_POST['tipo_salario'] ?? '');
-    $id_cargo     = trim($_POST['id_cargo'] ?? '');
-    $fecha        = trim($_POST['fecha'] ?? '');
-    $monto        = trim($_POST['monto'] ?? '');
+    $id                 = intval($_POST['id_salario'] ?? 0);
+    $tipo_salario       = trim($_POST['tipo_salario'] ?? '');
+    $id_cargo           = trim($_POST['id_cargo'] ?? '');
+    $fecha              = trim($_POST['fecha'] ?? '');
+    $monto              = normalizarMonto($_POST['monto'] ?? '');
 
     $errores = [];
 
@@ -101,20 +137,33 @@ if (isset($_POST['accion']) && $_POST['accion'] == "actualizar") {
     if (empty($fecha)) {
         $errores[] = "Debe seleccionar una fecha.";
     }
-    if (empty($monto) || !is_numeric($monto) || $monto <= 0) {
-        $errores[] = "El monto debe ser mayor que cero.";
+
+    if ($monto === '' || !preg_match('/^\d+(\.\d{1,2})?$/', $monto) || (float) $monto <= 0) {
+        $errores[] = "El monto debe ser un número válido mayor que cero (máximo 2 decimales).";
+    }
+
+    $id_cargo_final = ($tipo_salario === 'cargo' && ctype_digit($id_cargo)) ? intval($id_cargo) : null;
+
+    // No permitir dos salarios con la misma fecha (excluyendo este mismo registro)
+    if (empty($errores) && existeSalarioConFecha($conexion, $fecha, $id)) {
+        $errores[] = "Ya existe un salario registrado con esa fecha. No se permiten dos salarios con la misma fecha.";
     }
 
     if (!empty($errores)) {
         $_SESSION['errores'] = $errores;
-        header("Location: ../vistas/registrar_salario.php?editar=" . $id);
+        $_SESSION['old'] = [
+            'fecha'              => $fecha,
+            'monto'              => $monto,
+            'tipo_salario'       => $tipo_salario,
+            'id_cargo'           => $id_cargo,
+        ];
+        header("Location: ../vistas/editar_salario.php?editar=" . $id);
         exit();
     }
 
     // Se respeta el estado actual (Vigente/Deshabilitado) del registro que se edita
     $actual = $modelo->obtenerPorId($id);
     $estado = $actual ? $actual['estado'] : 'Deshabilitado';
-    $id_cargo_final = ($tipo_salario === 'cargo') ? intval($id_cargo) : null;
 
     $antes = bitacoraSnapshot($conexion, 'salario', $id);
 
@@ -126,7 +175,7 @@ if (isset($_POST['accion']) && $_POST['accion'] == "actualizar") {
         $_SESSION['errores'] = ["No fue posible actualizar el salario."];
     }
 
-    header("Location: ../vistas/registrar_salario.php");
+    header("Location: ../vistas/lista_salario.php");
     exit();
 }
 
@@ -148,7 +197,7 @@ if (isset($_GET['eliminar'])) {
         $_SESSION['exito'] = "Salario eliminado correctamente.";
     }
 
-    header("Location: ../vistas/registrar_salario.php");
+    header("Location: ../vistas/lista_salario.php");
     exit();
 }
 

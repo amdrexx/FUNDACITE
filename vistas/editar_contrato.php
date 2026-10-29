@@ -73,12 +73,16 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                                style="background-color: rgba(255, 255, 255, 0.05); cursor: not-allowed;">
                     </div>
 
-                    <!-- Nombre del Trabajador (Informativo) -->
-                    <div class="field">
-                        <label>Nombres y Apellidos</label>
-                        <input type="text" 
-                               value="<?php echo htmlspecialchars($contrato['nombre_trabajador'] ?? (($contrato['nombres'] ?? '') . ' ' . ($contrato['apellidos'] ?? 'No especificado'))); ?>" 
-                               readonly 
+                    <!-- Nombre del trabajador asociado al contrato -->
+                    <div class="field full-width">
+                        <label>Nombre del trabajador asociado al contrato</label>
+                        <?php
+                        $nombreTrabajadorAsociado = trim((string) ($contrato['nombre_trabajador'] ?? trim((string) ($contrato['nombres'] ?? '') . ' ' . (string) ($contrato['apellidos'] ?? ''))));
+                        ?>
+                        <input type="text"
+                               id="nombre_trabajador_asociado"
+                               value="<?php echo htmlspecialchars($nombreTrabajadorAsociado !== '' ? $nombreTrabajadorAsociado : 'Nombre no disponible', ENT_QUOTES, 'UTF-8'); ?>"
+                               readonly aria-readonly="true"
                                style="background-color: rgba(255, 255, 255, 0.05); cursor: not-allowed;">
                     </div>
 
@@ -242,5 +246,6 @@ document.addEventListener("DOMContentLoaded", function() {
 }
 </style>
 
+<script src="/FUNDACITE/vistas/js/valid_contrato_extra.js"></script>
 </body>
 </html>

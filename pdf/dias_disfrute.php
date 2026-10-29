@@ -62,6 +62,8 @@ $sql = "SELECT
             dv.fecha_inicio,
             dv.fecha_finalizacion,
             dv.observaciones,
+            dv.estado,
+            dv.justificacion_desaprobacion,
             t.cedula,
             t.nombres,
             t.apellidos,
@@ -86,6 +88,12 @@ $consulta->close();
 if (!$datosDisfrute) {
     http_response_code(404);
     exit('No se encontró el registro de días de disfrute.');
+}
+
+// La impresión está restringida en el servidor: ocultar el enlace no basta.
+if (($datosDisfrute['estado'] ?? '') !== 'Aprobado') {
+    http_response_code(403);
+    exit('No se puede imprimir la solicitud porque no está aprobada.');
 }
 
 registrarBitacora($conexion, 'Días de Disfrute', 'Generar PDF', "Generó el PDF del registro de días de disfrute ID $idDisfrute.");

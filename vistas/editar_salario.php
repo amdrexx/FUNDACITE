@@ -38,10 +38,10 @@ $old     = $_SESSION['old'] ?? [];
 unset($_SESSION['errores'], $_SESSION['exito'], $_SESSION['old']);
 
 // Valores a mostrar: lo digitado (si hubo error) o lo guardado en la BD
-$valTipo  = $old['tipo_salario'] ?? $salarioActual['tipo_salario'] ?? 'base';
-$valCargo = $old['id_cargo']     ?? $salarioActual['id_cargo']     ?? '';
-$valFecha = $old['fecha']        ?? $salarioActual['fecha']        ?? '';
-$valMonto = $old['monto']        ?? $salarioActual['monto']        ?? '';
+$valTipo    = $old['tipo_salario']       ?? $salarioActual['tipo_salario']       ?? 'base';
+$valCargo   = $old['id_cargo']           ?? $salarioActual['id_cargo']           ?? '';
+$valFecha   = $old['fecha']              ?? $salarioActual['fecha']              ?? '';
+$valMonto   = $old['monto']              ?? $salarioActual['monto']              ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -108,11 +108,14 @@ $valMonto = $old['monto']        ?? $salarioActual['monto']        ?? '';
                 <label for="monto">Monto</label>
                 <div style="position:relative; width:70%;">
                     <input
-                        type="number"
+                        type="text"
+                        inputmode="decimal"
+                        autocomplete="off"
                         name="monto"
                         id="monto"
-                        step="0.01"
-                        min="0"
+                        maxlength="15"
+                        pattern="^\d+([.,]\d{1,2})?$"
+                        title="Solo números, con hasta 2 decimales. Ej. 5000.00"
                         required
                         placeholder="Ej. 5000.00"
                         style="width:100%; box-sizing:border-box; padding-right:45px;"
@@ -133,7 +136,13 @@ $valMonto = $old['monto']        ?? $salarioActual['monto']        ?? '';
                 >
                     Cancelar
                 </a>
-                <button type="submit" name="accion" value="actualizar" class="btn-guardar">
+                <button
+                    type="submit"
+                    name="accion"
+                    value="actualizar"
+                    class="btn-guardar"
+                    style="color:#fff; -webkit-text-fill-color:#fff; font-size:15px; font-weight:700; text-indent:0; line-height:normal;"
+                >
                     Actualizar
                 </button>
             </div>
@@ -167,8 +176,44 @@ function closeAlert() {
     if (alerta) alerta.classList.add("hidden");
 }
 
-document.addEventListener("DOMContentLoaded", cambiarTipoSalario);
+document.addEventListener("DOMContentLoaded", function () {
+    cambiarTipoSalario();
+
+    // Monto: solo números, un separador decimal y máximo 2 decimales
+    const monto = document.getElementById("monto");
+    if (monto) {
+        const limpiarMonto = function (valor) {
+            valor = valor.replace(/[^0-9.,]/g, "");           // quita letras y símbolos
+            const pos = valor.search(/[.,]/);                  // primer separador
+            if (pos !== -1) {
+                const entero  = valor.slice(0, pos);
+                const decimal = valor.slice(pos + 1).replace(/[.,]/g, "").slice(0, 2);
+                valor = entero + valor.charAt(pos) + decimal;
+            }
+            return valor;
+        };
+
+        monto.addEventListener("keydown", function (e) {
+            // Bloquea letras y símbolos; permite teclas de control y atajos (Ctrl+V, etc.)
+            if (e.ctrlKey || e.metaKey || e.key.length > 1) return;
+            if (!/[0-9.,]/.test(e.key)) e.preventDefault();
+        });
+
+        monto.addEventListener("input", function () {
+            const limpio = limpiarMonto(monto.value);
+            if (monto.value !== limpio) monto.value = limpio;
+        });
+    }
+
+    const formulario = document.getElementById("formsalario");
+    if (formulario && monto) {
+        formulario.addEventListener("submit", function () {
+            monto.value = monto.value.replace(",", ".");       // envía siempre con punto
+        });
+    }
+});
 </script>
 
+<script src="/FUNDACITE/vistas/js/valid_salario_extra.js"></script>
 </body>
 </html>

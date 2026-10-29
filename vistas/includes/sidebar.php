@@ -106,13 +106,7 @@ style="display:flex;flex-direction:column;">
         <li>
             <a href="/FUNDACITE/vistas/lista_dias_disfrute.php" class="submenu-link">
                 <i class="bi bi-calendar2-heart"></i>
-                <b>DÍAS DE DISFRUTE</b>
-            </a>
-        </li>
-        <li>
-            <a href="/FUNDACITE/vistas/aprobacion_dias_disfrute.php" class="submenu-link">
-                <i class="bi bi-check2-square"></i>
-                <b>APROBACIÓN DE DISFRUTE</b>
+                <b>SOLICITUD DE DÍAS DE DISFRUTE</b>
             </a>
         </li>
         <?php endif; ?>

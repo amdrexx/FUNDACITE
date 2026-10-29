@@ -1,0 +1,2 @@
+/* Validación específica del formulario de actualización de salarios. */
+document.addEventListener('DOMContentLoaded',()=>{const form=document.getElementById('formAumento');if(!form)return;const pct=form.querySelector('[name="porcentaje"]');if(pct){pct.min='0.01';pct.max='1000';pct.step='0.01';pct.maxLength=7;}form.addEventListener('submit',e=>{if(!pct)return;const n=Number(pct.value);if(!Number.isFinite(n)||n<=0||n>1000){e.preventDefault();alert('El porcentaje debe ser mayor que 0 y no superar 1000%.');}});});

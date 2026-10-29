@@ -68,7 +68,7 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', !empty($detalleCo
 <!-- ================= CONTENIDO ================= -->
 <div class="main">
     <div class="glass tabla-container">
-        <h2 style="text-align:center; color:white;">Aprobación de Días de Disfrute</h2>
+        <h2 style="text-align:center; color:white;">Aprobación/Desaprobaciones de Días de Disfrute</h2>
     
         <form method="GET" action="aprobacion_dias_disfrute.php" class="buscador-container" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
             <input
@@ -133,17 +133,28 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', !empty($detalleCo
                                 </span>
                             </td>
                             <td class="acciones">
-                                <a class="btn-editar" target="_blank" href="/FUNDACITE/pdf/dias_disfrute.php?id=<?= urlencode($fila['id_dis']) ?>&print=1">
-                                    <i class="bi bi-printer"></i> Imprimir
-                                </a>
+                                <?php if ($estadoFila === 'Aprobado'): ?>
+                                   
+                                <?php endif; ?>
 
                                 <form action="../controladores/ctrl_dias_disfrute.php" method="POST" style="display:inline;">
-                                    <input type="hidden" name="id_dis" value="<?php echo htmlspecialchars($fila['id_dis'] ?? ''); ?>">
+                                    <input type="hidden" name="id_dis" value="<?= htmlspecialchars($fila['id_dis'] ?? '') ?>">
                                     <input type="hidden" name="origen" value="aprobacion_dias_disfrute.php">
-                                    <input type="hidden" name="query" value="<?php echo htmlspecialchars($queryActual); ?>">
-                                    <button type="submit" name="cambiar_estado_disfrute" class="<?= $estadoFila === 'Aprobado' ? 'btn-desaprobar' : 'btn-aprobar'; ?>" style="border:none; cursor:pointer;">
-                                        <i class="bi <?= $estadoFila === 'Aprobado' ? 'bi-x-circle' : 'bi-check-circle'; ?>"></i>
-                                        <?= $estadoFila === 'Aprobado' ? 'Desaprobar' : 'Aprobar'; ?>
+                                    <input type="hidden" name="query" value="<?= htmlspecialchars($queryActual, ENT_QUOTES, 'UTF-8') ?>">
+                                    <input type="hidden" name="accion_estado" value="Aprobar">
+                                    <button type="submit" name="cambiar_estado_disfrute" class="btn-aprobar" style="border:none; cursor:pointer;" <?= $estadoFila === 'Aprobado' ? 'disabled title="La solicitud ya está aprobada"' : '' ?>>
+                                        <i class="bi bi-check-circle"></i> Aprobar
+                                    </button>
+                                </form>
+
+                                <form action="../controladores/ctrl_dias_disfrute.php" method="POST" class="form-desaprobar" style="display:inline;" onsubmit="return solicitarJustificacion(this);">
+                                    <input type="hidden" name="id_dis" value="<?= htmlspecialchars($fila['id_dis'] ?? '') ?>">
+                                    <input type="hidden" name="origen" value="aprobacion_dias_disfrute.php">
+                                    <input type="hidden" name="query" value="<?= htmlspecialchars($queryActual, ENT_QUOTES, 'UTF-8') ?>">
+                                    <input type="hidden" name="accion_estado" value="Desaprobar">
+                                    <input type="hidden" name="justificacion_desaprobacion" value="">
+                                    <button type="submit" name="cambiar_estado_disfrute" class="btn-desaprobar" style="border:none; cursor:pointer;" <?= $estadoFila === 'Desaprobado' ? 'disabled title="La solicitud ya está desaprobada"' : '' ?>>
+                                        <i class="bi bi-x-circle"></i> Desaprobar
                                     </button>
                                 </form>
                             </td>
@@ -184,5 +195,18 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', !empty($detalleCo
     });
 </script>
 <?php endif; ?>
+<script>
+function solicitarJustificacion(form) {
+    if (form.querySelector('button').disabled) return false;
+    const justificacion = window.prompt('Indique la justificación de la desaprobación:');
+    if (justificacion === null) return false;
+    if (!justificacion.trim()) {
+        window.alert('La justificación es obligatoria para desaprobar.');
+        return false;
+    }
+    form.querySelector('[name="justificacion_desaprobacion"]').value = justificacion.trim();
+    return true;
+}
+</script>
 </body>
 </html>

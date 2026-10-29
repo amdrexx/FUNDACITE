@@ -151,5 +151,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+<script src="/FUNDACITE/vistas/js/valid_salario.js"></script>
+<script src="/FUNDACITE/vistas/js/valid_salario_extra.js"></script>
 </body>
 </html>

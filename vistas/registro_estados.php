@@ -2,14 +2,23 @@
 session_start();
 include_once "includes/guardian.php";
 require_once("../controladores/ctrl_estado.php");
+require_once("includes/validar_ubicacion.php");
 
 $controlador = new EstadoController();
 
-if (isset($_POST['guardar'])) {
+// Validación del nombre antes de guardar o actualizar
+$errorValidacion = '';
+
+if (isset($_POST['guardar']) || isset($_POST['actualizar'])) {
+    $_POST['nombre'] = normalizarNombreUbicacion($_POST['nombre'] ?? '');
+    $errorValidacion = validarNombreUbicacion($_POST['nombre'], 'del estado');
+}
+
+if (isset($_POST['guardar']) && $errorValidacion === '') {
     $controlador->guardar();
 }
 
-if (isset($_POST['actualizar'])) {
+if (isset($_POST['actualizar']) && $errorValidacion === '') {
     $controlador->actualizar();
 }
 
@@ -22,6 +31,9 @@ $editar = null;
 if (isset($_GET['editar'])) {
     $editar = $controlador->buscar($_GET['editar']);
 }
+
+// Valor que se muestra en el campo: lo digitado (si hubo error) o lo guardado
+$nombreForm = $_POST['nombre'] ?? ($editar['nombre'] ?? '');
 
 $estados = $controlador->listar();
 ?>
@@ -75,7 +87,11 @@ $estados = $controlador->listar();
                 type="text"
                 name="nombre"
                 placeholder="Ingrese el estado"
-                value="<?= $editar['nombre'] ?? ''; ?>"
+                value="<?= htmlspecialchars($nombreForm); ?>"
+                maxlength="50"
+                autocomplete="off"
+                data-validar-ubicacion
+                data-etiqueta="del estado"
                 required
             >
         </div>
@@ -183,8 +199,9 @@ $estados = $controlador->listar();
     <script src="/FUNDACITE/vistas/js/select2.min.js"></script>
     <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
     <script src="/FUNDACITE/vistas/js/boton_desplegable.js"></script>
-    <script src="/FUNDACITE/vistas/js/valid_trabajadores.js"></script>
+    
     <script src="/FUNDACITE/vistas/js/parroquia.js"></script>
+    <script src="/FUNDACITE/vistas/js/validar_ubicacion.js"></script>
     
 <?php if (isset($_GET['msg'])): ?>
 <script>
@@ -204,6 +221,19 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 <?php endif; ?>
+<?php if (!empty($errorValidacion)): ?>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const mensaje = document.getElementById("alertMessage");
+    const alerta  = document.getElementById("customAlert");
+    if (mensaje && alerta) {
+        mensaje.innerText = <?= json_encode($errorValidacion) ?>;
+        alerta.classList.remove("hidden");
+    }
+});
+</script>
+<?php endif; ?>
+<script src="/FUNDACITE/vistas/js/valid_estados.js?v=20261029"></script>
 </body>
 
 </html>

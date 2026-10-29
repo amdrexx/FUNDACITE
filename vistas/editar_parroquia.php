@@ -205,11 +205,12 @@ if (isset($_GET['estado']) && (int) $_GET['estado'] > 0) {
 <script src="/FUNDACITE/vistas/js/select2.min.js"></script>
 <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
 <script src="/FUNDACITE/vistas/js/boton_desplegable.js"></script>
-<script src="/FUNDACITE/vistas/js/valid_trabajadores.js"></script>
+
  
 <!-- AJAX PARA CARGAR MUNICIPIOS -->
 <script src="/FUNDACITE/vistas/js/ajax_parroquia.js"></script>
  
+<script src="/FUNDACITE/vistas/js/valid_ubicaciones.js"></script>
 </body>
  
 </html>
