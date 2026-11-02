@@ -1,0 +1,641 @@
+/* ============================================================================
+   ARCHIVO: vistas/css/exportar_importar.css
+   DESCRIPCIÓN: Botón flotante (flecha arriba) + panel de Exportar/Importar BD
+   (solo Administrador). Usa EXACTAMENTE el mismo lenguaje visual que
+   bitacora.css (vidrio esmerilado + azules institucionales #0F4C75/#3282B8)
+   para que ambos botones flotantes se vean como una sola familia.
+   ============================================================================ */
+
+.ei-root {
+    /* Mismos tokens que .bt-root, para quedar estandarizado en colores */
+    --ei-bg: rgba(20, 30, 36, 0.84);
+    --ei-surface: rgba(255, 255, 255, 0.06);
+    --ei-surface-hover: rgba(255, 255, 255, 0.11);
+    --ei-line: rgba(255, 255, 255, 0.12);
+    --ei-line-soft: rgba(255, 255, 255, 0.07);
+
+    --ei-text: #eaeaea;
+    --ei-text-dim: rgba(255, 255, 255, 0.62);
+    --ei-text-faint: rgba(255, 255, 255, 0.42);
+
+    --ei-navy: #0f4c75;
+    --ei-accent: #3282b8;
+    --ei-accent-hi: #4da3ff;
+
+    --ei-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: var(--ei-text);
+}
+
+.ei-root *,
+.ei-root *::before,
+.ei-root *::after {
+    box-sizing: border-box;
+}
+
+.ei-root button,
+.ei-root input,
+.ei-root select {
+    font: inherit;
+    color: inherit;
+}
+
+.ei-root button {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.ei-root :focus-visible {
+    outline: 2px solid var(--ei-accent-hi);
+    outline-offset: 2px;
+}
+
+/* ============================================================================
+   BOTÓN FLOTANTE (flecha hacia arriba) — justo encima de la campana (.bt-fab)
+   ============================================================================ */
+
+.ei-fab {
+    position: fixed;
+    right: 28px;
+    bottom: 100px; /* 28 (bt-fab) + 58 (alto) + 14 (separación) */
+    z-index: 1001;
+    width: 58px;
+    height: 58px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: linear-gradient(145deg, #3a90c9 0%, var(--ei-accent) 38%, var(--ei-navy) 100%);
+    color: #fff;
+    font-size: 23px;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow:
+        0 12px 30px rgba(9, 62, 97, 0.6),
+        0 3px 8px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.32);
+    transition:
+        transform 160ms var(--ei-ease),
+        box-shadow 160ms var(--ei-ease);
+}
+
+.ei-fab i {
+    display: block;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .ei-fab:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            0 16px 36px rgba(9, 62, 97, 0.7),
+            0 4px 10px rgba(0, 0, 0, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
+}
+
+.ei-fab:active {
+    transform: scale(0.95);
+    transition-duration: 90ms;
+}
+
+.ei-fab[aria-expanded="true"] {
+    background: linear-gradient(145deg, #2f78a8 0%, #1d6390 45%, #0b3d60 100%);
+}
+
+.ei-fab:focus-visible {
+    outline-offset: 4px;
+}
+
+/* ============================================================================
+   PANEL
+   ============================================================================ */
+
+.ei-panel {
+    position: fixed;
+    right: 28px;
+    bottom: 172px; /* encima de los dos botones flotantes */
+    z-index: 1001;
+    width: min(400px, calc(100vw - 32px));
+    height: min(560px, calc(100vh - 200px));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 20px;
+    background: var(--ei-bg);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    backdrop-filter: blur(20px) saturate(1.2);
+    border: 1px solid var(--ei-line);
+    box-shadow:
+        0 28px 64px rgba(0, 0, 0, 0.52),
+        0 0 0 1px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.09);
+    outline: none;
+
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+    transform-origin: bottom right;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+        opacity 160ms var(--ei-ease),
+        transform 200ms var(--ei-ease),
+        visibility 0s linear 200ms;
+}
+
+.ei-panel.is-open {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+        opacity 200ms var(--ei-ease),
+        transform 280ms var(--ei-ease),
+        visibility 0s;
+}
+
+/* --- Encabezado -------------------------------------------------------------- */
+
+.ei-head {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 14px 14px 16px;
+    background: linear-gradient(180deg, rgba(9, 62, 97, 0.9), rgba(9, 62, 97, 0.38));
+    border-bottom: 1px solid var(--ei-line);
+}
+
+.ei-head-ico {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    font-size: 19px;
+    color: #fff;
+    background: linear-gradient(145deg, #3a90c9, var(--ei-navy));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 10px rgba(9, 62, 97, 0.5);
+}
+
+.ei-head-txt {
+    flex: 1;
+    min-width: 0;
+}
+
+.ei-head-txt h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: #fff;
+}
+
+.ei-head-txt p {
+    margin: 2px 0 0;
+    font-size: 12.5px;
+    color: var(--ei-text-dim);
+}
+
+.ei-close {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--ei-surface);
+    font-size: 13px;
+    cursor: pointer;
+    transition:
+        background-color 120ms ease-out,
+        transform 90ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .ei-close:hover {
+        background: var(--ei-surface-hover);
+    }
+}
+
+.ei-close:active {
+    transform: scale(0.92);
+}
+
+/* --- Pestañas Exportar / Importar --------------------------------------------- */
+
+.ei-tabs {
+    flex: none;
+    display: flex;
+    gap: 6px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--ei-line-soft);
+}
+
+.ei-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    height: 38px;
+    border: 1px solid var(--ei-line);
+    border-radius: 10px;
+    background: var(--ei-surface);
+    color: var(--ei-text-dim);
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background-color 140ms ease-out,
+        border-color 140ms ease-out,
+        color 140ms ease-out,
+        transform 90ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .ei-tab:hover {
+        background: var(--ei-surface-hover);
+        color: #fff;
+    }
+}
+
+.ei-tab:active {
+    transform: scale(0.97);
+}
+
+.ei-tab[aria-selected="true"] {
+    background: var(--ei-accent);
+    border-color: rgba(255, 255, 255, 0.28);
+    color: #fff;
+}
+
+/* --- Contenido ----------------------------------------------------------------- */
+
+.ei-scroll {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.24) transparent;
+}
+
+.ei-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.ei-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+.ei-sec {
+    padding: 16px;
+}
+
+.ei-sec[hidden] {
+    display: none;
+}
+
+.ei-texto {
+    margin: 0 0 14px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--ei-text-dim);
+}
+
+.ei-texto code {
+    padding: 1px 6px;
+    border-radius: 6px;
+    background: var(--ei-surface);
+    color: #9fd0ff;
+    font-size: 12.5px;
+}
+
+/* --- Botones (estandarizados: mismas proporciones y radio en todo el panel) ---- */
+
+.ei-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    height: 44px;
+    padding: 0 16px;
+    border-radius: 11px;
+    border: 1px solid transparent;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        background-color 140ms ease-out,
+        transform 90ms ease-out,
+        opacity 140ms ease-out;
+}
+
+.ei-btn:active {
+    transform: scale(0.98);
+}
+
+.ei-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.ei-btn-primary {
+    background: linear-gradient(145deg, #3a90c9 0%, var(--ei-accent) 45%, var(--ei-navy) 100%);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(9, 62, 97, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .ei-btn-primary:not(:disabled):hover {
+        box-shadow: 0 10px 24px rgba(9, 62, 97, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+    }
+}
+
+.ei-btn-secundario {
+    margin-top: 10px;
+    background: var(--ei-surface);
+    border-color: var(--ei-line);
+    color: #fff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .ei-btn-secundario:not(:disabled):hover {
+        background: var(--ei-surface-hover);
+    }
+}
+
+/* --- Divisor de secciones -------------------------------------------------------- */
+
+.ei-divisor {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0 12px;
+    color: var(--ei-text-faint);
+    font-size: 11.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.ei-divisor::before,
+.ei-divisor::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--ei-line-soft);
+}
+
+/* --- Aviso de advertencia (importar) ---------------------------------------------- */
+
+.ei-aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 11px 12px;
+    border-radius: 10px;
+    background: rgba(245, 165, 36, 0.14);
+    border: 1px solid rgba(245, 165, 36, 0.38);
+    color: #f5c87a;
+    font-size: 12.5px;
+    line-height: 1.45;
+}
+
+.ei-aviso i {
+    flex: none;
+    margin-top: 1px;
+    font-size: 14px;
+}
+
+/* --- Selector de archivo y <select> (mismo radio/altura que los botones) -------- */
+
+.ei-file {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    height: 44px;
+    margin-bottom: 10px;
+    padding: 0 14px;
+    border: 1px dashed var(--ei-line);
+    border-radius: 11px;
+    background: var(--ei-surface);
+    color: var(--ei-text-dim);
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: background-color 140ms ease-out, border-color 140ms ease-out, color 140ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .ei-file:hover {
+        background: var(--ei-surface-hover);
+        border-color: var(--ei-accent-hi);
+        color: #fff;
+    }
+}
+
+.ei-file.has-file {
+    border-style: solid;
+    border-color: var(--ei-accent-hi);
+    color: #fff;
+}
+
+.ei-file span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ei-select {
+    width: 100%;
+    height: 44px;
+    margin-bottom: 10px;
+    padding: 0 12px;
+    border: 1px solid var(--ei-line);
+    border-radius: 11px;
+    background: var(--ei-surface);
+    font-size: 13.5px;
+    outline: none;
+    transition: border-color 150ms ease-out, background-color 150ms ease-out;
+}
+
+.ei-select:focus {
+    border-color: var(--ei-accent-hi);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.ei-select option {
+    background: #142026;
+    color: #eaeaea;
+}
+
+/* --- Lista de respaldos guardados (pestaña Exportar) ---------------------------- */
+
+.ei-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ei-lista li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 11px;
+    border-radius: 10px;
+    background: var(--ei-surface);
+    border: 1px solid var(--ei-line-soft);
+    font-size: 12.5px;
+}
+
+.ei-lista li i {
+    flex: none;
+    color: rgb(77, 163, 255);
+}
+
+.ei-lista-nombre {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #fff;
+    font-weight: 600;
+}
+
+.ei-lista-meta {
+    flex: none;
+    color: var(--ei-text-faint);
+    font-size: 11.5px;
+    white-space: nowrap;
+}
+
+.ei-vacio {
+    padding: 14px 4px;
+    color: var(--ei-text-faint);
+    font-size: 12.5px;
+    text-align: center;
+}
+
+/* --- Estado de la importación (éxito / error) ------------------------------------ */
+
+.ei-estado {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 11px 12px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    line-height: 1.45;
+}
+
+.ei-estado[hidden] {
+    display: none;
+}
+
+.ei-estado i {
+    flex: none;
+    margin-top: 1px;
+    font-size: 15px;
+}
+
+.ei-estado.is-ok {
+    background: rgba(76, 175, 80, 0.14);
+    border: 1px solid rgba(76, 175, 80, 0.38);
+    color: #a9e3ac;
+}
+
+.ei-estado.is-error {
+    background: rgba(244, 67, 54, 0.14);
+    border: 1px solid rgba(244, 67, 54, 0.38);
+    color: #f3a9a3;
+}
+
+.ei-estado.is-loading {
+    background: rgba(50, 130, 184, 0.16);
+    border: 1px solid rgba(77, 163, 255, 0.38);
+    color: #b8dcf5;
+}
+
+.ei-descarga {
+    display: inline-block;
+    margin-top: 6px;
+    color: #d8f3dc;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.ei-giro {
+    animation: ei-rotar 900ms linear infinite;
+}
+
+@keyframes ei-rotar {
+    to { transform: rotate(360deg); }
+}
+
+/* ============================================================================
+   RESPONSIVO
+   ============================================================================ */
+
+@media (max-width: 576px) {
+    .ei-fab {
+        right: 16px;
+        bottom: 82px; /* 16 + 54 + 12, igual criterio que .bt-fab en móvil */
+        width: 54px;
+        height: 54px;
+        font-size: 21px;
+    }
+
+    .ei-panel {
+        right: 8px;
+        left: 8px;
+        width: auto;
+        bottom: 146px;
+        height: min(70vh, calc(100vh - 170px));
+        border-radius: 18px;
+    }
+
+    .ei-select,
+    .ei-file {
+        font-size: 16px; /* evita el zoom automático de iOS al enfocar */
+    }
+}
+
+/* ============================================================================
+   MOVIMIENTO REDUCIDO
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .ei-fab,
+    .ei-panel,
+    .ei-panel.is-open {
+        transform: none;
+        transition-property: opacity, visibility;
+        transition-duration: 120ms, 0s;
+        transition-delay: 0s, 0s;
+    }
+
+    .ei-panel:not(.is-open) {
+        transition-delay: 0s, 120ms;
+    }
+
+    .ei-giro {
+        animation: none;
+    }
+}

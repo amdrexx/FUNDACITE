@@ -1,0 +1,272 @@
+<?php
+session_start();
+include_once "includes/guardian.php";
+
+require_once '../conexion.php';
+require_once '../modelos/clase_constancia.php';
+
+$constanciaModelo = new ConstanciaTrabajo($conexion);
+// Usuario Estándar: el select solo contiene a su propio trabajador.
+$trabajadores = $constanciaModelo->listarTrabajadoresActivos(filtroTrabajadorSesion());
+$soloPropio = esUsuarioEstandar() && count($trabajadores) === 1;
+
+$old = $_SESSION['old_constancia'] ?? null;
+$errores = $_SESSION['errores_constancia'] ?? [];
+$exito = $_SESSION['exito_constancia'] ?? '';
+
+unset($_SESSION['errores_constancia'], $_SESSION['exito_constancia']);
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registrar Constancia de Trabajo</title>
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.scss">
+    <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
+    <style>
+        #formconstancia .contenedor-botones {
+            justify-content: center;
+        }
+        #formconstancia .btn-accion {
+            flex: 0 0 auto;
+            width: 180px;
+        }
+        .campo-auto {
+            background-color: rgba(255, 255, 255, 0.1);
+            cursor: not-allowed;
+        }
+        .campo-ok {
+            color: #ccffcc;
+        }
+    </style>
+</head>
+<body>
+
+<?php include "includes/layout.php"; ?>
+
+<div class="main">
+    <div class="form-card">
+
+        <form id="formconstancia" method="POST" action="../controladores/ctrl_constancia.php">
+
+            <div class="form-grid full-width">
+                <h2>CONSTANCIA DE TRABAJO</h2>
+
+                <!-- 1. SELECT de trabajadores -->
+                <div class="field full-width">
+                    <label>Seleccionar Trabajador</label>
+                    <select name="id_trabajador" id="id_trabajador" required>
+                        <?php if (!$soloPropio): ?>
+                        <option value="">Seleccione un trabajador...</option>
+                        <?php endif; ?>
+                        <?php foreach ($trabajadores as $t): ?>
+                            <option value="<?= $t['id_trabajador'] ?>"
+                                <?= ($soloPropio || ($old && ($old['id_trabajador'] ?? '') == $t['id_trabajador'])) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($t['cedula'] . ' - ' . $t['nombre_completo']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <!-- Tipo de constancia: define únicamente el formato del PDF -->
+                <div class="field full-width">
+                    <label for="tipo_constancia">Tipo de constancia</label>
+                    <select name="tipo_constancia" id="tipo_constancia" required>
+                        <option value="normal" <?= (($old['tipo_constancia'] ?? 'normal') === 'normal') ? 'selected' : '' ?>>Constancia normal</option>
+                        <option value="primas_detalladas" <?= (($old['tipo_constancia'] ?? '') === 'primas_detalladas') ? 'selected' : '' ?>>Constancia con primas detalladas</option>
+                    </select>
+                </div>
+
+                <!-- 2. Fecha emisión -->
+                <div class="field">
+                    <label>Fecha de Emisión</label>
+                    <input type="date" name="fecha" value="<?= date('Y-m-d') ?>" required>
+                </div>
+
+                <!-- 3. Nombre completo (auto-rellenado) -->
+                <div class="field full-width">
+                    <label>Apellido y Nombres del Trabajador(a)</label>
+                    <input type="text" id="nombre_completo" class="campo-auto"
+                           value="<?= $old ? htmlspecialchars($old['nombre_completo'] ?? '') : '' ?>"
+                           readonly placeholder="Se auto-rellena al seleccionar trabajador...">
+                </div>
+
+                <!-- 4. Cédula (auto-rellenado) -->
+                <div class="field">
+                    <label>N° Cédula de Identidad</label>
+                    <input type="text" id="cedula_display" class="campo-auto"
+                           value="<?= $old ? htmlspecialchars($old['cedula'] ?? '') : '' ?>"
+                           readonly placeholder="---">
+                </div>
+
+                <!-- 5. Cargo (auto-rellenado) -->
+                <div class="field">
+                    <label>Cargo Actual</label>
+                    <input type="text" id="cargo_display" class="campo-auto"
+                           value="<?= $old ? htmlspecialchars($old['cargo'] ?? '') : '' ?>"
+                           readonly placeholder="---">
+                </div>
+
+                <!-- 6. Fecha de ingreso (auto-rellenado) -->
+                <div class="field">
+                    <label>Fecha de Ingreso</label>
+                    <input type="text" id="fecha_primer_contrato_display" class="campo-auto"
+                           value="<?= $old ? htmlspecialchars($old['fecha_primer_contrato'] ?? '') : '' ?>"
+                           readonly placeholder="---">
+                </div>
+
+                <!-- 7. Remuneración calculada desde salario vigente + primas activas -->
+                <div class="field">
+                    <label>Salario aplicado (Bs.)</label>
+                    <input type="text" id="salario_display" class="campo-auto"
+                           value="<?= $old && isset($old['salario_monto']) ? number_format((float)$old['salario_monto'], 2, ',', '.') : '' ?>"
+                           readonly placeholder="---">
+                    <small id="origen_salario_display"><?= htmlspecialchars($old['origen_salario'] ?? '') ?></small>
+                </div>
+                <div class="field">
+                    <label>Total de primas activas (Bs.)</label>
+                    <input type="text" id="primas_display" class="campo-auto"
+                           value="<?= $old && isset($old['total_primas']) ? number_format((float)$old['total_primas'], 2, ',', '.') : '' ?>"
+                           readonly placeholder="---">
+                </div>
+                <div class="field full-width">
+                    <label>Total mensual devengado (salario + primas) (Bs.)</label>
+                    <input type="text" id="total_devengado_display" class="campo-auto"
+                           value="<?= $old && isset($old['total_devengado']) ? number_format((float)$old['total_devengado'], 2, ',', '.') : '' ?>"
+                           readonly placeholder="---">
+                </div>
+
+                <!-- 8. Tipo de personal -->
+                <div class="field">
+                    <label>Tipo de Personal</label>
+                    <input type="text" id="tipo_personal" name="tipo_personal" class="campo-auto"
+                           value="<?= htmlspecialchars($old['tipo_personal'] ?? '') ?>"
+                           readonly required placeholder="Se completa al seleccionar trabajador...">
+                </div>
+
+                <!-- 9. Motivo -->
+                <div class="field full-width">
+                    <label>Motivo</label>
+                    <textarea name="motivo" rows="3" required
+                              placeholder="Ej: Indique el motivo de la constancia..."><?= htmlspecialchars($_POST['motivo'] ?? '') ?></textarea>
+                </div>
+
+            </div>
+
+            <div class="form-actions full-width">
+                <button type="submit" name="accion" value="limpiar" class="btn-secundario">
+                    Limpiar
+                </button>
+                <button type="submit" name="accion" value="guardar" id="btnGuardarConstancia" class="btn-guardar" disabled>
+                    Guardar
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+<?php include "includes/alerta.php"; ?>
+
+<script src="/FUNDACITE/vistas/js/valid_constancia.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var selectTrabajador = document.getElementById('id_trabajador');
+    var nombreCompleto   = document.getElementById('nombre_completo');
+    var cedulaDisplay    = document.getElementById('cedula_display');
+    var cargoDisplay     = document.getElementById('cargo_display');
+    var fechaIngresoDisp = document.getElementById('fecha_primer_contrato_display');
+    var salarioDisplay   = document.getElementById('salario_display');
+    var primasDisplay    = document.getElementById('primas_display');
+    var totalDevengadoDisplay = document.getElementById('total_devengado_display');
+    var origenSalarioDisplay = document.getElementById('origen_salario_display');
+    var tipoPersonal     = document.getElementById('tipo_personal');
+    var botonGuardar     = document.getElementById('btnGuardarConstancia');
+
+    selectTrabajador.addEventListener('change', function() {
+        var id = this.value;
+
+        if (!id) {
+            botonGuardar.disabled = true;
+            nombreCompleto.value = '';
+            cedulaDisplay.value  = '';
+            cargoDisplay.value   = '';
+            fechaIngresoDisp.value = '';
+            salarioDisplay.value = '';
+            primasDisplay.value = '';
+            totalDevengadoDisplay.value = '';
+            origenSalarioDisplay.textContent = '';
+            tipoPersonal.value = '';
+            return;
+        }
+
+        botonGuardar.disabled = true;
+        origenSalarioDisplay.textContent = 'Verificando salario registrado...';
+        fetch('../ajax/ajax_constancia_trabajador.php?id_trabajador=' + encodeURIComponent(id))
+            .then(function(resp) { return resp.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    nombreCompleto.value   = data.nombre_completo;
+                    cedulaDisplay.value    = data.cedula;
+                    cargoDisplay.value     = data.cargo;
+                    fechaIngresoDisp.value = data.fecha_primer_contrato || 'Sin contrato registrado';
+                    var formatoBs = function(valor) {
+                        return parseFloat(valor || 0).toLocaleString('es-VE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    };
+                    salarioDisplay.value = formatoBs(data.salario_monto);
+                    primasDisplay.value = formatoBs(data.total_primas);
+                    totalDevengadoDisplay.value = formatoBs(data.total_devengado);
+                    origenSalarioDisplay.textContent = data.origen_salario || 'Sin salario registrado';
+                    tipoPersonal.value = data.tipo_personal || '';
+                    botonGuardar.disabled = !data.tiene_salario;
+                    if (!data.tiene_salario) {
+                        origenSalarioDisplay.textContent = 'SIN SALARIO REGISTRADO: no se puede emitir la constancia.';
+                        alert('No se puede registrar la constancia. El trabajador no tiene un salario vigente registrado por cargo ni salario base.');
+                    }
+
+                    nombreCompleto.classList.add('campo-ok');
+                    setTimeout(function() { nombreCompleto.classList.remove('campo-ok'); }, 1500);
+                } else {
+                    botonGuardar.disabled = true;
+                    alert(data.message || 'No se encontraron datos del trabajador.');
+                }
+            })
+            .catch(function(err) {
+                console.error('Error AJAX:', err);
+                botonGuardar.disabled = true;
+                origenSalarioDisplay.textContent = 'No se pudo verificar el salario.';
+                alert('Error al consultar los datos y verificar el salario del trabajador. Intente nuevamente.');
+            });
+    });
+
+    if (selectTrabajador.value) {
+        selectTrabajador.dispatchEvent(new Event('change'));
+    }
+});
+</script>
+
+<?php if (!empty($errores)): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('alertMessage').textContent = <?= json_encode(implode("\n", $errores)) ?>;
+        document.getElementById('customAlert').classList.remove('hidden');
+    });
+</script>
+<?php endif; ?>
+
+<?php if (!empty($exito)): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('alertMessage').textContent = <?= json_encode($exito) ?>;
+        document.getElementById('customAlert').classList.remove('hidden');
+    });
+</script>
+<?php endif; ?>
+
+<script src="/FUNDACITE/vistas/js/valid_constancia_extra.js"></script>
+</body>
+</html>

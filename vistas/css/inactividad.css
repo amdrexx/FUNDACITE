@@ -1,0 +1,138 @@
+/* ============================================================================
+   Aviso de sesión por expirar (vistas/js/inactividad.js)
+   Movimiento: solo transform + opacity, ease-out, < 300 ms.
+   Aparece pocas veces al día, así que la entrada puede notarse (220 ms);
+   la salida es más corta (150 ms) para no hacer esperar a quien ya respondió.
+   ========================================================================== */
+
+.ses-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: rgba(10, 20, 40, .55);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    /* salida */
+    transition: opacity 150ms ease-out, visibility 0s linear 150ms;
+}
+
+.ses-overlay.ses-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    /* entrada */
+    transition: opacity 200ms ease-out, visibility 0s;
+}
+
+.ses-dialog {
+    width: min(100%, 400px);
+    box-sizing: border-box;
+    padding: 24px 24px 20px;
+    border-radius: 14px;
+    background: #fff;
+    color: #1a2233;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, .35);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    /* nunca se anima desde scale(0) */
+    opacity: 0;
+    transform: scale(.96) translateY(6px);
+    transition: transform 150ms ease-out, opacity 150ms ease-out;
+}
+
+.ses-visible .ses-dialog {
+    opacity: 1;
+    transform: none;
+    transition: transform 220ms cubic-bezier(.23, 1, .32, 1), opacity 200ms ease-out;
+}
+
+.ses-dialog h2 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    color: #1b3d6d;
+}
+
+.ses-dialog p {
+    margin: 0 0 16px;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.ses-count {
+    display: inline-block;
+    min-width: 2ch;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums; /* el número no "baila" al cambiar */
+    text-align: center;
+}
+
+/* Barra de tiempo restante: transform (no width) y linear porque mide tiempo */
+.ses-track {
+    height: 4px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: #e3e8f0;
+}
+
+.ses-bar {
+    height: 100%;
+    background: #1b3d6d;
+    transform-origin: left center;
+    transform: scaleX(1);
+    transition-property: transform;
+    transition-timing-function: linear;
+}
+
+.ses-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.ses-btn {
+    min-height: 40px;            /* zona táctil cómoda */
+    padding: 0 16px;
+    border: 0;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 150ms ease-out, background-color 150ms ease-out;
+}
+
+.ses-btn-primary { background: #1b3d6d; color: #fff; }
+.ses-btn-secondary { background: #e9edf3; color: #1a2233; }
+
+.ses-btn:active { transform: scale(.97); } /* respuesta inmediata al presionar */
+
+.ses-btn:focus-visible {
+    outline: 2px solid #1b3d6d;
+    outline-offset: 2px;
+}
+
+/* hover solo en dispositivos con puntero real (evita falsos hover en táctil) */
+@media (hover: hover) and (pointer: fine) {
+    .ses-btn-primary:hover { background: #24508f; }
+    .ses-btn-secondary:hover { background: #dbe2ec; }
+}
+
+.ses-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ses-dialog,
+    .ses-visible .ses-dialog { transform: none; }
+    .ses-btn:active { transform: none; }
+}
