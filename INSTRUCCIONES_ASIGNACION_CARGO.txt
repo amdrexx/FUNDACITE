@@ -1,0 +1,76 @@
+MODIFICACIÓN: HISTORIAL Y DESVINCULACIÓN DE CARGOS
+=================================================
+
+REGLA DE PRESIDENTE Y DIRECTOR
+------------------------------
+1. Al registrar un trabajador nuevo y seleccionar el cargo Presidente o Director,
+   el sistema finaliza la asignación del titular anterior y coloca su
+   TRABAJADOR.id_cargo en NULL.
+2. El trabajador anterior conserva íntegro su estatus laboral y todos sus datos.
+3. El movimiento anterior queda en ASIGNACION_CARGO con fecha_fin, estado
+   FINALIZADA y el usuario que realizó la sustitución.
+4. La sustitución automática está limitada al flujo de registro de un trabajador.
+   En la edición de un trabajador o desde el módulo Asignación de cargo no se
+   desplaza a un titular de Presidente o Director; se informa que el cargo ya
+   tiene titular.
+
+DESVINCULACIÓN MANUAL DE LOS DEMÁS CARGOS
+----------------------------------------
+1. En el módulo Asignación de cargo aparece la acción Desvincular para cada
+   trabajador que tenga un cargo actual.
+2. Al confirmar, el sistema registra fecha_fin, estado FINALIZADA, observación
+   y el usuario que hizo la desvinculación.
+3. TRABAJADOR.id_cargo queda en NULL y el trabajador aparece sin cargo.
+4. El campo TRABAJADOR.status no se modifica.
+5. La acción se procesa por POST y valida un token CSRF.
+
+BASE DE DATOS
+-------------
+- ASIGNACION_CARGO incluye id_usuario_asignador e id_usuario_desvinculador.
+- En una instalación nueva, importar bd.sql.
+- En una instalación existente, hacer respaldo y ejecutar
+  migracion_historial_asignacion_cargo.sql en la base de datos del proyecto.
+- Si todavía no se ha aplicado el traslado de tipo_personal, ejecutar también
+  migracion_tipo_personal_trabajador.sql.
+- No volver a importar bd.sql completo sobre una base de datos con información.
+
+NOTA
+----
+La migración inicial usa la fecha del contrato como aproximación para los
+registros históricos que no tenían fecha de asignación propia. Las asignaciones
+nuevas sí guardan la fecha y hora exactas en que se realizan.
+
+
+ASIGNAR CARGO DESDE EL MODULO
+-----------------------------
+1. El módulo vistas/asignar_cargo.php incluye un formulario propio para asignar
+   un cargo a un trabajador activo que actualmente esté sin cargo.
+2. La asignación no se realiza desde Editar trabajador.
+3. Al asignar, se actualiza TRABAJADOR.id_cargo y se inserta un nuevo movimiento
+   ACTIVO en ASIGNACION_CARGO con fecha/hora y usuario asignador.
+4. Para los cargos ordinarios, primero se debe desvincular manualmente la
+   asignación anterior desde el listado del mismo módulo cuando corresponda.
+5. Presidente y Director son cargos únicos: el módulo no desplaza ni permite
+   desvincular manualmente a sus titulares. Su sustitución ocurre al registrar
+   un nuevo trabajador que seleccione el mismo cargo.
+6. El formulario de asignación valida un token CSRF y la operación se ejecuta
+   dentro de una transacción.
+
+
+EDICION DEL TRABAJADOR
+----------------------
+- La vista editar_trabajador.php ya no permite modificar el cargo. Muestra el
+  cargo actual solo como consulta.
+- El controlador y el modelo de edición no aceptan cambios de id_cargo ni
+  modifican el historial de ASIGNACION_CARGO.
+- La asignación y desvinculación ordinaria se gestionan desde
+  vistas/asignar_cargo.php. El registro inicial del trabajador conserva su
+  lógica propia, incluida la sustitución automática de Presidente/Director.
+
+
+ACTUALIZACIÓN: GACETA DE ASIGNACIÓN
+- El formulario del módulo solicita la Gaceta utilizada al asignar un cargo.
+- La Gaceta se guarda en ASIGNACION_CARGO.gaceta y se muestra en el listado actual, historial y reportes PDF.
+- La desvinculación no solicita ni altera la Gaceta.
+- En asignaciones históricas o automáticas sin dato documental, el listado muestra 'No registrada'.
+- En una base de datos que ya tiene ASIGNACION_CARGO, ejecutar migracion_gaceta_asignacion_cargo.sql. En una instalación nueva, bd.sql ya crea la columna gaceta.

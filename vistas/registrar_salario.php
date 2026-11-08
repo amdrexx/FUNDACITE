@@ -1,0 +1,154 @@
+<?php
+session_start();
+include_once "includes/guardian.php";
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+require_once("../conexion.php");
+
+// Cargos para el select
+$cargos = [];
+$resultCargos = $conexion->query("SELECT id_cargo, nombre_cargo FROM CARGO ORDER BY nombre_cargo ASC");
+if ($resultCargos) {
+    while ($cargo = $resultCargos->fetch_assoc()) {
+        $cargos[] = $cargo;
+    }
+}
+
+// Mensajes y datos digitados si el controlador devolvió un error de validación
+$errores = $_SESSION['errores'] ?? [];
+$exito   = $_SESSION['exito'] ?? '';
+$old     = $_SESSION['old'] ?? [];
+
+unset($_SESSION['errores'], $_SESSION['exito'], $_SESSION['old']);
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Salario</title>
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.scss">
+    <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<?php include "includes/layout.php"; ?>
+
+<div class="main">
+    <div class="worker-page">
+        <a class="worker-back" href="lista_trabajadores.php" onclick="if (window.history.length > 1) { event.preventDefault(); window.history.back(); }">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            Volver 
+        </a>
+    <div class="form-card">
+
+        <form id="formsalario" method="POST" action="../controladores/ctrl_salario.php">
+
+            <center><h2>Registro de Salario</h2></center>
+
+            <div class="field full-width">
+                <label for="tipo_salario">Tipo de salario</label>
+                <select name="tipo_salario" id="tipo_salario" required onchange="cambiarTipoSalario()">
+                    <option value="">Seleccione un tipo</option>
+                    <option value="base" <?= (($old['tipo_salario'] ?? '') === 'base') ? 'selected' : '' ?>>Salario Minimo</option>
+                    <option value="cargo" <?= (($old['tipo_salario'] ?? '') === 'cargo') ? 'selected' : '' ?>>Sueldo por cargo</option>
+                </select>
+            </div>
+
+            <div class="field full-width" id="campo-cargo">
+                <label for="id_cargo">Cargo</label>
+                <select name="id_cargo" id="id_cargo">
+                    <option value="">Seleccione un cargo</option>
+                    <?php foreach ($cargos as $cargo): ?>
+                        <option
+                            value="<?= htmlspecialchars($cargo['id_cargo']) ?>"
+                            <?= ((string) ($old['id_cargo'] ?? '') === (string) $cargo['id_cargo']) ? 'selected' : '' ?>
+                        >
+                            <?= htmlspecialchars($cargo['nombre_cargo']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="fecha">Fecha de ingreso</label>
+                <input
+                    type="date"
+                    name="fecha"
+                    id="fecha"
+                    required
+                    value="<?= htmlspecialchars($old['fecha'] ?? '') ?>"
+                >
+            </div>
+
+            <div class="field campo-monto">
+                <label for="monto">Monto</label>
+                <div style="position:relative; width:70%;">
+                    <input
+                        type="number"
+                        name="monto"
+                        id="monto"
+                        step="0.01"
+                        min="0"
+                        required
+                        placeholder="Ej. 5000.00"
+                        style="width:100%; box-sizing:border-box; padding-right:3px;"
+                        value="<?= htmlspecialchars($old['monto'] ?? '') ?>"
+                    >
+                    <span
+                        class="sufijo-bs"
+                        style="position:absolute; right:20px; top:50%; left:auto; transform:translateY(-50%); margin:0; color:#333; font-weight:700; pointer-events:none;"
+                    >Bs</span>
+                </div>
+            </div>
+
+            <div class="form-actions full-width">
+                <button type="reset" class="btn-secundario" id="btnLimpiar">Limpiar</button>
+                <button type="submit" name="accion" value="guardar" class="btn-guardar">Guardar</button>
+            </div>
+
+
+        </form>
+    </div>
+</div>
+
+<script>
+function cambiarTipoSalario() {
+    const tipo       = document.getElementById("tipo_salario");
+    const campoCargo = document.getElementById("campo-cargo");
+    const cargo      = document.getElementById("id_cargo");
+
+    if (!tipo || !campoCargo || !cargo) return;
+
+    if (tipo.value === "cargo") {
+        campoCargo.style.display = "flex";
+        cargo.disabled = false;
+        cargo.required = true;
+    } else {
+        campoCargo.style.display = "none";
+        cargo.value = "";
+        cargo.disabled = true;
+        cargo.required = false;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    cambiarTipoSalario();
+
+    const formulario = document.getElementById("formsalario");
+    if (formulario) {
+        formulario.addEventListener("reset", function () {
+            setTimeout(cambiarTipoSalario, 0);
+        });
+    }
+});
+</script>
+
+</body>
+</html>

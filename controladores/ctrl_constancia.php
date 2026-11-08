@@ -1,0 +1,266 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once __DIR__ . '/../vistas/includes/guardian.php';
+require_once '../conexion.php';
+require_once '../modelos/clase_constancia.php';
+require_once __DIR__ . '/helpers/bitacora_helper.php';
+
+$constanciaModelo = new ConstanciaTrabajo($conexion);
+
+// Alias esperado por otras vistas (p.ej. ver_constancia.php) que llaman
+// a $controladorConstancia->buscarPorId(...)
+$controladorConstancia = $constanciaModelo;
+
+// =====================================================
+// Las acciones de abajo (eliminar / guardar / limpiar) son parte del
+// flujo de FORMULARIO y solo deben ejecutarse en peticiones POST.
+// Si este archivo se incluye desde una vista en GET (como ver_constancia.php),
+// no debe disparar ninguna redirección ni el mensaje "Acción no válida".
+// =====================================================
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+// Usuario Estándar: solo puede generar SU propia constancia. Eliminar y
+// actualizar siguen siendo de Administrador/Director (este guard lo deja en
+// la bitácora y lo devuelve al dashboard).
+if (esUsuarioEstandar()
+    && (isset($_POST['eliminar_constancia']) || ($_POST['accion'] ?? '') === 'actualizar')) {
+    requireAdministradorODirector();
+}
+
+// =====================================================
+// 1. ELIMINAR CONSTANCIA
+// =====================================================
+if (isset($_POST['eliminar_constancia'])) {
+
+    $id_constancia = (int) ($_POST['id_constancia'] ?? 0);
+
+    if ($id_constancia <= 0) {
+        $_SESSION['error_edicion'] = ['No se especificó una constancia válida.'];
+        header('Location: ../vistas/lista_constancias.php');
+        exit;
+    }
+
+    try {
+        $antes = bitacoraSnapshot($conexion, 'constancia', $id_constancia);
+        $ok = $constanciaModelo->eliminar($id_constancia);
+
+        if ($ok) {
+            registrarBitacora($conexion, 'Constancias', 'Eliminar', 'Eliminó la ' . bitacoraNombre($antes, $id_constancia) . '.');
+            $_SESSION['exito_edicion'] = 'Constancia eliminada correctamente.';
+        } else {
+            $_SESSION['error_edicion'] = ['No se pudo eliminar la constancia.'];
+        }
+    } catch (mysqli_sql_exception $e) {
+        $_SESSION['error_edicion'] = ['Error de BD al eliminar: ' . $e->getMessage()];
+    }
+
+    header('Location: ../vistas/lista_constancias.php');
+    exit;
+}
+
+
+// =====================================================
+// 2. ACCIONES DEL FORMULARIO
+// =====================================================
+$accion = $_POST['accion'] ?? '';
+
+
+// ---------- LIMPIAR ----------
+if ($accion === 'limpiar') {
+    unset($_SESSION['old_constancia']);
+    header('Location: ../vistas/registrar_constancia.php');
+    exit;
+}
+
+
+// ---------- GUARDAR ----------
+if ($accion === 'guardar') {
+
+    $id_trabajador     = (int) ($_POST['id_trabajador'] ?? 0);
+    $tipo_personal     = trim($_POST['tipo_personal'] ?? '');
+    $fecha             = trim($_POST['fecha'] ?? '');
+    $motivo            = trim($_POST['motivo'] ?? '');
+    $tipo_constancia   = trim($_POST['tipo_constancia'] ?? 'normal');
+    // Compatibilidad temporal: los formularios antiguos enviaban primas_detalladas.
+    if ($tipo_constancia === 'primas_detalladas') {
+        $tipo_constancia = 'egreso';
+    }
+
+    // El trabajador y el tipo de personal se resuelven en el servidor.
+    // Para Usuario Estándar también se fuerza su propio registro y la fecha de hoy.
+    if (esUsuarioEstandar()) {
+        $id_trabajador = idTrabajadorSesion();
+        $fecha = date('Y-m-d');
+    }
+    $datosTrabajador = $id_trabajador > 0
+        ? $constanciaModelo->obtenerTrabajadorCompleto($id_trabajador)
+        : null;
+    $tipo_personal = (string) ($datosTrabajador['tipo_personal'] ?? '');
+
+    $TIPOS_CONSTANCIA_VALIDOS = ['normal', 'egreso'];
+    $TIPOS_PERSONAL_VALIDOS = ['Fijo', 'Contratado', 'Obrero', 'Empleado', 'Jubilado'];
+    $errores = [];
+
+    if ($id_trabajador <= 0) {
+        $errores[] = 'Debes seleccionar un trabajador.';
+    }
+    if (!in_array($tipo_personal, $TIPOS_PERSONAL_VALIDOS, true)) {
+        $errores[] = 'Debes seleccionar un tipo de personal válido.';
+    }
+    if (!in_array($tipo_constancia, $TIPOS_CONSTANCIA_VALIDOS, true)) {
+        $errores[] = 'Debes seleccionar un tipo de constancia válido.';
+    }
+    if ($fecha === '') {
+        $errores[] = 'La fecha de emisión es obligatoria.';
+    }
+    if ($motivo === '') {
+        $errores[] = 'El motivo es obligatorio.';
+    }
+    if ($id_trabajador > 0 && !$constanciaModelo->tieneSalarioRegistrado($id_trabajador)) {
+        $errores[] = 'No se puede registrar la constancia porque falta el salario exigido para su tipo de personal: Obrero requiere salario base/mínimo; los demás tipos requieren salario por cargo.';
+    }
+    if ($tipo_constancia === 'egreso' && $id_trabajador > 0 && !$constanciaModelo->tienePrimasActivas($id_trabajador)) {
+        $nombre = trim((string) ($datosTrabajador['nombre_completo'] ?? 'El trabajador seleccionado'));
+        $errores[] = 'No se puede emitir la Constancia de egreso para ' . $nombre . ' porque no tiene primas activas registradas. Registre al menos una prima activa o seleccione Constancia normal.';
+    }
+
+    if (!empty($errores)) {
+        $_SESSION['errores_constancia'] = $errores;
+        header('Location: ../vistas/registrar_constancia.php');
+        exit;
+    }
+
+    $codigo_constancia = 'CON-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(2)), 0, 4));
+
+    try {
+        $resultado = $constanciaModelo->registrarConstancia(
+            $id_trabajador,
+            $codigo_constancia,
+            $motivo,
+            $tipo_personal,
+            $fecha,
+            $tipo_constancia
+        );
+
+        if ($resultado) {
+
+            // Mensaje de éxito para mostrar en la lista de constancias
+            $_SESSION['exito_edicion'] = 'Constancia registrada correctamente.';
+
+            registrarBitacora($conexion, 'Constancias', 'Crear', "Registró la constancia (código $codigo_constancia) para el trabajador \"" . bitacoraNombreDe($conexion, 'trabajador', $id_trabajador) . "\".");
+
+            unset($_SESSION['old_constancia']);
+
+            // Redirige a la lista de constancias
+            header('Location: ../vistas/lista_constancias.php');
+            exit;
+
+        } else {
+            $_SESSION['errores_constancia'] = [
+                'No se pudo registrar la constancia.' . ($constanciaModelo->ultimoError ? ' Detalle: ' . $constanciaModelo->ultimoError : '')
+            ];
+        }
+    } catch (mysqli_sql_exception $e) {
+        $_SESSION['errores_constancia'] = ['Error de BD al guardar: ' . $e->getMessage()];
+    }
+
+    header('Location: ../vistas/registrar_constancia.php');
+    exit;
+}
+
+
+// ---------- ACTUALIZAR ----------
+if ($accion === 'actualizar') {
+
+    $id_constancia     = (int) ($_POST['id_constancia'] ?? 0);
+    $id_trabajador     = (int) ($_POST['id_trabajador'] ?? 0);
+    $tipo_personal     = trim($_POST['tipo_personal'] ?? '');
+    $fecha             = trim($_POST['fecha'] ?? '');
+    $motivo            = trim($_POST['motivo'] ?? '');
+    $tipo_constancia   = trim($_POST['tipo_constancia'] ?? 'normal');
+    $datosTrabajador = $id_trabajador > 0
+        ? $constanciaModelo->obtenerTrabajadorCompleto($id_trabajador)
+        : null;
+    $tipo_personal = (string) ($datosTrabajador['tipo_personal'] ?? '');
+    // Compatibilidad temporal: los formularios antiguos enviaban primas_detalladas.
+    if ($tipo_constancia === 'primas_detalladas') {
+        $tipo_constancia = 'egreso';
+    }
+
+    $TIPOS_CONSTANCIA_VALIDOS = ['normal', 'egreso'];
+    $TIPOS_PERSONAL_VALIDOS = ['Fijo', 'Contratado', 'Obrero', 'Empleado', 'Jubilado'];
+    $errores = [];
+
+    if ($id_constancia <= 0) {
+        $errores[] = 'No se especificó una constancia válida.';
+    }
+    if ($id_trabajador <= 0) {
+        $errores[] = 'Debes seleccionar un trabajador.';
+    }
+    if (!in_array($tipo_personal, $TIPOS_PERSONAL_VALIDOS, true)) {
+        $errores[] = 'Debes seleccionar un tipo de personal válido.';
+    }
+    if (!in_array($tipo_constancia, $TIPOS_CONSTANCIA_VALIDOS, true)) {
+        $errores[] = 'Debes seleccionar un tipo de constancia válido.';
+    }
+    if ($fecha === '') {
+        $errores[] = 'La fecha de emisión es obligatoria.';
+    }
+    if ($motivo === '') {
+        $errores[] = 'El motivo es obligatorio.';
+    }
+    if ($id_trabajador > 0 && !$constanciaModelo->tieneSalarioRegistrado($id_trabajador)) {
+        $errores[] = 'No se puede actualizar la constancia porque falta el salario exigido para su tipo de personal: Obrero requiere salario base/mínimo; los demás tipos requieren salario por cargo.';
+    }
+    if ($tipo_constancia === 'egreso' && $id_trabajador > 0 && !$constanciaModelo->tienePrimasActivas($id_trabajador)) {
+        $nombre = trim((string) ($datosTrabajador['nombre_completo'] ?? 'El trabajador seleccionado'));
+        $errores[] = 'No se puede cambiar a Constancia de egreso para ' . $nombre . ' porque no tiene primas activas registradas. Registre al menos una prima activa o seleccione Constancia normal.';
+    }
+
+    if (!empty($errores)) {
+        $_SESSION['errores_constancia'] = $errores;
+        header('Location: ../vistas/editar_constancia.php?id=' . $id_constancia);
+        exit;
+    }
+
+    try {
+        $antes = bitacoraSnapshot($conexion, 'constancia', $id_constancia);
+
+        $ok = $constanciaModelo->actualizar(
+            $id_constancia,
+            $id_trabajador,
+            $motivo,
+            $tipo_personal,
+            $fecha,
+            $tipo_constancia
+        );
+
+        if ($ok) {
+            $despues = bitacoraSnapshot($conexion, 'constancia', $id_constancia);
+            registrarBitacora($conexion, 'Constancias', 'Editar', 'Actualizó la ' . bitacoraNombre($antes, $id_constancia) . ': ' . bitacoraCambios($antes, $despues));
+            $_SESSION['exito_edicion'] = 'Constancia actualizada correctamente.';
+            header('Location: ../vistas/lista_constancias.php');
+            exit;
+        } else {
+            $_SESSION['errores_constancia'] = [
+                'No se pudo actualizar la constancia.' . ($constanciaModelo->ultimoError ? ' Detalle: ' . $constanciaModelo->ultimoError : '')
+            ];
+        }
+    } catch (mysqli_sql_exception $e) {
+        $_SESSION['errores_constancia'] = ['Error de BD al actualizar: ' . $e->getMessage()];
+    }
+
+    header('Location: ../vistas/editar_constancia.php?id=' . $id_constancia);
+    exit;
+}
+
+
+// ---------- ACCIÓN NO RECONOCIDA ----------
+$_SESSION['errores_constancia'] = ['Acción no válida.'];
+header('Location: ../vistas/registrar_constancia.php');
+exit;
+
+} // fin if ($_SERVER['REQUEST_METHOD'] === 'POST')
