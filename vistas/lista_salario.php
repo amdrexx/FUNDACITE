@@ -164,8 +164,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                     placeholder="Buscar por tipo, cargo, fecha, monto o estado"
                     value="<?php echo htmlspecialchars($buscar); ?>"
                 >
-                
-
+            
                 <button class="btn-buscar">Buscar</button>
             </form>    
 
@@ -187,13 +186,13 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                     </a>
                 <?php endif; ?>
 
-            </form>
+            
 
             <?php if ($puedeActualizar): ?>
 
             <?php endif; ?>
-
-            <table class="tabla">
+            <div class="modulo-card" style="margin: 20px auto 0; padding: 10px;">
+                <table class="tabla">
 
                 <thead>
                     <tr>

@@ -21,6 +21,16 @@ function fmtFecha(string $f): string {
     $d = DateTime::createFromFormat('Y-m-d', $f);
     return $d ? $d->format('d/m/Y') : $f;
 }
+
+/** "12,00% / 56,00%"  o  "56,00 Bs. / 12,50 Bs." */
+function fmtValores(array $p): string {
+    $suf = $p['tipo_valor'] === 'porcentaje' ? '%' : ' Bs.';
+    $partes = array_map(
+        static fn($v) => number_format((float) $v['valor'], 2, ',', '.') . $suf,
+        $p['valores'] ?? []
+    );
+    return $partes ? implode(' / ', $partes) : '—';
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -36,7 +46,7 @@ function fmtFecha(string $f): string {
 <body>
 
 <?php include "includes/layout.php"; ?>
-
+<?php include "includes/alerta.php"; ?>
 
 <div class="main">
     <div class="glass tabla-container">
@@ -47,7 +57,7 @@ function fmtFecha(string $f): string {
                 type="text"
                 name="buscar"
                 class="input-busqueda"
-                placeholder="Buscar por nombre, fecha, porcentaje o estatus..."
+                placeholder="Buscar por nombre, tipo, fecha, valor o estatus..."
                 value="<?= htmlspecialchars($buscar) ?>"
             >
             <button type="submit" class="btn-buscar">Buscar</button>
@@ -55,13 +65,14 @@ function fmtFecha(string $f): string {
                 + Nueva prima
             </a>
         </form>
-
+        <div class="modulo-card" style="margin: 20px auto 0; padding: 10px;">
         <table class="tabla">
             <thead>
                 <tr>
                     <th>Prima</th>
+                    <th>Tipo</th>
                     <th>Fecha</th>
-                    <th>Porcentaje</th>
+                    <th>Valor(es)</th>
                     <th>Estatus</th>
                     <th>Acciones</th>
                 </tr>
@@ -71,8 +82,9 @@ function fmtFecha(string $f): string {
                 <?php foreach ($primas as $p): ?>
                     <tr>
                         <td><?= htmlspecialchars($p['nombre']) ?></td>
+                        <td><?= $p['tipo_valor'] === 'porcentaje' ? 'Porcentaje' : 'Monto fijo' ?></td>
                         <td><?= htmlspecialchars(fmtFecha($p['fecha'])) ?></td>
-                        <td><?= number_format((float) $p['porcentaje'], 2, ',', '.') ?>%</td>
+                        <td><?= htmlspecialchars(fmtValores($p)) ?></td>
                         <td><?= htmlspecialchars($p['estatus']) ?></td>
                         <td class="acciones">
                             <a class="btn-editar" href="registrar_primas_nuevo.php?editar=<?= (int) $p['id_nueva_prima'] ?>">
@@ -82,7 +94,9 @@ function fmtFecha(string $f): string {
 
                             <?php if (esAdministradorODirector()): ?>
                             <form action="../controladores/ctrl_nueva_prima.php" method="POST" style="display:inline;"
-                                  data-confirm="<?= htmlspecialchars($p['estatus'] === 'Activo' ? '¿Seguro que deseas inactivar esta prima?' : '¿Seguro que deseas activar esta prima?', ENT_QUOTES, 'UTF-8') ?>">
+                                  onsubmit="return confirm('<?= $p['estatus'] === 'Activo'
+                                      ? '¿Seguro que deseas inactivar esta prima?'
+                                      : '¿Seguro que deseas activar esta prima?' ?>');">
                                 <input type="hidden" name="id_nueva_prima" value="<?= (int) $p['id_nueva_prima'] ?>">
                                 <input type="hidden" name="accion" value="<?= $p['estatus'] === 'Activo' ? 'inactivar' : 'activar' ?>">
                                 <?php if ($p['estatus'] === 'Activo'): ?>
@@ -103,7 +117,7 @@ function fmtFecha(string $f): string {
                 <?php endforeach; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="5" style="text-align:center;">No hay primas registradas.</td>
+                    <td colspan="6" style="text-align:center;">No hay primas registradas.</td>
                 </tr>
             <?php endif; ?>
             </tbody>
@@ -113,7 +127,18 @@ function fmtFecha(string $f): string {
 
 <script src="/FUNDACITE/vistas/js/boton_desplegable.js"></script>
 
-
+<?php if (!empty($errores)): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var alertDiv = document.getElementById('customAlert');
+        var msg = document.getElementById('alertMessage');
+        if (alertDiv && msg) {
+            msg.textContent = <?= json_encode(implode("\n", $errores)) ?>;
+            alertDiv.classList.remove('hidden');
+        }
+    });
+</script>
+<?php endif; ?>
 
 </body>
 </html>

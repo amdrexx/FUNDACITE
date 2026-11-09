@@ -21,9 +21,29 @@ class DiasDisfrute {
         return true;
     }
 
-    /** Devuelve siempre los 30 días hábiles configurados para este módulo. */
+    /**
+     * Días hábiles de disfrute definidos por el CONVENIO colectivo vigente
+     * hoy (dias_disfrute del convenio cuyo periodo cubre la fecha actual).
+     * Devuelve null si no hay ningún convenio vigente registrado.
+     */
     public function calcularDiasDisfrute($fechaIngreso = null) {
-        return 30;
+        return $this->diasSegunConvenioVigente();
+    }
+
+    /** Consulta directa a CONVENIO para obtener los días del convenio vigente hoy. */
+    private function diasSegunConvenioVigente(): ?int {
+        $sql = "SELECT dias_disfrute FROM CONVENIO
+                WHERE fecha_inicio <= CURDATE() AND fecha_vencimiento >= CURDATE()
+                ORDER BY fecha_inicio DESC, id_convenio DESC
+                LIMIT 1";
+        $resultado = $this->db->query($sql);
+        if (!$resultado) {
+            $this->ultimoError = $this->db->error;
+            return null;
+        }
+
+        $fila = $resultado->fetch_assoc();
+        return $fila ? (int) $fila['dias_disfrute'] : null;
     }
 
     public function motivoNoElegibilidadDiasDisfrute($tipoContrato = '', $fechaIngreso = '') {
@@ -144,10 +164,11 @@ class DiasDisfrute {
         }
 
         $trabajadores = $resultado->fetch_all(MYSQLI_ASSOC);
+        $diasConvenioVigente = $this->diasSegunConvenioVigente();
         foreach ($trabajadores as &$trabajador) {
             $trabajador['elegible_disfrute'] = true;
             $trabajador['motivo_inelegibilidad'] = '';
-            $trabajador['dias_correspondientes'] = 30;
+            $trabajador['dias_correspondientes'] = $diasConvenioVigente;
         }
         unset($trabajador);
 
@@ -183,7 +204,7 @@ class DiasDisfrute {
     public function registrarDiasDisfrute($id_trabajador, $codigo_disfrute, $motivo,
                                            $fecha_inicio, $fecha_finalizacion,
                                            $observaciones, $tipo_remuneracion,
-                                           $requiere_suplente, $dias_correspondientes = 30) {
+                                           $requiere_suplente, $dias_correspondientes = null) {
 
         try {
             if (!in_array($tipo_remuneracion, ['remunerado', 'no_remunerado'], true)) {
@@ -193,12 +214,18 @@ class DiasDisfrute {
                 throw new InvalidArgumentException('La indicación de suplente no es válida.');
             }
 
+            // La cantidad de días siempre se toma del convenio colectivo vigente,
+            // nunca de un valor fijo ni del que haya enviado el formulario.
+            $dias_correspondientes = $this->diasSegunConvenioVigente();
+            if ($dias_correspondientes === null) {
+                throw new RuntimeException('No hay un convenio vigente registrado que indique los días de disfrute correspondientes. Registre o actualice el convenio colectivo antes de continuar.');
+            }
+
             $zonaHoraria = new DateTimeZone('America/Caracas');
             $fecha_inicio = (new DateTimeImmutable('today', $zonaHoraria))->format('Y-m-d');
             $fecha_final_val = null; // Se calcula al aprobar, no al solicitar.
-            $dias_correspondientes = 30;
-            // La solicitud se crea pendiente. Los 30 días hábiles comienzan
-            // a contarse desde la fecha/hora en que el Director o Administrador apruebe.
+            // La solicitud se crea pendiente. Los días hábiles del convenio vigente
+            // comienzan a contarse desde la fecha/hora en que el Director o Administrador apruebe.
             $sqlDis = "INSERT INTO DISFRUTE_DE_VACACIONES
                        (id_trabajador, codigo_disfrute, motivo, fecha_inicio,
                         fecha_finalizacion, observaciones, tipo_remuneracion,
@@ -425,8 +452,30 @@ class DiasDisfrute {
             $fechaDecision = $momentoDecision->format('Y-m-d H:i:s');
 
             if ($nuevoEstado === 'Aprobado') {
+                // Se respeta la cantidad de días que ya quedó guardada en la
+                // solicitud (la del convenio vigente al momento de solicitarla).
+                $sqlActual = "SELECT dias_correspondientes FROM DISFRUTE_DE_VACACIONES WHERE id_dis = ? LIMIT 1";
+                $stmtActual = $this->db->prepare($sqlActual);
+                if (!$stmtActual) {
+                    $this->ultimoError = 'No se pudo consultar la solicitud: ' . $this->db->error;
+                    return false;
+                }
+                $stmtActual->bind_param('i', $id_dis);
+                $stmtActual->execute();
+                $filaActual = $stmtActual->get_result()->fetch_assoc();
+                $stmtActual->close();
+
+                $diasCorrespondientes = ($filaActual && $filaActual['dias_correspondientes'] !== null)
+                    ? (int) $filaActual['dias_correspondientes']
+                    : $this->diasSegunConvenioVigente();
+
+                if ($diasCorrespondientes === null) {
+                    $this->ultimoError = 'No se pudo determinar la cantidad de días correspondientes para esta solicitud. Registre o actualice el convenio colectivo vigente.';
+                    return false;
+                }
+
                 $fechaInicioReal = $momentoDecision->format('Y-m-d');
-                $fechaFinalizacion = $this->calcularFechaFinalizacion($momentoDecision, 30);
+                $fechaFinalizacion = $this->calcularFechaFinalizacion($momentoDecision, $diasCorrespondientes);
                 if ($fechaFinalizacion === null) {
                     return false;
                 }
@@ -436,8 +485,7 @@ class DiasDisfrute {
                             justificacion_desaprobacion = NULL,
                             fecha_aprobacion = ?,
                             fecha_inicio = ?,
-                            fecha_finalizacion = ?,
-                            dias_correspondientes = 30
+                            fecha_finalizacion = ?
                         WHERE id_dis = ?";
                 $stmt = $this->db->prepare($sql);
                 if (!$stmt) {

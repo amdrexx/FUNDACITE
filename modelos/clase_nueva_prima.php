@@ -1,27 +1,22 @@
 <?php
 // =============================================================================
-// MODELO: NuevaPrima  (catálogo de primas nuevas, guardado en la tabla PRIMA)
+// MODELO: NuevaPrima  (catálogo de primas)
 // -----------------------------------------------------------------------------
-// Usa la misma tabla PRIMA que ya existe:
-//   - Prima asignada a un trabajador  -> id_trabajador con valor (como siempre).
-//   - Prima nueva del catálogo        -> id_trabajador = NULL.
-//     nombre -> tipo_prima | porcentaje -> porcentaje | fecha -> fecha | estatus -> estatus
+// Tablas (ver bd/migracion_primas.sql):
+//   PRIMA        (id_prima, nombre, tipo_valor 'porcentaje'|'monto', fecha, estatus)
+//   PRIMA_VALOR  (id_prima_valor, id_prima, valor, orden)  -> una prima puede tener
+//                varios valores (por ejemplo 12 % y 56 %)
 //
-// Para que esto funcione la tabla necesita (la clase lo hace sola; el SQL
-// equivalente está en nueva_prima.sql):
-//   1) id_trabajador debe aceptar NULL.
-//   2) Columna clave_catalogo + índice UNIQUE: impide registrar la misma prima
-//      dos veces el mismo día (nombre + fecha), incluso con doble clic o dos
-//      usuarios guardando a la vez. Las primas asignadas a trabajadores dejan
-//      esta columna en NULL, así que no se ven afectadas.
-// Las pantallas y consultas existentes de primas ya filtran por
-// id_trabajador IS NOT NULL, por eso no mezclan estas filas.
+// Las primas que se asignan a un trabajador viven en TRABAJADOR_PRIMA (tabla puente)
+// y las maneja clase_primas.php. Aquí solo se administra el catálogo.
 // =============================================================================
 
 class NuevaPrima
 {
+    public const TIPOS_VALOR  = ['porcentaje', 'monto'];
+    public const MAX_VALORES  = 10;
+
     private mysqli $conexion;
-    private bool $tieneClave = false;
 
     /** Último error de base de datos (para mostrarlo en pantalla). */
     public ?string $ultimoError = null;
@@ -32,88 +27,86 @@ class NuevaPrima
     public function __construct(mysqli $conexion)
     {
         $this->conexion = $conexion;
-        $this->asegurarTabla();
     }
 
     /* =====================================================
-       TABLA PRIMA: lo mínimo necesario para el catálogo
+       Auxiliares
     ===================================================== */
 
-    private function asegurarTabla(): void
+    /** Ejecuta y lanza excepción si falla (funciona con o sin mysqli_report). */
+    private function ejecutar(mysqli_stmt $stmt): void
     {
-        try {
-            $res = $this->conexion->query('SHOW COLUMNS FROM PRIMA');
-
-            if (!$res) {
-                $this->ultimoError = 'No se pudo leer la tabla PRIMA: ' . $this->conexion->error;
-                return;
-            }
-
-            $cols = [];
-            while ($f = $res->fetch_assoc()) {
-                $cols[strtolower((string) $f['Field'])] = strtoupper((string) $f['Null']);
-            }
-
-            // 1) id_trabajador debe aceptar NULL (las primas del catálogo no pertenecen a un trabajador)
-            if (($cols['id_trabajador'] ?? 'YES') === 'NO') {
-                $this->conexion->query('ALTER TABLE PRIMA MODIFY id_trabajador INT UNSIGNED NULL');
-            }
-
-            // 2) Columna clave_catalogo
-            if (!isset($cols['clave_catalogo'])) {
-                $this->conexion->query('ALTER TABLE PRIMA ADD COLUMN clave_catalogo VARCHAR(120) NULL');
-            }
-
-            // 3) Índice único sobre clave_catalogo (varias filas NULL están permitidas)
-            $idx = $this->conexion->query("SHOW INDEX FROM PRIMA WHERE Key_name = 'uq_prima_catalogo'");
-            if ($idx && $idx->num_rows === 0) {
-                $this->conexion->query('ALTER TABLE PRIMA ADD UNIQUE KEY uq_prima_catalogo (clave_catalogo)');
-            }
-
-            $chk = $this->conexion->query("SHOW COLUMNS FROM PRIMA LIKE 'clave_catalogo'");
-            $this->tieneClave = (bool) ($chk && $chk->num_rows > 0);
-        } catch (\Throwable $e) {
-            $this->ultimoError = 'No se pudo preparar la tabla PRIMA para nuevas primas: ' . $e->getMessage();
+        if (!$stmt->execute()) {
+            throw new RuntimeException($stmt->error, $stmt->errno);
         }
     }
 
-    /** Clave única de una prima del catálogo: nombre (sin distinguir mayúsculas) + fecha. */
-    private function clave(string $nombre, string $fecha): string
+    private function preparar(string $sql): mysqli_stmt
     {
-        return mb_strtolower($nombre, 'UTF-8') . '|' . $fecha;
+        $stmt = $this->conexion->prepare($sql);
+        if (!$stmt) {
+            throw new RuntimeException($this->conexion->error, $this->conexion->errno);
+        }
+        return $stmt;
     }
 
+    /** "12:12.00|13:56.00" -> [['id'=>12,'valor'=>12.0], ['id'=>13,'valor'=>56.0]] */
+    private function parsearValores(?string $txt): array
+    {
+        $salida = [];
+
+        if ($txt === null || $txt === '') {
+            return $salida;
+        }
+
+        foreach (explode('|', $txt) as $par) {
+            [$id, $valor] = array_pad(explode(':', $par, 2), 2, '0');
+            $salida[] = ['id' => (int) $id, 'valor' => (float) $valor];
+        }
+
+        return $salida;
+    }
+
+    private const SELECT_PRIMA = "SELECT p.id_prima AS id_nueva_prima, p.nombre, p.tipo_valor, p.fecha, p.estatus,
+            (SELECT GROUP_CONCAT(CONCAT(v.id_prima_valor, ':', v.valor)
+                                 ORDER BY v.orden, v.id_prima_valor SEPARATOR '|')
+               FROM PRIMA_VALOR v WHERE v.id_prima = p.id_prima) AS valores
+        FROM PRIMA p";
+
     /* =====================================================
-       CONSULTAS (solo filas del catálogo: id_trabajador IS NULL)
+       CONSULTAS
     ===================================================== */
 
+    /** @return array<int,array> cada fila trae 'valores' => [['id'=>..,'valor'=>..], ...] */
     public function listar(string $buscar = ''): array
     {
-        $sql = "SELECT id_prima AS id_nueva_prima, tipo_prima AS nombre, fecha, porcentaje, estatus
-                FROM PRIMA
-                WHERE id_trabajador IS NULL";
+        $sql = self::SELECT_PRIMA;
 
         try {
             if ($buscar !== '') {
-                $sql .= " AND (tipo_prima LIKE ? OR estatus LIKE ? OR DATE_FORMAT(fecha, '%d/%m/%Y') LIKE ?
-                              OR CAST(porcentaje AS CHAR) LIKE ?)";
+                $sql .= " WHERE (p.nombre LIKE ? OR p.estatus LIKE ? OR p.tipo_valor LIKE ?
+                                 OR DATE_FORMAT(p.fecha, '%d/%m/%Y') LIKE ?
+                                 OR EXISTS (SELECT 1 FROM PRIMA_VALOR x
+                                            WHERE x.id_prima = p.id_prima
+                                              AND CAST(x.valor AS CHAR) LIKE ?))";
             }
-            $sql .= " ORDER BY fecha DESC, id_prima DESC";
+            $sql .= " ORDER BY p.fecha DESC, p.id_prima DESC";
 
-            $stmt = $this->conexion->prepare($sql);
-            if (!$stmt) {
-                $this->ultimoError = $this->conexion->error;
-                return [];
-            }
+            $stmt = $this->preparar($sql);
 
             if ($buscar !== '') {
                 $like = '%' . $buscar . '%';
-                $stmt->bind_param('ssss', $like, $like, $like, $like);
+                $stmt->bind_param('sssss', $like, $like, $like, $like, $like);
             }
 
-            $stmt->execute();
+            $this->ejecutar($stmt);
             $filas = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             $stmt->close();
+
+            foreach ($filas as &$f) {
+                $f['valores'] = $this->parsearValores($f['valores']);
+            }
+            unset($f);
 
             return $filas;
         } catch (\Throwable $e) {
@@ -125,19 +118,19 @@ class NuevaPrima
     public function obtenerPorId(int $id): ?array
     {
         try {
-            $stmt = $this->conexion->prepare(
-                'SELECT id_prima AS id_nueva_prima, tipo_prima AS nombre, fecha, porcentaje, estatus
-                 FROM PRIMA WHERE id_prima = ? AND id_trabajador IS NULL'
-            );
-            if (!$stmt) {
-                return null;
-            }
+            $stmt = $this->preparar(self::SELECT_PRIMA . ' WHERE p.id_prima = ?');
             $stmt->bind_param('i', $id);
-            $stmt->execute();
+            $this->ejecutar($stmt);
             $fila = $stmt->get_result()->fetch_assoc();
             $stmt->close();
 
-            return $fila ?: null;
+            if (!$fila) {
+                return null;
+            }
+
+            $fila['valores'] = $this->parsearValores($fila['valores']);
+
+            return $fila;
         } catch (\Throwable $e) {
             $this->ultimoError = $e->getMessage();
             return null;
@@ -145,23 +138,45 @@ class NuevaPrima
     }
 
     /**
-     * ¿Ya existe una prima nueva con ese nombre en esa fecha?
-     * No distingue mayúsculas/minúsculas ni espacios sobrantes.
+     * Cada valor de porcentaje de las primas ACTIVAS de tipo porcentaje
+     * (lo usa la pantalla "Actualizar porcentajes").
+     */
+    public function listarValoresPorcentaje(): array
+    {
+        try {
+            $res = $this->conexion->query(
+                "SELECT v.id_prima_valor, p.id_prima, p.nombre, p.fecha, v.valor,
+                        (SELECT COUNT(*) FROM PRIMA_VALOR c WHERE c.id_prima = p.id_prima) AS total_valores,
+                        (SELECT COUNT(*) FROM PRIMA_VALOR c2
+                          WHERE c2.id_prima = p.id_prima
+                            AND (c2.orden < v.orden
+                                 OR (c2.orden = v.orden AND c2.id_prima_valor <= v.id_prima_valor))) AS posicion
+                 FROM PRIMA_VALOR v
+                 JOIN PRIMA p ON p.id_prima = v.id_prima
+                 WHERE p.estatus = 'Activo' AND p.tipo_valor = 'porcentaje'
+                 ORDER BY p.fecha DESC, p.id_prima DESC, v.orden, v.id_prima_valor"
+            );
+
+            return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+        } catch (\Throwable $e) {
+            $this->ultimoError = $e->getMessage();
+            return [];
+        }
+    }
+
+    /**
+     * ¿Ya existe una prima con ese nombre en esa fecha?
      * $excluirId sirve al editar para no compararse contra el propio registro.
      */
     public function existeDuplicado(string $nombre, string $fecha, int $excluirId = 0): bool
     {
         try {
-            $stmt = $this->conexion->prepare(
+            $stmt = $this->preparar(
                 'SELECT COUNT(*) FROM PRIMA
-                 WHERE id_trabajador IS NULL AND LOWER(TRIM(tipo_prima)) = LOWER(?)
-                   AND fecha = ? AND id_prima <> ?'
+                 WHERE LOWER(TRIM(nombre)) = LOWER(?) AND fecha = ? AND id_prima <> ?'
             );
-            if (!$stmt) {
-                return false;
-            }
             $stmt->bind_param('ssi', $nombre, $fecha, $excluirId);
-            $stmt->execute();
+            $this->ejecutar($stmt);
             $stmt->bind_result($total);
             $stmt->fetch();
             $stmt->close();
@@ -177,91 +192,119 @@ class NuevaPrima
        ESCRITURA
     ===================================================== */
 
-    /** @return int id insertado, o 0 si falló (ver $esDuplicado y $ultimoError). */
-    public function registrar(string $nombre, string $fecha, float $porcentaje): int
+    /**
+     * Registra la prima y todos sus valores en una sola transacción.
+     * @param float[] $valores
+     * @return int id insertado, o 0 si falló (ver $esDuplicado y $ultimoError).
+     */
+    public function registrar(string $nombre, string $fecha, string $tipoValor, array $valores): int
     {
         $this->esDuplicado = false;
 
         try {
-            if ($this->tieneClave) {
-                $clave = $this->clave($nombre, $fecha);
-                $stmt = $this->conexion->prepare(
-                    "INSERT INTO PRIMA (id_trabajador, tipo_prima, condicion, porcentaje, monto, monto_total, fecha, estatus, clave_catalogo)
-                     VALUES (NULL, ?, 'Prima nueva', ?, 0, 0, ?, 'Activo', ?)"
-                );
-                if (!$stmt) {
-                    $this->ultimoError = $this->conexion->error;
-                    return 0;
-                }
-                $stmt->bind_param('sdss', $nombre, $porcentaje, $fecha, $clave);
-            } else {
-                $stmt = $this->conexion->prepare(
-                    "INSERT INTO PRIMA (id_trabajador, tipo_prima, condicion, porcentaje, monto, monto_total, fecha, estatus)
-                     VALUES (NULL, ?, 'Prima nueva', ?, 0, 0, ?, 'Activo')"
-                );
-                if (!$stmt) {
-                    $this->ultimoError = $this->conexion->error;
-                    return 0;
-                }
-                $stmt->bind_param('sds', $nombre, $porcentaje, $fecha);
-            }
+            $this->conexion->begin_transaction();
 
-            $stmt->execute();
+            $stmt = $this->preparar(
+                "INSERT INTO PRIMA (nombre, tipo_valor, fecha, estatus) VALUES (?, ?, ?, 'Activo')"
+            );
+            $stmt->bind_param('sss', $nombre, $tipoValor, $fecha);
+            $this->ejecutar($stmt);
             $id = (int) $this->conexion->insert_id;
             $stmt->close();
 
+            $this->sincronizarValores($id, $valores);
+
+            $this->conexion->commit();
+
             return $id;
         } catch (\Throwable $e) {
+            $this->revertir();
             $this->marcarError($e);
             return 0;
         }
     }
 
-    public function actualizar(int $id, string $nombre, string $fecha, float $porcentaje): bool
+    /** @param float[] $valores */
+    public function actualizar(int $id, string $nombre, string $fecha, string $tipoValor, array $valores): bool
     {
         $this->esDuplicado = false;
 
         try {
-            if ($this->tieneClave) {
-                $clave = $this->clave($nombre, $fecha);
-                $stmt = $this->conexion->prepare(
-                    'UPDATE PRIMA SET tipo_prima = ?, fecha = ?, porcentaje = ?, clave_catalogo = ?
-                     WHERE id_prima = ? AND id_trabajador IS NULL'
-                );
-                if (!$stmt) {
-                    $this->ultimoError = $this->conexion->error;
-                    return false;
-                }
-                $stmt->bind_param('ssdsi', $nombre, $fecha, $porcentaje, $clave, $id);
-            } else {
-                $stmt = $this->conexion->prepare(
-                    'UPDATE PRIMA SET tipo_prima = ?, fecha = ?, porcentaje = ?
-                     WHERE id_prima = ? AND id_trabajador IS NULL'
-                );
-                if (!$stmt) {
-                    $this->ultimoError = $this->conexion->error;
-                    return false;
-                }
-                $stmt->bind_param('ssdi', $nombre, $fecha, $porcentaje, $id);
-            }
+            $this->conexion->begin_transaction();
 
-            $stmt->execute();
+            $stmt = $this->preparar(
+                'UPDATE PRIMA SET nombre = ?, tipo_valor = ?, fecha = ? WHERE id_prima = ?'
+            );
+            $stmt->bind_param('sssi', $nombre, $tipoValor, $fecha, $id);
+            $this->ejecutar($stmt);
             $stmt->close();
+
+            $this->sincronizarValores($id, $valores);
+
+            $this->conexion->commit();
 
             return true;
         } catch (\Throwable $e) {
+            $this->revertir();
             $this->marcarError($e);
             return false;
         }
     }
 
     /**
-     * Actualiza el porcentaje de varias primas del catálogo en una sola transacción:
+     * Deja en PRIMA_VALOR exactamente la lista recibida, respetando el orden:
+     * el valor N actualiza la fila N existente (así se conserva su id y el enlace
+     * con TRABAJADOR_PRIMA), los que sobran se agregan y los que faltan se borran.
+     * Debe llamarse dentro de una transacción.
+     *
+     * @param float[] $valores
+     */
+    private function sincronizarValores(int $idPrima, array $valores): void
+    {
+        $stmt = $this->preparar(
+            'SELECT id_prima_valor FROM PRIMA_VALOR WHERE id_prima = ? ORDER BY orden, id_prima_valor'
+        );
+        $stmt->bind_param('i', $idPrima);
+        $this->ejecutar($stmt);
+        $existentes = array_map('intval', array_column($stmt->get_result()->fetch_all(MYSQLI_ASSOC), 'id_prima_valor'));
+        $stmt->close();
+
+        $upd = $this->preparar('UPDATE PRIMA_VALOR SET valor = ?, orden = ? WHERE id_prima_valor = ?');
+        $ins = $this->preparar('INSERT INTO PRIMA_VALOR (id_prima, valor, orden) VALUES (?, ?, ?)');
+        $del = $this->preparar('DELETE FROM PRIMA_VALOR WHERE id_prima_valor = ?');
+
+        foreach (array_values($valores) as $i => $valor) {
+            $v = round((float) $valor, 2);
+            $orden = $i + 1;
+
+            if (isset($existentes[$i])) {
+                $idValor = $existentes[$i];
+                $upd->bind_param('dii', $v, $orden, $idValor);
+                $this->ejecutar($upd);
+            } else {
+                $ins->bind_param('idi', $idPrima, $v, $orden);
+                $this->ejecutar($ins);
+            }
+        }
+
+        for ($i = count($valores); $i < count($existentes); $i++) {
+            $idValor = $existentes[$i];
+            $del->bind_param('i', $idValor);
+            $this->ejecutar($del);
+        }
+
+        $upd->close();
+        $ins->close();
+        $del->close();
+    }
+
+    /**
+     * Actualiza varios valores de porcentaje en una sola transacción:
      * se guardan todos los cambios o ninguno.
      *
-     * @param array<int,float> $cambios  [id_prima => nuevo porcentaje]
+     * @param array<int,float> $cambios  [id_prima_valor => nuevo porcentaje]
      */
-    public function actualizarPorcentajes(array $cambios): bool
+    public function actualizarValores(array $cambios): bool
     {
         if (!$cambios) {
             return false;
@@ -270,21 +313,13 @@ class NuevaPrima
         try {
             $this->conexion->begin_transaction();
 
-            $stmt = $this->conexion->prepare(
-                'UPDATE PRIMA SET porcentaje = ? WHERE id_prima = ? AND id_trabajador IS NULL'
-            );
+            $stmt = $this->preparar('UPDATE PRIMA_VALOR SET valor = ? WHERE id_prima_valor = ?');
 
-            if (!$stmt) {
-                $this->ultimoError = $this->conexion->error;
-                $this->conexion->rollback();
-                return false;
-            }
-
-            foreach ($cambios as $id => $porcentaje) {
-                $pct = round((float) $porcentaje, 2);
-                $idPrima = (int) $id;
-                $stmt->bind_param('di', $pct, $idPrima);
-                $stmt->execute();
+            foreach ($cambios as $id => $valor) {
+                $v = round((float) $valor, 2);
+                $idValor = (int) $id;
+                $stmt->bind_param('di', $v, $idValor);
+                $this->ejecutar($stmt);
             }
 
             $stmt->close();
@@ -292,7 +327,7 @@ class NuevaPrima
 
             return true;
         } catch (\Throwable $e) {
-            try { $this->conexion->rollback(); } catch (\Throwable $x) {}
+            $this->revertir();
             $this->ultimoError = $e->getMessage();
             return false;
         }
@@ -305,15 +340,9 @@ class NuevaPrima
         }
 
         try {
-            $stmt = $this->conexion->prepare(
-                'UPDATE PRIMA SET estatus = ? WHERE id_prima = ? AND id_trabajador IS NULL'
-            );
-            if (!$stmt) {
-                $this->ultimoError = $this->conexion->error;
-                return false;
-            }
+            $stmt = $this->preparar('UPDATE PRIMA SET estatus = ? WHERE id_prima = ?');
             $stmt->bind_param('si', $estatus, $id);
-            $stmt->execute();
+            $this->ejecutar($stmt);
             $stmt->close();
 
             return true;
@@ -323,10 +352,15 @@ class NuevaPrima
         }
     }
 
+    private function revertir(): void
+    {
+        try { $this->conexion->rollback(); } catch (\Throwable $x) {}
+    }
+
     private function marcarError(\Throwable $e): void
     {
         $this->ultimoError = $e->getMessage();
-        // 1062 = Duplicate entry (índice UNIQUE de clave_catalogo: nombre + fecha)
+        // 1062 = Duplicate entry (índice UNIQUE nombre + fecha)
         $this->esDuplicado = ((int) $e->getCode() === 1062) || stripos($e->getMessage(), 'duplicate') !== false;
     }
 }

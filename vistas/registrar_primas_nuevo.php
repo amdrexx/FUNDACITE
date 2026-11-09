@@ -32,9 +32,23 @@ unset($_SESSION['errores'], $_SESSION['exito'], $_SESSION['old']);
 
 function h($v): string { return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8'); }
 
-$valNombre     = $old['nombre']     ?? ($registro['nombre'] ?? '');
-$valFecha      = $old['fecha']      ?? ($registro['fecha'] ?? '');
-$valPorcentaje = $old['porcentaje'] ?? (isset($registro['porcentaje']) ? rtrim(rtrim(number_format((float) $registro['porcentaje'], 2, '.', ''), '0'), '.') : '');
+/** 12.5 -> "12.5" | 56 -> "56" (para dejarlo editable en el input) */
+function numInput($v): string { return rtrim(rtrim(number_format((float) $v, 2, '.', ''), '0'), '.'); }
+
+$valNombre = $old['nombre'] ?? ($registro['nombre'] ?? '');
+$valFecha  = $old['fecha']  ?? ($registro['fecha'] ?? '');
+$valTipo   = $old['tipo_valor'] ?? ($registro['tipo_valor'] ?? 'porcentaje');
+if (!in_array($valTipo, NuevaPrima::TIPOS_VALOR, true)) { $valTipo = 'porcentaje'; }
+
+// Lista de valores a mostrar (el primero va en el campo principal, el resto en campos extra)
+if (isset($old['valores']) && is_array($old['valores'])) {
+    $valValores = array_values(array_map('strval', $old['valores']));
+} else {
+    $valValores = array_map(static fn($v) => numInput($v['valor']), $registro['valores'] ?? []);
+}
+if (!$valValores) { $valValores = ['']; }
+
+$valVarios = isset($old['varios']) ? (bool) $old['varios'] : count($valValores) > 1;
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -47,9 +61,20 @@ $valPorcentaje = $old['porcentaje'] ?? (isset($registro['porcentaje']) ? rtrim(r
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.scss">
     <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
+    <style>
+        .check-varios { display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:700;
+                        color:#a9c7ff; font-size:.95rem; }
+        .check-varios input { width:18px; height:18px; margin:0; cursor:pointer; accent-color:#0a84ff; }
+        .valor-extra { display:flex; align-items:flex-end; gap:10px; }
+        .valor-extra .caja { position:relative; flex:1; }
+        .btn-quitar { border:none; cursor:pointer; background:#c62828; color:#fff; border-radius:8px;
+                      height:38px; padding:0 12px; font-weight:700; }
+        .btn-agregar-valor { border:none; cursor:pointer; border-radius:8px; padding:9px 14px; font-weight:700; }
+    </style>
 </head>
 <body>
 
+<?php include "includes/alerta.php"; ?>
 <?php include "includes/layout.php"; ?>
 
 <div class="main">
@@ -68,6 +93,15 @@ $valPorcentaje = $old['porcentaje'] ?? (isset($registro['porcentaje']) ? rtrim(r
                 <?php if ($editando): ?>
                     <input type="hidden" name="id_nueva_prima" value="<?= (int) $registro['id_nueva_prima'] ?>">
                 <?php endif; ?>
+
+                <!-- 1) ¿Porcentaje o monto fijo? -->
+                <div class="field">
+                    <label for="tipo_valor">¿Cómo se calcula la prima?</label>
+                    <select name="tipo_valor" id="tipo_valor" required>
+                        <option value="porcentaje" <?= $valTipo === 'porcentaje' ? 'selected' : '' ?>>Por porcentaje (%)</option>
+                        <option value="monto" <?= $valTipo === 'monto' ? 'selected' : '' ?>>Monto fijo (Bs.)</option>
+                    </select>
+                </div>
 
                 <div class="field">
                     <label for="nombre">Nombre de la prima</label>
@@ -93,26 +127,40 @@ $valPorcentaje = $old['porcentaje'] ?? (isset($registro['porcentaje']) ? rtrim(r
                     >
                 </div>
 
+                <!-- 2) Valor principal -->
                 <div class="field campo-monto">
-                    <label for="porcentaje">% prima</label>
+                    <label for="valor1" id="lblValor1">% prima</label>
                     <div style="position:relative; width:70%;">
                         <input
                             type="number"
-                            name="porcentaje"
-                            id="porcentaje"
+                            name="valores[]"
+                            id="valor1"
                             step="0.01"
                             min="0.01"
-                            max="100"
                             required
-                            placeholder="Ej. 10"
-                            style="width:100%; box-sizing:border-box; padding-right:3px;"
-                            value="<?= h($valPorcentaje) ?>"
+                            style="width:100%; box-sizing:border-box; padding-right:34px;"
+                            value="<?= h($valValores[0]) ?>"
                         >
                         <span
-                            class="sufijo-bs"
-                            style="position:absolute; right:20px; top:50%; left:auto; transform:translateY(-50%); margin:0; color:#333; font-weight:700; pointer-events:none;"
-                        >%</span>
+                            class="sufijo-valor"
+                            style="position:absolute; right:12px; top:50%; left:auto; transform:translateY(-50%); margin:0; color:#333; font-weight:700; pointer-events:none;"
+                        ></span>
                     </div>
+                </div>
+
+                <!-- 3) ¿Tiene más de un valor? -->
+                <div class="field full-width">
+                    <label class="check-varios">
+                        <input type="checkbox" name="varios" id="varios" value="1" <?= $valVarios ? 'checked' : '' ?>>
+                        <span>Esta prima tiene más de un valor <small id="notaVarios" style="font-weight:400; color:#ddd;"></small></span>
+                    </label>
+                </div>
+
+                <div class="full-width" id="bloqueExtras" style="display:none; grid-column:1 / -1;">
+                    <div id="listaExtras" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:15px 25px;"></div>
+                    <button type="button" id="btnAgregarValor" class="btn-secundario btn-agregar-valor" style="margin-top:12px;">
+                        + Agregar otro valor
+                    </button>
                 </div>
 
                 <div class="form-actions full-width">
@@ -134,24 +182,169 @@ $valPorcentaje = $old['porcentaje'] ?? (isset($registro['porcentaje']) ? rtrim(r
 <script>
 // Validación en pantalla (el servidor vuelve a validar todo) y protección contra doble envío
 (function () {
-    const form = document.getElementById('formnuevaprima');
+    const MAX_VALORES = <?= (int) NuevaPrima::MAX_VALORES ?>;
+    const form      = document.getElementById('formnuevaprima');
+    const tipo      = document.getElementById('tipo_valor');
+    const valor1    = document.getElementById('valor1');
+    const lblValor1 = document.getElementById('lblValor1');
+    const varios    = document.getElementById('varios');
+    const bloque    = document.getElementById('bloqueExtras');
+    const lista     = document.getElementById('listaExtras');
+    const btnAgregar = document.getElementById('btnAgregarValor');
+    const nota      = document.getElementById('notaVarios');
+    const valoresIniciales = <?= json_encode(array_slice($valValores, 1), JSON_UNESCAPED_UNICODE) ?>;
     let enviando = false;
+
+    const esPct = () => tipo.value === 'porcentaje';
+
+    function sufijo() { return esPct() ? '%' : 'Bs.'; }
+
+    // Ajusta etiquetas, sufijo y límites según sea porcentaje o monto fijo
+    function aplicarTipo() {
+        const pct = esPct();
+        const inputs = [valor1].concat(Array.from(lista.querySelectorAll('input')));
+
+        lblValor1.textContent = pct ? '% prima' : 'Monto (Bs.)';
+        nota.textContent = pct ? '(por ejemplo 12 % y 56 %)' : '(por ejemplo 56,00 Bs. y 12,50 Bs.)';
+
+        inputs.forEach(function (inp, i) {
+            inp.placeholder = pct ? 'Ej. 10' : 'Ej. 56.00';
+            if (pct) { inp.max = '100'; } else { inp.removeAttribute('max'); }
+            const suf = inp.parentElement.querySelector('.sufijo-valor');
+            if (suf) suf.textContent = sufijo();
+        });
+
+        lista.querySelectorAll('label').forEach(function (l, i) {
+            l.textContent = (pct ? 'Porcentaje ' : 'Monto ') + (i + 2);
+        });
+    }
+
+    function renumerar() {
+        lista.querySelectorAll('label').forEach(function (l, i) {
+            l.textContent = (esPct() ? 'Porcentaje ' : 'Monto ') + (i + 2);
+        });
+        btnAgregar.style.display = (lista.children.length + 1 >= MAX_VALORES) ? 'none' : '';
+    }
+
+    function agregarExtra(valor) {
+        if (lista.children.length + 1 >= MAX_VALORES) return;
+
+        const n = lista.children.length;
+        const campo = document.createElement('div');
+        campo.className = 'field valor-extra-campo';
+
+        const etiqueta = document.createElement('label');
+        etiqueta.htmlFor = 'valor_extra_' + Date.now() + '_' + n;
+
+        const fila = document.createElement('div');
+        fila.className = 'valor-extra';
+
+        const caja = document.createElement('div');
+        caja.className = 'caja';
+
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.name = 'valores[]';
+        input.id = etiqueta.htmlFor;
+        input.step = '0.01';
+        input.min = '0.01';
+        input.required = true;
+        input.style.cssText = 'width:100%; box-sizing:border-box; padding-right:34px;';
+        input.value = valor || '';
+
+        const suf = document.createElement('span');
+        suf.className = 'sufijo-valor';
+        suf.style.cssText = 'position:absolute; right:12px; top:50%; left:auto; transform:translateY(-50%); margin:0; color:#333; font-weight:700; pointer-events:none;';
+
+        const quitar = document.createElement('button');
+        quitar.type = 'button';
+        quitar.className = 'btn-quitar';
+        quitar.title = 'Quitar este valor';
+        quitar.textContent = '✕';
+        quitar.addEventListener('click', function () {
+            campo.remove();
+            renumerar();
+            aplicarTipo();
+        });
+
+        caja.appendChild(input);
+        caja.appendChild(suf);
+        fila.appendChild(caja);
+        fila.appendChild(quitar);
+        campo.appendChild(etiqueta);
+        campo.appendChild(fila);
+        lista.appendChild(campo);
+
+        renumerar();
+        aplicarTipo();
+        return input;
+    }
+
+    function actualizarVarios() {
+        if (varios.checked) {
+            bloque.style.display = '';
+            if (lista.children.length === 0) {
+                const inp = agregarExtra('');
+                if (inp && document.activeElement === varios) inp.focus();
+            }
+        } else {
+            bloque.style.display = 'none';
+            lista.innerHTML = '';   // sin campos extra no se envían
+        }
+        aplicarTipo();
+    }
+
+    tipo.addEventListener('change', aplicarTipo);
+    varios.addEventListener('change', actualizarVarios);
+    btnAgregar.addEventListener('click', function () {
+        const inp = agregarExtra('');
+        if (inp) inp.focus();
+    });
+
+    form.addEventListener('reset', function () {
+        setTimeout(function () { lista.innerHTML = ''; actualizarVarios(); }, 0);
+    });
 
     form.addEventListener('submit', function (e) {
         if (enviando) { e.preventDefault(); return; }
 
         const nombre = form.nombre.value.replace(/\s+/g, ' ').trim();
         const fecha  = form.fecha.value;
-        const pct    = parseFloat(String(form.porcentaje.value).replace(',', '.'));
         const errores = [];
 
         if (nombre.length < 3 || nombre.length > 100) errores.push('El nombre debe tener entre 3 y 100 caracteres.');
         if (!fecha) errores.push('Debe seleccionar una fecha.');
-        if (!Number.isFinite(pct) || pct <= 0 || pct > 100) errores.push('El porcentaje debe ser mayor que 0 y hasta 100.');
+
+        const inputs = [valor1].concat(Array.from(lista.querySelectorAll('input')));
+        const vistos = {};
+        inputs.forEach(function (inp, i) {
+            const v = parseFloat(String(inp.value).replace(',', '.'));
+            const n = i + 1;
+            if (!Number.isFinite(v) || v <= 0 || (esPct() && v > 100)) {
+                errores.push('Valor ' + n + ': ' + (esPct()
+                    ? 'el porcentaje debe ser mayor que 0 y hasta 100.'
+                    : 'el monto debe ser mayor que 0.'));
+            } else {
+                const clave = v.toFixed(2);
+                if (vistos[clave]) errores.push('El valor ' + n + ' está repetido.');
+                vistos[clave] = true;
+            }
+        });
+
+        if (varios.checked && inputs.length < 2) {
+            errores.push('Marcó que la prima tiene más de un valor: agregue al menos otro.');
+        }
 
         if (errores.length) {
             e.preventDefault();
-            FundaciteAlerta.mostrar(errores.join('\n'), 'warning');
+            const alerta = document.getElementById('customAlert');
+            const msg = document.getElementById('alertMessage');
+            if (alerta && msg) {
+                msg.textContent = errores.join('\n');
+                alerta.classList.remove('hidden');
+            } else {
+                alert(errores.join('\n'));
+            }
             return;
         }
 
@@ -160,10 +353,29 @@ $valPorcentaje = $old['porcentaje'] ?? (isset($registro['porcentaje']) ? rtrim(r
     });
 
     window.addEventListener('pageshow', function () { enviando = false; });
+
+    // Estado inicial (también restaura lo digitado tras un error del servidor)
+    if (varios.checked) {
+        bloque.style.display = '';
+        valoresIniciales.forEach(function (v) { agregarExtra(v); });
+        if (lista.children.length === 0) agregarExtra('');
+    }
+    aplicarTipo();
 })();
 </script>
 
-
+<?php if (!empty($errores)): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var alertDiv = document.getElementById('customAlert');
+        var msg = document.getElementById('alertMessage');
+        if (alertDiv && msg) {
+            msg.textContent = <?= json_encode(implode("\n", $errores)) ?>;
+            alertDiv.classList.remove('hidden');
+        }
+    });
+</script>
+<?php endif; ?>
 
 </body>
 </html>

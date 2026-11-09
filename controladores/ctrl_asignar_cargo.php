@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['asignar_cargo'])) {
 
     if ($tokenSesion === '' || $tokenFormulario === '' || !hash_equals($tokenSesion, $tokenFormulario)) {
         $_SESSION['error_asignacion'] = ['La solicitud de asignación no es válida o ha expirado. Actualice la página e inténtelo nuevamente.'];
-        header('Location: ../vistas/asignar_cargo.php?status=error');
+        header('Location: ../vistas/registrar_asignacion_cargo.php?status=error');
         exit;
     }
 
@@ -62,19 +62,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['asignar_cargo'])) {
 
     if (empty($id_trabajador)) {
         $_SESSION['error_asignacion'] = ["Debe seleccionar un trabajador válido."];
-        header("Location: ../vistas/asignar_cargo.php?status=error");
+        header("Location: ../vistas/registrar_asignacion_cargo.php?status=error");
         exit;
     }
 
     if (empty($id_cargo)) {
         $_SESSION['error_asignacion'] = ["Debe seleccionar un cargo válido a asignar."];
-        header("Location: ../vistas/asignar_cargo.php?status=error");
+        header("Location: ../vistas/registrar_asignacion_cargo.php?status=error");
         exit;
     }
 
     if ($gaceta === '' || (preg_match_all('/./us', $gaceta, $coincidenciasGaceta) ?: 0) > 150) {
         $_SESSION['error_asignacion'] = ['Debe indicar la Gaceta utilizada para asignar el cargo (máximo 150 caracteres).'];
-        header('Location: ../vistas/asignar_cargo.php?status=error');
+        header('Location: ../vistas/registrar_asignacion_cargo.php?status=error');
         exit;
     }
 
@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['asignar_cargo'])) {
         header("Location: ../vistas/asignar_cargo.php?status=success");
     } else {
         $_SESSION['error_asignacion'] = [$controladorAsignarCargo->ultimoError ?: 'Error al intentar asignar el cargo.'];
-        header("Location: ../vistas/asignar_cargo.php?status=error");
+        header("Location: ../vistas/registrar_asignacion_cargo.php?status=error");
     }
     exit;
 }

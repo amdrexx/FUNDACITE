@@ -50,6 +50,14 @@ if ($condHijos !== '' && strpos($condHijos, ':') !== false) {
     $parte = substr(strrchr($condHijos, ':'), 1);
     $montosPrevios = array_map('trim', explode(',', $parte));
 }
+// Valor elegido en cada prima con varios valores: [id_prima del catálogo => id_prima_valor]
+$valoresPrevios = [];
+foreach ($primasTrabajador as $pt) {
+    if (!empty($pt['id_prima_valor'])) { $valoresPrevios[(int) $pt['id_prima_catalogo']] = (int) $pt['id_prima_valor']; }
+}
+if (isset($old['valor_prima']) && is_array($old['valor_prima'])) {
+    foreach ($old['valor_prima'] as $k => $v) { $valoresPrevios[(int) $k] = (int) $v; }
+}
 $deshabilitado = $accion === 'consultar' ? 'disabled' : '';
 $bloquear = ($accion === 'editar' || $accion === 'consultar') ? 'disabled' : '';
 $titulo = $accion === 'editar' ? 'Editar prima' : ($accion === 'consultar' ? 'Consulta de prima' : 'Registro de primas');
@@ -70,6 +78,11 @@ unset($_SESSION['errores'], $_SESSION['exito'], $_SESSION['old']);
 </head>
 <body>
 
+<div id="customAlert" class="custom-alert hidden">
+    <div class="alert-box">
+        <p id="alertMessage"></p>
+        <button onclick="closeAlert()">Aceptar</button>
+    </div>
 </div>
 
 
@@ -86,6 +99,7 @@ unset($_SESSION['errores'], $_SESSION['exito'], $_SESSION['old']);
         id="formprimas"
         data-modo="<?= h($accion) ?>"
         data-montos-previos='<?= h(json_encode($montosPrevios)) ?>'
+        data-valores-previos='<?= h(json_encode((object) $valoresPrevios)) ?>'
         method="POST"
         action="../controladores/ctrl_primas.php"
         novalidate
@@ -207,33 +221,58 @@ unset($_SESSION['errores'], $_SESSION['exito'], $_SESSION['old']);
         <!-- PRIMAS: al registrar se marcan las que se quieran; al editar/consultar solo aparece la prima del registro -->
         <div id="grupoPrimas" style="grid-column: 1 / -1;" data-previas='<?= h(json_encode($tiposPrevios)) ?>'>
             <?php
-            $filasPrimas = [
-                'Prima por antigüedad'         => ['nueva' => false, 'pct' => 0],
-                'Prima por hijos'              => ['nueva' => false, 'pct' => 0],
-                'Prima por profesionalización' => ['nueva' => false, 'pct' => 0],
-            ];
+            // Primas fijas del sistema: si están en el catálogo se toman su prima y sus valores
+            // (en "Prima por hijos" los valores del catálogo son los montos permitidos por hijo)
+            $filasPrimas = [];
+            foreach (['Prima por antigüedad', 'Prima por hijos', 'Prima por profesionalización'] as $nombreFija) {
+                $c = $catalogoNuevas[$nombreFija] ?? null;
+                $filasPrimas[$nombreFija] = [
+                    'nueva'      => false,
+                    'id_prima'   => (int) ($c['id_prima'] ?? 0),
+                    'tipo_valor' => (string) ($c['tipo_valor'] ?? 'porcentaje'),
+                    'valores'    => $c['valores'] ?? [],
+                ];
+            }
 
             // Primas nuevas registradas en "Registrar nueva prima" (catálogo)
-            foreach ($catalogoNuevas as $nombreNueva => $pctNueva) {
+            foreach ($catalogoNuevas as $nombreNueva => $infoNueva) {
                 $nombreNueva = (string) $nombreNueva;
                 if (!isset($filasPrimas[$nombreNueva])) {
-                    $filasPrimas[$nombreNueva] = ['nueva' => true, 'pct' => (float) $pctNueva];
+                    $filasPrimas[$nombreNueva] = [
+                        'nueva'      => true,
+                        'id_prima'   => (int) $infoNueva['id_prima'],
+                        'tipo_valor' => (string) $infoNueva['tipo_valor'],
+                        'valores'    => $infoNueva['valores'],
+                    ];
                 }
             }
 
             // Editar/consultar: si el trabajador tiene una prima nueva que ya no está activa
-            // en el catálogo, igual se muestra con el porcentaje que tenía guardado
+            // en el catálogo, igual se muestra con el valor que tenía guardado
             if ($accion !== 'registrar') {
                 $guardadas = $accion === 'editar' ? $primasTrabajador : [$prima_data];
                 foreach ($guardadas as $pg) {
                     $tp = (string) ($pg['tipo_prima'] ?? '');
+                    $pctG = (float) ($pg['porcentaje'] ?? 0);
+                    $valG = [[
+                        'id'    => (int) ($pg['id_prima_valor'] ?? 0),
+                        'valor' => $pctG > 0 ? $pctG : (float) ($pg['monto'] ?? 0),
+                    ]];
+
                     if ($tp !== '' && !isset($filasPrimas[$tp])) {
-                        $filasPrimas[$tp] = ['nueva' => true, 'pct' => (float) ($pg['porcentaje'] ?? 0)];
+                        $filasPrimas[$tp] = [
+                            'nueva'      => true,
+                            'id_prima'   => (int) ($pg['id_prima_catalogo'] ?? 0),
+                            'tipo_valor' => $pctG > 0 ? 'porcentaje' : 'monto',
+                            'valores'    => $valG,
+                        ];
                     }
-                }
-                // En consulta se muestra el porcentaje con el que se guardó
-                if ($accion === 'consultar' && isset($filasPrimas[$txt_tipo]) && $filasPrimas[$txt_tipo]['nueva']) {
-                    $filasPrimas[$txt_tipo]['pct'] = (float) ($prima_data['porcentaje'] ?? 0);
+
+                    // En consulta se muestra el valor con el que se guardó
+                    if ($accion === 'consultar' && $tp !== '' && !empty($filasPrimas[$tp]['nueva'])) {
+                        $filasPrimas[$tp]['tipo_valor'] = $pctG > 0 ? 'porcentaje' : 'monto';
+                        $filasPrimas[$tp]['valores'] = $valG;
+                    }
                 }
             }
 
@@ -243,7 +282,9 @@ unset($_SESSION['errores'], $_SESSION['exito'], $_SESSION['old']);
             ?>
             <div class="prima-row" data-tipo="<?= h($valorFila) ?>"
                  data-nueva="<?= $infoFila['nueva'] ? '1' : '0' ?>"
-                 data-pct="<?= h($infoFila['pct']) ?>">
+                 data-id-prima="<?= (int) $infoFila['id_prima'] ?>"
+                 data-tipo-valor="<?= h($infoFila['tipo_valor']) ?>"
+                 data-valores='<?= h(json_encode($infoFila['valores'])) ?>'>
                 <label class="prima-check">
                     <input type="checkbox" class="chk-prima"
                         <?= $accion === 'registrar'
@@ -309,7 +350,11 @@ document.addEventListener("DOMContentLoaded", function () {
             panel: fila.querySelector(".prima-panel"),
             nota: fila.querySelector(".prima-nota"),
             nueva: fila.dataset.nueva === "1",
-            pct: parseFloat(fila.dataset.pct) || 0
+            idPrima: parseInt(fila.dataset.idPrima, 10) || 0,
+            tipoValor: fila.dataset.tipoValor || "porcentaje",
+            valores: (function () {
+                try { return JSON.parse(fila.dataset.valores || "[]"); } catch (e) { return []; }
+            })()
         };
     });
 
@@ -344,10 +389,21 @@ document.addEventListener("DOMContentLoaded", function () {
         { valor: "Doc. / Post.", texto: "Doc. / Post. (35%)", pct: 35 }
     ];
 
-    const MONTOS_HIJO = [
-        { valor: "56.00", texto: "56,00 Bs." },
-        { valor: "12.50", texto: "12,50 Bs." }
-    ];
+    // Montos por hijo: los de la prima "por hijos" del catálogo (si es de monto fijo);
+    // si no hay, los de siempre (56,00 y 12,50 Bs.)
+    const MONTOS_HIJO = (function () {
+        const fh = filas.find(function (x) { return x.tipo === T_HIJ; });
+        if (fh && fh.tipoValor === "monto" && fh.valores.length) {
+            return fh.valores.map(function (v) {
+                const n = Number(v.valor);
+                return { valor: n.toFixed(2), texto: n.toFixed(2).replace(".", ",") + " Bs." };
+            });
+        }
+        return [
+            { valor: "56.00", texto: "56,00 Bs." },
+            { valor: "12.50", texto: "12,50 Bs." }
+        ];
+    })();
 
     // Tabla 1 - Prima de antigüedad: años de servicio -> porcentaje (23 años en adelante = 30%)
     const PORCENTAJE_ANTIGUEDAD = {
@@ -376,7 +432,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function mostrarAlerta(mensaje) {
-        window.FundaciteAlerta.mostrar(mensaje, 'warning');
+        if (typeof window.showAlert === "function") {
+            window.showAlert(mensaje, false);
+        } else {
+            alert(mensaje);
+        }
     }
 
     function opcionTrabajador() {
@@ -535,8 +595,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // ---------------------------------------------------------------------
     // Panel: Hijos (solo muestra la cantidad registrada y el monto por hijo)
     // ---------------------------------------------------------------------
-    // Monto que se aplica a cada hijo (cambiar aquí si la regla es otra: "56.00" o "12.50")
-    const MONTO_HIJO_DEFECTO = "56.00";
+    // Monto que se aplica por defecto a cada hijo: el primer valor de la prima por hijos
+    const MONTO_HIJO_DEFECTO = MONTOS_HIJO[0].valor;
 
     function crearPanelHijos(host) {
         const raiz = host;
@@ -617,26 +677,65 @@ document.addEventListener("DOMContentLoaded", function () {
     // ---------------------------------------------------------------------
     let contadorNuevas = 0;
 
-    function crearPanelNueva(host, porcentaje) {
+    // Valor elegido antes (al editar o tras un error del servidor): {id_prima: id_prima_valor}
+    function valoresPrevios() {
+        try { return JSON.parse(formulario.dataset.valoresPrevios || "{}"); } catch (e) { return {}; }
+    }
+
+    // $f = fila de la prima: { tipo, idPrima, tipoValor: "porcentaje" | "monto", valores: [{id, valor}] }
+    function crearPanelNueva(host, f) {
         const n = ++contadorNuevas;
-        const pct = crearInputLectura("nueva_pct_" + n, "number");
+        const esPct = f.tipoValor === "porcentaje";
+        const valores = f.valores || [];
+        const formato = function (v) { return Number(v).toFixed(2).replace(".", ","); };
         const monto = crearInputLectura("nueva_monto_" + n, "number");
+        let selector = null;
+        let pct = null;
 
-        pct.value = porcentaje.toFixed(2);
+        if (valores.length > 1) {
+            // La prima tiene varios valores: se elige cuál aplicar a este trabajador
+            selector = crearSelect(
+                "nueva_valor_" + n,
+                "valor_prima[" + f.idPrima + "]",
+                valores.map(function (v) {
+                    return { valor: String(v.id), texto: formato(v.valor) + (esPct ? " %" : " Bs.") };
+                }),
+                "Seleccione un valor"
+            );
+            const previo = valoresPrevios()[f.idPrima];
+            if (previo) selector.value = String(previo);
+            selector.addEventListener("change", recalcular);
+            host.appendChild(crearCampo(esPct ? "Porcentaje a aplicar (%)" : "Monto a aplicar (Bs.)", selector));
+        } else if (esPct) {
+            pct = crearInputLectura("nueva_pct_" + n, "number");
+            host.appendChild(crearCampo("Porcentaje (%)", pct));
+        }
 
-        host.appendChild(crearCampo("Porcentaje (%)", pct));
         host.appendChild(crearCampo("Monto de la prima (Bs.)", monto));
+
+        function valorActual() {
+            if (selector) {
+                const v = valores.find(function (x) { return String(x.id) === selector.value; });
+                return v ? Number(v.valor) : 0;
+            }
+            return valores.length ? Number(valores[0].valor) : 0;
+        }
 
         return {
             raiz: host,
             autollenar: function () { /* no depende de datos del trabajador */ },
             calcular: function (base) {
-                const m = porcentaje > 0 ? (base * porcentaje) / 100 : 0;
+                const v = valorActual();
+                // Porcentaje: base salarial x % | Monto fijo: el monto tal cual
+                const m = esPct ? (v > 0 ? (base * v) / 100 : 0) : v;
+                if (pct) pct.value = v > 0 ? v.toFixed(2) : "";
                 monto.value = moneda(m);
                 return m;
             },
             validar: function () {
-                return porcentaje > 0 ? "" : "La prima no tiene un porcentaje válido.";
+                if (!valores.length) return "La prima \"" + f.tipo + "\" no tiene valores registrados.";
+                if (selector && !selector.value) return "Seleccione el valor que desea aplicar en \"" + f.tipo + "\".";
+                return valorActual() > 0 ? "" : "La prima \"" + f.tipo + "\" no tiene un valor válido.";
             }
         };
     }
@@ -715,7 +814,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const esNuevo = !panel;
             if (esNuevo) {
                 f.panel.innerHTML = "";
-                panel = f.nueva ? crearPanelNueva(f.panel, f.pct) : FABRICA[f.tipo](f.panel);
+                panel = f.nueva ? crearPanelNueva(f.panel, f) : FABRICA[f.tipo](f.panel);
                 activos[f.tipo] = panel;
             }
             f.panel.style.display = "grid";
@@ -905,13 +1004,52 @@ document.addEventListener("DOMContentLoaded", function () {
 // =====================================================
 // ALERTA PERSONALIZADA
 // =====================================================
-function showAlert(message, success = false) { FundaciteAlerta.mostrar(message, success ? 'success' : 'error'); }
+function showAlert(message, success = false) {
+    const alerta = document.getElementById("customAlert");
+    const mensaje = document.getElementById("alertMessage");
 
-function closeAlert() { FundaciteAlerta.cerrar(false); }
+    if (!alerta || !mensaje) {
+        alert(message);
+        return;
+    }
+
+    mensaje.innerText = message;
+    alerta.classList.remove("hidden");
+
+    const boton = document.querySelector(".alert-box button");
+    if (boton) {
+        boton.style.background = success ? "#2e7d32" : "#c62828";
+    }
+}
+
+function closeAlert() {
+    document.getElementById("customAlert")?.classList.add("hidden");
+}
 
 </script>
 
+<!-- Alertas de errores/éxito -->
+<?php if (!empty($errores)): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var alertDiv = document.getElementById('customAlert');
+        var msg = document.getElementById('alertMessage');
+        msg.textContent = <?php echo json_encode(implode("\n", $errores)); ?>;
+        alertDiv.classList.remove('hidden');
+    });
+</script>
+<?php endif; ?>
 
+<?php if (!empty($exito)): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var alertDiv = document.getElementById('customAlert');
+        var msg = document.getElementById('alertMessage');
+        msg.textContent = <?php echo json_encode($exito); ?>;
+        alertDiv.classList.remove('hidden');
+    });
+</script>
+<?php endif; ?>
 
 <script src="/FUNDACITE/vistas/js/valid_primas_extra.js"></script>
 </body>

@@ -53,8 +53,8 @@ value="<?php echo htmlspecialchars($buscar); ?>">
 </form>
 
 
-
-<table class="tabla">
+<div class="modulo-card" style="margin: 20px auto 0; padding: 10px;">
+    <table class="tabla">
 <thead>
 <tr>
 

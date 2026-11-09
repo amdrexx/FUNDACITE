@@ -35,9 +35,6 @@ CREATE TABLE PARROQUIA (
         ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
-
-
 CREATE TABLE DIRECCION (
     id_dir INT UNSIGNED NOT NULL AUTO_INCREMENT,
     cod_par INT UNSIGNED NOT NULL,
@@ -118,6 +115,17 @@ CREATE TABLE CONTRATO (
     CONSTRAINT fk_contrato_trabajador FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR(id_trabajador) ON DELETE CASCADE,
     CONSTRAINT fk_contrato_cargo FOREIGN KEY (id_cargo) REFERENCES CARGO(id_cargo) ON DELETE RESTRICT,
     CONSTRAINT chk_periodo_contrato CHECK (fecha_fin IS NULL OR fecha_fin >= fecha_contrato)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE CONVENIO (
+    id_convenio INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    fecha_inicio DATE NOT NULL,
+    fecha_vencimiento DATE NOT NULL,
+    nombre_gremio VARCHAR(150) NOT NULL,
+    dias_disfrute TINYINT UNSIGNED NOT NULL,
+    PRIMARY KEY (id_convenio),
+    INDEX idx_convenio_gremio (nombre_gremio),
+    CONSTRAINT chk_periodo_convenio CHECK (fecha_vencimiento >= fecha_inicio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE CONSTANCIA_DE_TRABAJO (
@@ -241,20 +249,45 @@ CREATE TABLE SALARIO (
 -- genérico PRIMA del ZIP independiente, que no guardaba trabajador ni monto.
 -- Mantener UNIQUE(id_trabajador, tipo_prima) para evitar duplicados por trabajador.
 CREATE TABLE PRIMA (
-    id_prima INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    id_trabajador INT UNSIGNED NOT NULL,
-    tipo_prima VARCHAR(100) NOT NULL,
-    condicion VARCHAR(150) NOT NULL DEFAULT '',
-    porcentaje DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    monto DECIMAL(12,2) NOT NULL DEFAULT 0.00,
-    monto_total DECIMAL(12,2) NOT NULL DEFAULT 0.00,
-    fecha DATE NOT NULL,
-    estatus ENUM('Activo', 'Inactivo') NOT NULL DEFAULT 'Activo',
+    id_prima    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    nombre      VARCHAR(100) NOT NULL,
+    tipo_valor  ENUM('porcentaje','monto') NOT NULL DEFAULT 'porcentaje',
+    fecha       DATE NOT NULL,
+    estatus     ENUM('Activo','Inactivo') NOT NULL DEFAULT 'Activo',
     PRIMARY KEY (id_prima),
-    UNIQUE KEY uq_prima_trabajador_tipo (id_trabajador, tipo_prima),
-    CONSTRAINT fk_prima_trabajador FOREIGN KEY (id_trabajador)
-        REFERENCES TRABAJADOR(id_trabajador) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    UNIQUE KEY uq_prima_nombre_fecha (nombre, fecha)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE PRIMA_VALOR (
+    id_prima_valor INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    id_prima       INT UNSIGNED NOT NULL,
+    valor          DECIMAL(12,2) NOT NULL,
+    orden          TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    PRIMARY KEY (id_prima_valor),
+    CONSTRAINT fk_valor_prima FOREIGN KEY (id_prima)
+        REFERENCES PRIMA (id_prima) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE TRABAJADOR_PRIMA (
+    id_trabajador_prima INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    id_trabajador       INT UNSIGNED NOT NULL,
+    id_prima            INT UNSIGNED NOT NULL,
+    id_prima_valor      INT UNSIGNED NULL,
+    condicion           VARCHAR(150) NOT NULL DEFAULT '',
+    porcentaje          DECIMAL(5,2)  NOT NULL DEFAULT 0.00,
+    monto               DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    monto_total         DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    fecha               DATE NOT NULL,
+    estatus             ENUM('Activo','Inactivo') NOT NULL DEFAULT 'Activo',
+    PRIMARY KEY (id_trabajador_prima),
+    UNIQUE KEY uq_trabajador_prima (id_trabajador, id_prima),
+    CONSTRAINT fk_tp_trabajador FOREIGN KEY (id_trabajador)
+        REFERENCES TRABAJADOR (id_trabajador) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_tp_prima FOREIGN KEY (id_prima)
+        REFERENCES PRIMA (id_prima) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT fk_tp_valor FOREIGN KEY (id_prima_valor)
+        REFERENCES PRIMA_VALOR (id_prima_valor) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ================================================================================
 -- 6. TABLA DE AUDITORÍA

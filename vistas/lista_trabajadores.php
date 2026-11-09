@@ -73,6 +73,7 @@ registrarBitacora($conexion, 'Trabajadores', 'Consultar', $buscar !== '' ? "Cons
     </a>
     <?php endif; ?>
 </form>
+        <div class="modulo-card" style="margin: 20px auto 0; padding: 10px;">
         <table class="tabla">
             <thead>
                 <tr>

@@ -57,6 +57,7 @@ registrarBitacora($conexion, 'Constancias', 'Consultar', $buscar !== '' ? "Consu
             <?php endif; ?>
         </form>
 
+        <div class="modulo-card" style="margin: 20px auto 0; padding: 10px;">
         <table class="tabla">
             <thead>
                 <tr>

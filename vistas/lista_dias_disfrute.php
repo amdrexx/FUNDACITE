@@ -82,8 +82,10 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', $buscar !== '' ? 
             </a>
             <?php endif; ?>
         </form>
+        
+        <div class="modulo-card" style="margin: 20px auto 0; padding: 10px;">
 
-        <table class="tabla">
+             <table class="tabla">
             <thead>
                 <tr>
                     <th>Trabajador</th>

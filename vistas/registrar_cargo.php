@@ -94,8 +94,10 @@ if (isset($_GET['status'])) {
                     </a>
                 </div>
                 <?php endif; ?>
-
-                <table class="tabla">
+                
+                
+                <div class="modulo-card" style="margin: 20px auto 0; padding: 10px;">    
+                    <table class="tabla">
                     <thead>
                         <tr>
                             <th>Nombre del Cargo</th>

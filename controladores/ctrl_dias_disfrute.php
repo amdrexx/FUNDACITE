@@ -236,11 +236,22 @@ if (isset($_POST['accion'])) {
                 exit;
             }
 
+            // La cantidad de días corresponde a la que indique el convenio
+            // colectivo vigente; si no hay ninguno, no se puede registrar.
+            $dias_correspondientes = $diasDisfruteModelo->calcularDiasDisfrute();
+            if ($dias_correspondientes === null) {
+                $_SESSION['errores'] = [
+                    'No hay un convenio vigente registrado que indique los días de disfrute correspondientes. '
+                    . 'Registre o actualice el convenio colectivo antes de continuar.'
+                ];
+                $datosFormulario['cedula'] = $trab['cedula'] ?? '';
+                $_SESSION['old'] = $datosFormulario;
+                header("Location: /FUNDACITE/vistas/registrar_dias_disfrute.php");
+                exit;
+            }
+
             // Código individual del registro de días de disfrute.
             $codigo_disfrute = str_replace('-', '', $fecha_inicio) . '-' . str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
-
-            // El registro conserva siempre 30 días hábiles.
-            $dias_correspondientes = 30;
 
             $resultado = $diasDisfruteModelo->registrarDiasDisfrute(
                 $id_trabajador,

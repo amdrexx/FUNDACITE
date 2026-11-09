@@ -74,6 +74,7 @@ $modalidad    = $etiquetasOrigen[$trab['origen_salario'] ?? ''] ?? 'No determina
 
 <?php include "includes/layout.php"; ?>
 
+<?php include "includes/alerta.php"; ?>
 
 <div class="main">
     <div class="worker-page">

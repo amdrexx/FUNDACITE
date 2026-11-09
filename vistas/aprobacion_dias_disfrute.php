@@ -95,6 +95,7 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', !empty($detalleCo
             </a>
         </form>
 
+       <div class="modulo-card" style="margin: 20px auto 0; padding: 10px;"> 
         <table class="tabla">
             <thead>
                 <tr>

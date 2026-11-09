@@ -1,6 +1,7 @@
 <?php
 // =============================================================================
-// CONTROLADOR: Primas  (registrar, actualizar y eliminar)
+// CONTROLADOR: Primas del trabajador  (registrar, actualizar y eliminar)
+// Guarda en la tabla puente TRABAJADOR_PRIMA (trabajador <-> prima del catálogo PRIMA).
 // Regla: el servidor calcula la prima con los datos REALES del trabajador; del
 // formulario solo toma el trabajador, el tipo de prima y los montos por hijo.
 // =============================================================================
@@ -68,6 +69,7 @@ function fallo(string $mensaje, int $idEditar = 0): void
         'tipo_prima'    => $_POST['tipo_prima'] ?? '',
         'tipos_prima'   => is_array($_POST['tipos_prima'] ?? null) ? array_values($_POST['tipos_prima']) : [],
         'estatus'       => $_POST['estatus'] ?? 'Activo',
+        'valor_prima'   => is_array($_POST['valor_prima'] ?? null) ? $_POST['valor_prima'] : [],
     ];
     irRegistro($idEditar);
 }
@@ -77,7 +79,7 @@ function fallo(string $mensaje, int $idEditar = 0): void
    Devuelve ['condicion','porcentaje','monto'] o ['error' => mensaje]
 --------------------------------------------------------------------------- */
 
-function calcularPrima(array $trab, string $tipo, array $post): array
+function calcularPrima(array $trab, string $tipo, array $post, ?array $montosHijo = null): array
 {
     $base = (float) $trab['base_prima'];
 
@@ -154,14 +156,17 @@ function calcularPrima(array $trab, string $tipo, array $post): array
             return ['error' => "Debe indicar el monto de cada uno de los $cantidad hijos."];
         }
 
+        // Montos permitidos por hijo: los del catálogo (prima de tipo monto) o los de siempre
+        $permitidosHijo = $montosHijo ?: MONTOS_HIJO_VALIDOS;
         $validos = [];
         $total = 0.0;
 
         foreach ($montos as $m) {
             $m = round((float) str_replace(',', '.', trim((string) $m)), 2);
 
-            if (!in_array($m, MONTOS_HIJO_VALIDOS, true)) {
-                return ['error' => 'Solo se permiten montos de 56,00 Bs. o 12,50 Bs. por hijo.'];
+            if (!in_array($m, $permitidosHijo, true)) {
+                return ['error' => 'Solo se permiten los montos definidos para la prima por hijos ('
+                    . implode(' o ', array_map(static fn($x) => number_format($x, 2, ',', '.') . ' Bs.', $permitidosHijo)) . ').'];
             }
 
             $validos[] = number_format($m, 2, '.', '');
@@ -179,27 +184,72 @@ function calcularPrima(array $trab, string $tipo, array $post): array
 }
 
 /**
- * Prima nueva del catálogo: monto = base salarial del trabajador x porcentaje / 100.
- * Devuelve ['condicion','porcentaje','monto'] o ['error' => mensaje]
+ * Prima nueva del catálogo.
+ *  - tipo 'porcentaje': monto = base salarial del trabajador x porcentaje / 100
+ *  - tipo 'monto'     : monto = el monto fijo del catálogo
+ * Si la prima tiene varios valores, el formulario envía cuál se aplica en
+ * valor_prima[<id_prima>] = id_prima_valor.
+ * Devuelve ['condicion','porcentaje','monto','id_valor'] o ['error' => mensaje]
  */
-function calcularPrimaNueva(array $trab, float $pct): array
+function calcularPrimaNueva(array $trab, array $info, array $post): array
 {
-    if ($pct <= 0 || $pct > 100) {
-        return ['error' => 'El porcentaje de la prima no es válido (debe ser mayor que 0 y hasta 100).'];
+    $valores = $info['valores'] ?? [];
+
+    if (!$valores) {
+        return ['error' => 'La prima no tiene valores registrados en el catálogo.'];
     }
 
-    $base = (float) $trab['base_prima'];
+    if (count($valores) > 1) {
+        $elegidos = $post['valor_prima'] ?? [];
+        $idElegido = is_array($elegidos) ? (int) ($elegidos[$info['id_prima']] ?? 0) : 0;
+        $sel = null;
 
-    if ($base <= 0) {
-        return ['error' => 'No existe una base salarial vigente para calcular esta prima. Revise el sueldo base o el salario asignado al cargo.'];
+        foreach ($valores as $v) {
+            if ((int) $v['id'] === $idElegido) {
+                $sel = $v;
+                break;
+            }
+        }
+
+        if ($sel === null) {
+            return ['error' => 'Seleccione cuál de los valores de la prima desea aplicar.'];
+        }
+    } else {
+        $sel = $valores[0];
     }
 
-    $pct = round($pct, 2);
+    $valor = round((float) $sel['valor'], 2);
+    $idValor = (int) $sel['id'] > 0 ? (int) $sel['id'] : null;
+    $esPct = ($info['tipo_valor'] ?? 'porcentaje') === 'porcentaje';
+
+    if ($esPct) {
+        if ($valor <= 0 || $valor > 100) {
+            return ['error' => 'El porcentaje de la prima no es válido (debe ser mayor que 0 y hasta 100).'];
+        }
+
+        $base = (float) $trab['base_prima'];
+
+        if ($base <= 0) {
+            return ['error' => 'No existe una base salarial vigente para calcular esta prima. Revise el sueldo base o el salario asignado al cargo.'];
+        }
+
+        return [
+            'condicion'  => rtrim(rtrim(number_format($valor, 2, '.', ''), '0'), '.') . '% del salario',
+            'porcentaje' => $valor,
+            'monto'      => round($base * $valor / 100, 2),
+            'id_valor'   => $idValor,
+        ];
+    }
+
+    if ($valor <= 0) {
+        return ['error' => 'El monto de la prima no es válido (debe ser mayor que 0).'];
+    }
 
     return [
-        'condicion'  => rtrim(rtrim(number_format($pct, 2, '.', ''), '0'), '.') . '% del salario',
-        'porcentaje' => $pct,
-        'monto'      => round($base * $pct / 100, 2),
+        'condicion'  => 'Monto fijo de ' . number_format($valor, 2, ',', '.') . ' Bs.',
+        'porcentaje' => 0.0,
+        'monto'      => $valor,
+        'id_valor'   => $idValor,
     ];
 }
 
@@ -235,24 +285,55 @@ function postParaTipo(string $tipo, array $post): array
     return $post;
 }
 
+/** Datos mínimos de una prima ya asignada (por si ya no está activa en el catálogo). */
+function infoDesdeFila(array $fila): array
+{
+    $pct = (float) ($fila['porcentaje'] ?? 0);
+    $esPct = $pct > 0;
+
+    return [
+        'id_prima'   => (int) ($fila['id_prima_catalogo'] ?? 0),
+        'tipo_valor' => $esPct ? 'porcentaje' : 'monto',
+        'valores'    => [[
+            'id'    => (int) ($fila['id_prima_valor'] ?? 0),
+            'valor' => $esPct ? $pct : (float) ($fila['monto'] ?? 0),
+        ]],
+    ];
+}
+
 /**
  * Calcula una prima sea fija (antigüedad, hijos, profesionalización) o nueva del catálogo.
- * $pctGuardado: porcentaje que ya tenía el trabajador (se usa al editar si la prima
+ * $filaGuardada: la asignación que ya tenía el trabajador (se usa al editar si la prima
  * nueva ya no está activa en el catálogo).
+ * Devuelve ['condicion','porcentaje','monto','id_valor'] o ['error' => mensaje]
  */
-function calcularPrimaTipo(array $trab, string $tipo, array $post, array $catalogo, ?float $pctGuardado = null): array
+function calcularPrimaTipo(array $trab, string $tipo, array $post, array $catalogo, ?array $filaGuardada = null): array
 {
+    $infoCatalogo = $catalogo[$tipo] ?? null;
+
     if (in_array($tipo, TIPOS_FIJOS, true)) {
-        return calcularPrima($trab, $tipo, postParaTipo($tipo, $post));
+        // Prima por hijos: si en el catálogo es de monto fijo, esos son los montos permitidos por hijo
+        $montosHijo = null;
+        if ($tipo === TIPO_HIJOS && $infoCatalogo !== null && ($infoCatalogo['tipo_valor'] ?? '') === 'monto') {
+            $montosHijo = array_map(static fn($v) => round((float) $v['valor'], 2), $infoCatalogo['valores']);
+        }
+
+        $calc = calcularPrima($trab, $tipo, postParaTipo($tipo, $post), $montosHijo);
+
+        if (!isset($calc['error'])) {
+            $calc['id_valor'] = null;
+        }
+
+        return $calc;
     }
 
-    $pct = $catalogo[$tipo] ?? $pctGuardado;
+    $info = $infoCatalogo ?? ($filaGuardada !== null ? infoDesdeFila($filaGuardada) : null);
 
-    if ($pct === null) {
+    if ($info === null) {
         return ['error' => 'La prima no está disponible en el catálogo de primas nuevas.'];
     }
 
-    return calcularPrimaNueva($trab, (float) $pct);
+    return calcularPrimaNueva($trab, $info, $post);
 }
 
 /* ---------------------------------------------------------------------------
@@ -438,6 +519,8 @@ if (!$editando) {
 
         $items[] = [
             'tipo'        => $t,
+            'id_prima'    => (int) $catalogo[$t]['id_prima'],
+            'id_valor'    => $calc['id_valor'] ?? null,
             'condicion'   => $calc['condicion'],
             'porcentaje'  => $calc['porcentaje'],
             'monto'       => $calc['monto'],
@@ -505,7 +588,7 @@ foreach ($tipos as $t) {
         fallo($t . ': ' . $error, $idEditar);
     }
 
-    $calc = calcularPrimaTipo($trab, $t, $_POST, $catalogo, (float) $porTipo[$t]['porcentaje']);
+    $calc = calcularPrimaTipo($trab, $t, $_POST, $catalogo, $porTipo[$t]);
     if (isset($calc['error'])) {
         fallo($t . ': ' . $calc['error'], $idEditar);
     }
@@ -515,7 +598,8 @@ foreach ($tipos as $t) {
     }
 
     $items[] = [
-        'id_prima'    => (int) $porTipo[$t]['id_prima'],
+        'id_prima'    => (int) $porTipo[$t]['id_prima'],   // id de la asignación (TRABAJADOR_PRIMA)
+        'id_valor'    => $calc['id_valor'] ?? null,
         'tipo'        => $t,
         'condicion'   => $calc['condicion'],
         'porcentaje'  => $calc['porcentaje'],

@@ -13,6 +13,13 @@ $hoyVisible = $fechaActualCaracas->format('d/m/Y');
 $trabajadores = $diasDisfruteModelo->listarTrabajadoresDiasDisfrute(filtroTrabajadorSesion());
 $soloPropio = esUsuarioEstandar() && count($trabajadores) === 1 && !empty($trabajadores[0]['elegible_disfrute']);
 
+// Los días que le corresponden a cualquier trabajador son los que indique
+// el convenio colectivo vigente; ya no hay un valor fijo para todos.
+$diasConvenioVigente = $diasDisfruteModelo->calcularDiasDisfrute();
+$diasConvenioTexto = $diasConvenioVigente !== null
+    ? $diasConvenioVigente . ' días hábiles'
+    : 'Sin convenio vigente registrado';
+
 $old = $_SESSION['old'] ?? null;
 $errores = $_SESSION['errores'] ?? [];
 $exito = $_SESSION['exito'] ?? '';
@@ -62,6 +69,12 @@ unset($_SESSION['errores'], $_SESSION['exito']);
 
             <div class="form-grid full-width">
                 <h2>DIAS DE DISFRUTE</h2>
+
+                <?php if ($diasConvenioVigente === null): ?>
+                    <div class="full-width" style="color:#ffd7d7;background:rgba(180,35,24,.25);border:1px solid rgba(180,35,24,.5);border-radius:8px;padding:10px 14px;margin-bottom:10px;">
+                        No hay un convenio vigente registrado. Debe registrar o actualizar el convenio colectivo antes de poder registrar días de disfrute.
+                    </div>
+                <?php endif; ?>
 
                 <!-- 1. Selección de trabajadores activos -->
                 <div class="field full-width">
@@ -120,7 +133,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                 <div class="field">
                     <label>Días de disfrute que le corresponden</label>
                     <input type="text" id="dias_correspondientes_display" class="campo-auto"
-                           value="30 días hábiles" readonly>
+                           value="<?= htmlspecialchars($diasConvenioTexto, ENT_QUOTES, 'UTF-8') ?>" readonly>
                 </div>
 
                 <!-- 6. Fecha de Inicio: se fija con la fecha actual de la solicitud -->
@@ -193,7 +206,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                 <button type="submit" name="accion" value="limpiar" class="btn-secundario">
                     Limpiar
                 </button>
-                <button type="submit" name="accion" value="guardar" class="btn-guardar">
+                <button type="submit" name="accion" value="guardar" class="btn-guardar" <?= $diasConvenioVigente === null ? 'disabled title="No hay un convenio vigente registrado."' : '' ?>>
                     Guardar
                 </button>
             </div>
@@ -211,8 +224,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var cedulaDisplay = document.getElementById('cedula_display');
     var cargoDisplay = document.getElementById('cargo_display');
     var diasDisplay = document.getElementById('dias_correspondientes_display');
+    var diasConvenioTexto = <?= json_encode($diasConvenioTexto, JSON_UNESCAPED_UNICODE) ?>;
 
-    if (diasDisplay) diasDisplay.value = '30 días hábiles';
+    if (diasDisplay) diasDisplay.value = diasConvenioTexto;
 
     selectTrabajador.addEventListener('change', function() {
         var id = this.value;
@@ -220,7 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
             nombreCompleto.value = '';
             cedulaDisplay.value = '';
             cargoDisplay.value = '';
-            if (diasDisplay) diasDisplay.value = '30 días hábiles';
+            if (diasDisplay) diasDisplay.value = diasConvenioTexto;
             return;
         }
 
@@ -231,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     nombreCompleto.value = data.nombre_completo || '';
                     cedulaDisplay.value = data.cedula || '';
                     cargoDisplay.value = data.cargo || '';
-                    if (diasDisplay) diasDisplay.value = '30 días hábiles';
+                    if (diasDisplay) diasDisplay.value = diasConvenioTexto;
                     nombreCompleto.classList.add('campo-ok');
                     setTimeout(function() { nombreCompleto.classList.remove('campo-ok'); }, 1500);
                 } else {

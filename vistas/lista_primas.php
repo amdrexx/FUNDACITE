@@ -82,13 +82,13 @@ foreach ($primas as $p) {
 
   
   <?php include "includes/layout.php"; ?>
-
+  <?php include "includes/alerta.php"; ?>
 
     <div class="main">
         <div class="glass tabla-container">
             <h2 style="text-align:center; color:white;">Lista Primas al trabajador</h2>
 
-            <form method="GET" action="lista_primas.php" class="buscador-container" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <form method="GET" action="lista_primas.php" class="buscador-container" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;"></form>
                 <input
                     type="text"
                     name="buscar"
@@ -97,34 +97,34 @@ foreach ($primas as $p) {
                     value="<?= htmlspecialchars($buscar) ?>"
                 >
                 <button type="submit" class="btn-buscar">Buscar</button>
-                <a href="/FUNDACITE/vistas/registrar_prima.php" class="btn-persona" style="text-decoration:none;">
+                <a href="/FUNDACITE/vistas/registrar_prima.php" class="btn-persona" style="text-decoration:none; margin-right:10px;">
                     + Agregar prima
                 </a>
-                <a href="/FUNDACITE/vistas/registrar_primas_nuevo.php" class="btn-persona" style="text-decoration:none;">
+                <a href="/FUNDACITE/vistas/registrar_primas_nuevo.php" class="btn-persona" style="text-decoration:none; margin-right:10px;">
                     + Registrar nueva prima
                 </a>
                     <a href="actualizar_porcentaje_prima.php" class="btn-persona" style="text-decoration:none;margin-right:10px;">
                     Actualizar
                 </a>
                 </a>
-                    <a href="lista_nuevas_primas.php" class="btn-persona" style="text-decoration:none;margin-right:2px;">
-                    lista primas
+                    <a href="lista_nuevas_primas.php" class="btn-persona" style="text-decoration:none;margin-right:2px; position:relative; top:10px;">
+                    Lista Primas
                 </a>
                 <?php if (esAdministradorODirector()): ?>
                 <a
                     href="/FUNDACITE/pdf/reporte_primas.php<?= $buscar !== '' ? '?buscar=' . urlencode($buscar) : ''; ?>"
                     class="btn-pdf"
                     target="_blank"
-                    style="text-decoration:none; margin-left:auto;"
-                >
+                    style="text-decoration:none; margin-left:10px; position:relative; top:10px;">
+                
                     <i class="bi bi-file-earmark-pdf"></i>
                     Exportar PDF
                 </a>
                 <?php endif; ?>
             </form>
-
-
-            <table class="tabla">
+    
+            <div class="modulo-card" style="margin: 20px auto 0; padding: 10px;">      
+                <table class="tabla">
                 <thead>
                     <tr>
                         <th>Cédula</th>
@@ -172,7 +172,9 @@ foreach ($primas as $p) {
 
                 <?php if (esAdministradorODirector()): ?>
                 <form action="../controladores/ctrl_primas.php" method="POST" style="display:inline;"
-                      data-confirm="<?= htmlspecialchars($hayActivas ? '¿Seguro que deseas inactivar las primas de este trabajador?' : '¿Seguro que deseas activar las primas de este trabajador?', ENT_QUOTES, 'UTF-8') ?>">
+                      onsubmit="return confirm('<?= $hayActivas
+                          ? '¿Seguro que deseas inactivar las primas de este trabajador?'
+                          : '¿Seguro que deseas activar las primas de este trabajador?' ?>');">
                     <input type="hidden" name="id_trabajador" value="<?= (int) $g['id'] ?>">
                     <input type="hidden" name="accion" value="<?= $hayActivas ? 'inactivar_primas' : 'activar_primas' ?>">
                     <?php if ($hayActivas): ?>
@@ -208,6 +210,26 @@ foreach ($primas as $p) {
 
     <script src="/FUNDACITE/vistas/js/boton_desplegable.js"></script>
 
-    
+    <?php if (!empty($errores)): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var alertDiv = document.getElementById('customAlert');
+        var msg = document.getElementById('alertMessage');
+        msg.textContent = <?php echo json_encode(implode("\n", $errores)); ?>;
+        alertDiv.classList.remove('hidden');
+    });
+</script>
+<?php endif; ?>
+
+<?php if (!empty($exito_edicion)): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var alertDiv = document.getElementById('customAlert');
+        var msg = document.getElementById('alertMessage');
+        msg.textContent = <?php echo json_encode($exito_edicion); ?>;
+        alertDiv.classList.remove('hidden');
+    });
+</script>
+<?php endif; ?>
 </body>
 </html>

@@ -58,6 +58,8 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                     </a>
                 </div>
 
+                
+                <div class="modulo-card" style="margin: 20px auto 0; padding: 10px;">
                 <table class="tabla" style="width: 100% !important;">
                     <thead>
                         <tr>

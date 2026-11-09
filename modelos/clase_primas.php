@@ -2,9 +2,9 @@
 // =============================================================================
 // MODELO: Prima  (primas asignadas a cada trabajador)
 // -----------------------------------------------------------------------------
-// - Usa ÚNICAMENTE la tabla PRIMA. Si le faltan columnas (id_trabajador,
-//   condicion, monto, monto_total, estatus) las agrega sola, y reemplaza el índice
-//   UNIQUE(tipo_prima) por UNIQUE(id_trabajador, tipo_prima).
+// - Usa la tabla puente TRABAJADOR_PRIMA (trabajador <-> prima del catálogo PRIMA).
+//   Las tablas se crean con bd/migracion_primas.sql (esta clase ya no modifica la
+//   estructura de la base de datos).
 // - Los datos del trabajador se leen de TRABAJADOR / CONTRATO / CARGO / SALARIO.
 //   Si a TRABAJADOR le falta alguna columna opcional (hijos, años de servicio,
 //   nivel de educación) la consulta se adapta y NO falla.
@@ -21,88 +21,6 @@ class Prima
     public function __construct(mysqli $conexion)
     {
         $this->conexion = $conexion;
-        $this->asegurarTabla();
-    }
-
-    /* =====================================================
-       TABLA PRIMA: asegura las columnas e índices necesarios
-    ===================================================== */
-
-    private function asegurarTabla(): void
-    {
-        try {
-            $cols = [];
-            $res = $this->conexion->query('SHOW COLUMNS FROM PRIMA');
-
-            if (!$res) {
-                $this->ultimoError = 'No se pudo leer la tabla PRIMA: ' . $this->conexion->error;
-                return;
-            }
-
-            while ($f = $res->fetch_assoc()) {
-                $cols[] = strtolower((string) $f['Field']);
-            }
-
-            // 1) Columnas nuevas (id_trabajador acepta NULL por las filas antiguas)
-            $agregar = [
-                'id_trabajador' => 'ADD COLUMN id_trabajador INT UNSIGNED NULL AFTER id_prima',
-                'condicion'     => "ADD COLUMN condicion VARCHAR(150) NOT NULL DEFAULT '' AFTER tipo_prima",
-                'monto'         => 'ADD COLUMN monto DECIMAL(12,2) NOT NULL DEFAULT 0.00 AFTER porcentaje',
-                'monto_total'   => 'ADD COLUMN monto_total DECIMAL(12,2) NOT NULL DEFAULT 0.00 AFTER monto',
-                'estatus'       => "ADD COLUMN estatus ENUM('Activo','Inactivo') NOT NULL DEFAULT 'Activo' AFTER fecha",
-            ];
-
-            foreach ($agregar as $col => $ddl) {
-                if (!in_array($col, $cols, true)) {
-                    if (!$this->conexion->query("ALTER TABLE PRIMA $ddl")) {
-                        $this->ultimoError = "No se pudo agregar $col a PRIMA: " . $this->conexion->error;
-                        return;
-                    }
-                }
-            }
-
-            // 2) Índices: quitar UNIQUE(tipo_prima) y crear UNIQUE(id_trabajador, tipo_prima)
-            $indices = [];
-            $res = $this->conexion->query('SHOW INDEX FROM PRIMA');
-
-            while ($res && ($f = $res->fetch_assoc())) {
-                $indices[$f['Key_name']]['unico'] = ((int) $f['Non_unique'] === 0);
-                $indices[$f['Key_name']]['cols'][] = strtolower((string) $f['Column_name']);
-            }
-
-            foreach ($indices as $nombre => $i) {
-                if ($nombre !== 'PRIMARY' && $i['unico'] && $i['cols'] === ['tipo_prima']) {
-                    $this->conexion->query('ALTER TABLE PRIMA DROP INDEX `' . str_replace('`', '', $nombre) . '`');
-                }
-            }
-
-            if (!isset($indices['uq_prima_trabajador_tipo'])) {
-                $this->conexion->query(
-                    'ALTER TABLE PRIMA ADD UNIQUE KEY uq_prima_trabajador_tipo (id_trabajador, tipo_prima)'
-                );
-            }
-
-            // 3) Llave foránea hacia TRABAJADOR (si no se puede crear, no es crítico)
-            $fk = $this->conexion->query(
-                "SELECT 1 FROM information_schema.TABLE_CONSTRAINTS
-                 WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'PRIMA'
-                   AND CONSTRAINT_NAME = 'fk_prima_trabajador'"
-            );
-
-            if ($fk && $fk->num_rows === 0) {
-                try {
-                    $this->conexion->query(
-                        'ALTER TABLE PRIMA ADD CONSTRAINT fk_prima_trabajador
-                         FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR(id_trabajador)
-                         ON DELETE CASCADE ON UPDATE CASCADE'
-                    );
-                } catch (\Throwable $e) {
-                    error_log('Primas - no se pudo crear la llave foránea: ' . $e->getMessage());
-                }
-            }
-        } catch (\Throwable $e) {
-            $this->ultimoError = 'Error al preparar la tabla PRIMA: ' . $e->getMessage();
-        }
     }
 
     /* =====================================================
@@ -326,18 +244,26 @@ class Prima
     }
 
     /* =====================================================
-       PRIMAS REGISTRADAS
+       PRIMAS ASIGNADAS A TRABAJADORES  (tabla puente TRABAJADOR_PRIMA)
+       Se mantienen los alias de siempre (id_prima = id de la asignación,
+       tipo_prima = nombre de la prima) para no romper las vistas.
     ===================================================== */
 
     private const SELECT_PRIMAS = "SELECT
-                p.id_prima, p.id_trabajador, p.tipo_prima, p.condicion,
-                p.porcentaje, p.monto, p.monto_total, p.fecha, p.estatus,
+                tp.id_trabajador_prima AS id_prima,
+                tp.id_trabajador,
+                tp.id_prima AS id_prima_catalogo,
+                tp.id_prima_valor,
+                p.nombre AS tipo_prima,
+                p.tipo_valor,
+                tp.condicion,
+                tp.porcentaje, tp.monto, tp.monto_total, tp.fecha, tp.estatus,
                 t.cedula,
                 CONCAT(t.nombres, ' ', t.apellidos) AS nombre_completo
-            FROM PRIMA p
-            LEFT JOIN TRABAJADOR t ON t.id_trabajador = p.id_trabajador";
+            FROM TRABAJADOR_PRIMA tp
+            JOIN PRIMA p ON p.id_prima = tp.id_prima
+            LEFT JOIN TRABAJADOR t ON t.id_trabajador = tp.id_trabajador";
 
-    /** @return array<int,array> */
     /** Cambia el estatus (Activo/Inactivo) de todas las primas de un trabajador. */
     public function cambiarEstatusPorTrabajador(int $idTrabajador, string $estatus): bool
     {
@@ -345,7 +271,7 @@ class Prima
             return false;
         }
 
-        $stmt = $this->conexion->prepare('UPDATE PRIMA SET estatus = ? WHERE id_trabajador = ?');
+        $stmt = $this->conexion->prepare('UPDATE TRABAJADOR_PRIMA SET estatus = ? WHERE id_trabajador = ?');
 
         if (!$stmt) {
             $this->ultimoError = $this->conexion->error;
@@ -367,7 +293,7 @@ class Prima
     public function listarPorTrabajador(int $idTrabajador): array
     {
         $stmt = $this->conexion->prepare(
-            self::SELECT_PRIMAS . ' WHERE p.id_trabajador = ? ORDER BY p.id_prima ASC'
+            self::SELECT_PRIMAS . ' WHERE tp.id_trabajador = ? ORDER BY tp.id_trabajador_prima ASC'
         );
 
         if (!$stmt) {
@@ -392,14 +318,13 @@ class Prima
     public function listar(string $buscar = ''): array
     {
         $sql = self::SELECT_PRIMAS . "
-                WHERE p.id_trabajador IS NOT NULL
-                  AND (   p.tipo_prima LIKE ?
-                       OR p.condicion LIKE ?
+                WHERE (   p.nombre LIKE ?
+                       OR tp.condicion LIKE ?
                        OR COALESCE(t.cedula, '') LIKE ?
                        OR COALESCE(t.nombres, '') LIKE ?
                        OR COALESCE(t.apellidos, '') LIKE ?
                        OR CONCAT(COALESCE(t.nombres, ''), ' ', COALESCE(t.apellidos, '')) LIKE ?)
-                ORDER BY p.id_prima DESC";
+                ORDER BY tp.id_trabajador_prima DESC";
 
         $stmt = $this->conexion->prepare($sql);
 
@@ -423,9 +348,10 @@ class Prima
         return $filas;
     }
 
+    /** $id = id de la asignación (TRABAJADOR_PRIMA.id_trabajador_prima). */
     public function obtenerPorId(int $id): ?array
     {
-        $stmt = $this->conexion->prepare(self::SELECT_PRIMAS . ' WHERE p.id_prima = ? LIMIT 1');
+        $stmt = $this->conexion->prepare(self::SELECT_PRIMAS . ' WHERE tp.id_trabajador_prima = ? LIMIT 1');
 
         if (!$stmt) {
             $this->ultimoError = $this->conexion->error;
@@ -447,7 +373,9 @@ class Prima
     public function tiposRegistradosPorTrabajador(): array
     {
         $res = $this->conexion->query(
-            'SELECT id_trabajador, tipo_prima FROM PRIMA WHERE id_trabajador IS NOT NULL'
+            'SELECT tp.id_trabajador, p.nombre AS tipo_prima
+             FROM TRABAJADOR_PRIMA tp
+             JOIN PRIMA p ON p.id_prima = tp.id_prima'
         );
         $mapa = [];
 
@@ -459,45 +387,73 @@ class Prima
     }
 
     /**
-     * Catálogo de primas nuevas (filas de PRIMA con id_trabajador NULL) que se pueden
-     * asignar a un trabajador: [nombre => porcentaje].
-     * De cada nombre se toma el registro más reciente y solo se incluye si está Activo.
-     * @return array<string,float>
+     * Catálogo de primas ACTIVAS que se pueden asignar a un trabajador.
+     * De cada nombre se toma la versión más reciente (por fecha) y solo se incluye
+     * si está Activa y tiene al menos un valor.
+     *
+     * @return array<string,array{id_prima:int,tipo_valor:string,valores:array<int,array{id:int,valor:float}>}>
      */
     public function listarCatalogoNuevas(): array
     {
         $res = $this->conexion->query(
-            'SELECT tipo_prima, porcentaje, estatus FROM PRIMA
-             WHERE id_trabajador IS NULL
-             ORDER BY fecha DESC, id_prima DESC'
+            'SELECT p.id_prima, p.nombre, p.tipo_valor, p.estatus, v.id_prima_valor, v.valor
+             FROM PRIMA p
+             LEFT JOIN PRIMA_VALOR v ON v.id_prima = p.id_prima
+             ORDER BY p.fecha DESC, p.id_prima DESC, v.orden, v.id_prima_valor'
         );
 
-        $vistos = [];
+        $masReciente = [];   // clave del nombre => id_prima de su versión más reciente
         $catalogo = [];
 
         while ($res && ($f = $res->fetch_assoc())) {
-            $nombre = (string) $f['tipo_prima'];
+            $nombre = (string) $f['nombre'];
             $clave = mb_strtolower(trim($nombre), 'UTF-8');
+            $idPrima = (int) $f['id_prima'];
 
-            if (isset($vistos[$clave])) {
-                continue; // ya se tomó el registro más reciente de este nombre
+            if (!isset($masReciente[$clave])) {
+                $masReciente[$clave] = $idPrima;
             }
-            $vistos[$clave] = true;
 
-            if ($f['estatus'] === 'Activo') {
-                $catalogo[$nombre] = (float) $f['porcentaje'];
+            if ($masReciente[$clave] !== $idPrima) {
+                continue; // versión más antigua de la misma prima
             }
+
+            if (!isset($catalogo[$nombre])) {
+                $catalogo[$nombre] = [
+                    'id_prima'   => $idPrima,
+                    'tipo_valor' => (string) $f['tipo_valor'],
+                    'estatus'    => (string) $f['estatus'],
+                    'valores'    => [],
+                ];
+            }
+
+            if ($f['id_prima_valor'] !== null) {
+                $catalogo[$nombre]['valores'][] = [
+                    'id'    => (int) $f['id_prima_valor'],
+                    'valor' => (float) $f['valor'],
+                ];
+            }
+        }
+
+        foreach ($catalogo as $nombre => $info) {
+            if ($info['estatus'] !== 'Activo' || !$info['valores']) {
+                unset($catalogo[$nombre]);
+                continue;
+            }
+            unset($catalogo[$nombre]['estatus']);
         }
 
         return $catalogo;
     }
 
-    /** ¿El trabajador ya tiene una prima de este tipo? (excluye $idExcluir al editar) */
+    /** ¿El trabajador ya tiene una prima de este tipo (nombre)? (excluye $idExcluir al editar) */
     public function existePrima(int $idTrabajador, string $tipo, int $idExcluir = 0): bool
     {
         $stmt = $this->conexion->prepare(
-            'SELECT id_prima FROM PRIMA
-             WHERE id_trabajador = ? AND tipo_prima = ? AND id_prima <> ? LIMIT 1'
+            'SELECT tp.id_trabajador_prima
+             FROM TRABAJADOR_PRIMA tp
+             JOIN PRIMA p ON p.id_prima = tp.id_prima
+             WHERE tp.id_trabajador = ? AND p.nombre = ? AND tp.id_trabajador_prima <> ? LIMIT 1'
         );
 
         if (!$stmt) {
@@ -512,9 +468,14 @@ class Prima
         return $existe;
     }
 
+    /**
+     * Asigna una prima del catálogo a un trabajador.
+     * $idValor: valor elegido de PRIMA_VALOR (null si la prima no usa uno del catálogo).
+     */
     public function registrar(
         int $idTrabajador,
-        string $tipo,
+        int $idPrima,
+        ?int $idValor,
         string $condicion,
         float $porcentaje,
         float $monto,
@@ -522,9 +483,9 @@ class Prima
         string $estatus = 'Activo'
     ): bool {
         $stmt = $this->conexion->prepare(
-            'INSERT INTO PRIMA
-                (id_trabajador, tipo_prima, condicion, porcentaje, monto, monto_total, fecha, estatus)
-             VALUES (?, ?, ?, ?, ?, ?, CURDATE(), ?)'
+            'INSERT INTO TRABAJADOR_PRIMA
+                (id_trabajador, id_prima, id_prima_valor, condicion, porcentaje, monto, monto_total, fecha, estatus)
+             VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE(), ?)'
         );
 
         if (!$stmt) {
@@ -532,7 +493,7 @@ class Prima
             return false;
         }
 
-        $stmt->bind_param('issddds', $idTrabajador, $tipo, $condicion, $porcentaje, $monto, $montoTotal, $estatus);
+        $stmt->bind_param('iiisddds', $idTrabajador, $idPrima, $idValor, $condicion, $porcentaje, $monto, $montoTotal, $estatus);
         $ok = $stmt->execute();
 
         if (!$ok) {
@@ -545,10 +506,10 @@ class Prima
     }
 
     /**
-     * Registra varias primas de un mismo trabajador en una sola transacción:
+     * Asigna varias primas a un mismo trabajador en una sola transacción:
      * se guardan todas o ninguna.
      *
-     * @param array<int,array{tipo:string,condicion:string,porcentaje:float,monto:float,monto_total:float}> $items
+     * @param array<int,array{id_prima:int,id_valor:?int,condicion:string,porcentaje:float,monto:float,monto_total:float}> $items
      */
     public function registrarLote(int $idTrabajador, array $items, string $estatus = 'Activo'): bool
     {
@@ -563,7 +524,8 @@ class Prima
             foreach ($items as $it) {
                 $ok = $this->registrar(
                     $idTrabajador,
-                    $it['tipo'],
+                    (int) $it['id_prima'],
+                    $it['id_valor'] ?? null,
                     $it['condicion'],
                     $it['porcentaje'],
                     $it['monto'],
@@ -586,9 +548,10 @@ class Prima
         }
     }
 
+    /** $idAsignacion = TRABAJADOR_PRIMA.id_trabajador_prima (la prima del catálogo no cambia). */
     public function actualizar(
-        int $idPrima,
-        string $tipo,
+        int $idAsignacion,
+        ?int $idValor,
         string $condicion,
         float $porcentaje,
         float $monto,
@@ -596,10 +559,10 @@ class Prima
         string $estatus = 'Activo'
     ): bool {
         $stmt = $this->conexion->prepare(
-            'UPDATE PRIMA
-             SET tipo_prima = ?, condicion = ?, porcentaje = ?, monto = ?,
+            'UPDATE TRABAJADOR_PRIMA
+             SET id_prima_valor = ?, condicion = ?, porcentaje = ?, monto = ?,
                  monto_total = ?, fecha = CURDATE(), estatus = ?
-             WHERE id_prima = ?'
+             WHERE id_trabajador_prima = ?'
         );
 
         if (!$stmt) {
@@ -607,7 +570,7 @@ class Prima
             return false;
         }
 
-        $stmt->bind_param('ssdddsi', $tipo, $condicion, $porcentaje, $monto, $montoTotal, $estatus, $idPrima);
+        $stmt->bind_param('isdddsi', $idValor, $condicion, $porcentaje, $monto, $montoTotal, $estatus, $idAsignacion);
         $ok = $stmt->execute();
 
         if (!$ok) {
@@ -621,7 +584,8 @@ class Prima
 
     /**
      * Actualiza varias primas de un trabajador en una sola transacción.
-     * @param array<int,array{id_prima:int,tipo:string,condicion:string,porcentaje:float,monto:float,monto_total:float}> $items
+     * @param array<int,array{id_prima:int,id_valor:?int,condicion:string,porcentaje:float,monto:float,monto_total:float}> $items
+     *        (aquí 'id_prima' es el id de la asignación, como siempre)
      */
     public function actualizarLote(array $items, string $estatus = 'Activo'): bool
     {
@@ -636,7 +600,7 @@ class Prima
             foreach ($items as $it) {
                 $ok = $this->actualizar(
                     (int) $it['id_prima'],
-                    $it['tipo'],
+                    $it['id_valor'] ?? null,
                     $it['condicion'],
                     $it['porcentaje'],
                     $it['monto'],
@@ -659,16 +623,16 @@ class Prima
         }
     }
 
-    public function eliminar(int $idPrima): bool
+    public function eliminar(int $idAsignacion): bool
     {
-        $stmt = $this->conexion->prepare('DELETE FROM PRIMA WHERE id_prima = ?');
+        $stmt = $this->conexion->prepare('DELETE FROM TRABAJADOR_PRIMA WHERE id_trabajador_prima = ?');
 
         if (!$stmt) {
             $this->ultimoError = $this->conexion->error;
             return false;
         }
 
-        $stmt->bind_param('i', $idPrima);
+        $stmt->bind_param('i', $idAsignacion);
         $ok = $stmt->execute();
         $stmt->close();
 
@@ -688,7 +652,7 @@ class Prima
         }
 
         $stmt = $this->conexion->prepare(
-            "SELECT COALESCE(SUM(monto), 0) AS total FROM PRIMA WHERE id_trabajador = ? AND estatus = 'Activo'"
+            "SELECT COALESCE(SUM(monto), 0) AS total FROM TRABAJADOR_PRIMA WHERE id_trabajador = ? AND estatus = 'Activo'"
         );
 
         if (!$stmt) {

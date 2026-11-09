@@ -1,7 +1,8 @@
 <?php
 // =============================================================================
 // CONTROLADOR: Nuevas primas  (guardar, actualizar, inactivar, activar y actualizar porcentajes)
-// Las primas nuevas se guardan en la tabla PRIMA con id_trabajador = NULL.
+// El catálogo vive en PRIMA (+ PRIMA_VALOR para uno o varios valores).
+// Cada prima es de tipo 'porcentaje' o 'monto' (monto fijo en Bs.).
 // =============================================================================
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -17,6 +18,7 @@ $modelo = new NuevaPrima($conexion);
 
 const RUTA_REGISTRO = '../vistas/registrar_primas_nuevo.php';
 const RUTA_LISTA    = '../vistas/lista_nuevas_primas.php';
+const MONTO_MAXIMO  = 9999999.99;
 
 /* ---------------------------------------------------------------------------
    Auxiliares
@@ -35,7 +37,7 @@ function normalizarNombre(string $nombre): string
 }
 
 /** Acepta coma o punto como separador decimal. */
-function normalizarPorcentaje(string $valor): string
+function normalizarNumero(string $valor): string
 {
     return str_replace(',', '.', trim($valor));
 }
@@ -46,10 +48,56 @@ function fechaLegible(string $fecha): string
     return $d ? $d->format('d/m/Y') : $fecha;
 }
 
+function fmtNum(float $n): string
+{
+    return number_format($n, 2, ',', '.');
+}
+
+/** "12,00% / 56,00%"  o  "56,00 Bs. / 12,50 Bs." */
+function describirValores(string $tipoValor, array $valores): string
+{
+    $partes = array_map(
+        static fn($v) => $tipoValor === 'porcentaje' ? fmtNum((float) $v) . '%' : fmtNum((float) $v) . ' Bs.',
+        $valores
+    );
+
+    return implode(' / ', $partes);
+}
+
+/** Valores de un registro del modelo ([['id'=>..,'valor'=>..],..]) -> [float, ...] */
+function soloValores(array $registro): array
+{
+    return array_map(static fn($v) => (float) $v['valor'], $registro['valores'] ?? []);
+}
+
+/**
+ * Valores enviados en valores[]. Si "varios" no está marcado solo cuenta el primero.
+ * @return string[]
+ */
+function normalizarValores($crudos, bool $varios): array
+{
+    $crudos = is_array($crudos) ? $crudos : [$crudos];
+    $lista = [];
+
+    foreach ($crudos as $v) {
+        $t = normalizarNumero((string) $v);
+        if ($t !== '') {
+            $lista[] = $t;
+        }
+    }
+
+    return $varios ? $lista : array_slice($lista, 0, 1);
+}
+
 /** Devuelve la lista de errores de validación (vacía si todo está bien). */
-function validarDatos(string $nombre, string $fecha, string $porcentaje): array
+function validarDatos(string $nombre, string $fecha, string $tipoValor, array $valores, bool $varios): array
 {
     $errores = [];
+
+    // Tipo de valor
+    if (!in_array($tipoValor, NuevaPrima::TIPOS_VALOR, true)) {
+        $errores[] = 'Seleccione si la prima es por porcentaje o por monto fijo.';
+    }
 
     // Nombre
     $largo = mb_strlen($nombre, 'UTF-8');
@@ -71,11 +119,37 @@ function validarDatos(string $nombre, string $fecha, string $porcentaje): array
         $errores[] = 'La fecha no puede ser anterior al año 2000.';
     }
 
-    // Porcentaje
-    if ($porcentaje === '') {
-        $errores[] = 'Debe ingresar el porcentaje.';
-    } elseif (!preg_match('/^\d{1,3}(\.\d{1,2})?$/', $porcentaje) || (float) $porcentaje <= 0 || (float) $porcentaje > 100) {
-        $errores[] = 'El porcentaje debe ser un número mayor que 0 y hasta 100 (máximo 2 decimales).';
+    // Valores
+    if (in_array($tipoValor, NuevaPrima::TIPOS_VALOR, true)) {
+        $esPct = $tipoValor === 'porcentaje';
+        $etiqueta = $esPct ? 'porcentaje' : 'monto';
+
+        if (!$valores) {
+            $errores[] = 'Debe ingresar el ' . $etiqueta . '.';
+        } elseif ($varios && count($valores) < 2) {
+            $errores[] = 'Marcó que la prima tiene más de un valor: ingrese al menos dos ' . ($esPct ? 'porcentajes' : 'montos') . ' o desmarque la opción.';
+        } elseif (count($valores) > NuevaPrima::MAX_VALORES) {
+            $errores[] = 'Una prima puede tener como máximo ' . NuevaPrima::MAX_VALORES . ' valores.';
+        } else {
+            $vistos = [];
+            foreach ($valores as $i => $txt) {
+                $n = $i + 1;
+                $max = $esPct ? 100 : MONTO_MAXIMO;
+
+                if (!preg_match('/^\d{1,10}(\.\d{1,2})?$/', $txt) || (float) $txt <= 0 || (float) $txt > $max) {
+                    $errores[] = $esPct
+                        ? "Valor $n: el porcentaje debe ser un número mayor que 0 y hasta 100 (máximo 2 decimales)."
+                        : "Valor $n: el monto debe ser un número mayor que 0 (máximo 2 decimales).";
+                    continue;
+                }
+
+                $clave = number_format((float) $txt, 2, '.', '');
+                if (isset($vistos[$clave])) {
+                    $errores[] = "El valor $n está repetido. Cada valor de la prima debe ser distinto.";
+                }
+                $vistos[$clave] = true;
+            }
+        }
     }
 
     return $errores;
@@ -129,7 +203,8 @@ if (in_array($accion, ['inactivar', 'activar'], true)) {
 }
 
 /* ---------------------------------------------------------------------------
-   ACTUALIZAR PORCENTAJES (una por una o todas a la vez)
+   ACTUALIZAR PORCENTAJES (uno por uno o todos a la vez)
+   Trabaja sobre cada VALOR de porcentaje de las primas activas de tipo porcentaje.
 --------------------------------------------------------------------------- */
 
 if ($accion === 'actualizar_porcentajes') {
@@ -140,22 +215,23 @@ if ($accion === 'actualizar_porcentajes') {
         irA(RUTA_LISTA);
     }
 
-    // Solo se pueden modificar las primas activas del catálogo
+    // [id_prima_valor => fila]
     $activas = [];
-    foreach ($modelo->listar() as $fila) {
-        if ($fila['estatus'] === 'Activo') {
-            $activas[(int) $fila['id_nueva_prima']] = $fila;
-        }
+    foreach ($modelo->listarValoresPorcentaje() as $fila) {
+        $activas[(int) $fila['id_prima_valor']] = $fila;
     }
 
-    $fmt = static fn(float $n): string => number_format($n, 2, ',', '.');
+    $etiquetaFila = static function (array $fila): string {
+        return '"' . $fila['nombre'] . '"' . ((int) $fila['total_valores'] > 1 ? ' (valor ' . (int) $fila['posicion'] . ')' : '');
+    };
+
     $modo = (string) ($_POST['modo'] ?? 'individual');
     $cambios = [];
     $errores = [];
 
     if ($modo === 'todas') {
         $operacion = (string) ($_POST['operacion'] ?? '');
-        $valorTxt = normalizarPorcentaje((string) ($_POST['valor'] ?? ''));
+        $valorTxt = normalizarNumero((string) ($_POST['valor'] ?? ''));
 
         if (!in_array($operacion, ['establecer', 'subir', 'bajar'], true)) {
             $errores[] = 'Seleccione qué desea hacer con el porcentaje (establecer, subir o bajar).';
@@ -176,21 +252,21 @@ if ($accion === 'actualizar_porcentajes') {
         if (!$errores) {
             $valor = round((float) $valorTxt, 2);
 
-            foreach ($seleccion as $idPrima) {
-                $actualPct = (float) $activas[$idPrima]['porcentaje'];
+            foreach ($seleccion as $idValor) {
+                $actualPct = (float) $activas[$idValor]['valor'];
                 $nuevoPct = $operacion === 'establecer'
                     ? $valor
                     : ($operacion === 'subir' ? $actualPct + $valor : $actualPct - $valor);
                 $nuevoPct = round($nuevoPct, 2);
 
                 if ($nuevoPct <= 0 || $nuevoPct > 100) {
-                    $errores[] = 'La prima "' . $activas[$idPrima]['nombre'] . '" quedaría en ' . $fmt($nuevoPct) .
+                    $errores[] = 'La prima ' . $etiquetaFila($activas[$idValor]) . ' quedaría en ' . fmtNum($nuevoPct) .
                                  '%. El porcentaje debe estar entre 0,01 y 100.';
                     continue;
                 }
 
                 if (abs($nuevoPct - $actualPct) >= 0.005) {
-                    $cambios[$idPrima] = $nuevoPct;
+                    $cambios[$idValor] = $nuevoPct;
                 }
             }
         }
@@ -198,22 +274,22 @@ if ($accion === 'actualizar_porcentajes') {
         $nuevos = $_POST['nuevo'] ?? [];
         $nuevos = is_array($nuevos) ? $nuevos : [];
 
-        foreach ($activas as $idPrima => $fila) {
-            $txt = normalizarPorcentaje((string) ($nuevos[$idPrima] ?? ''));
+        foreach ($activas as $idValor => $fila) {
+            $txt = normalizarNumero((string) ($nuevos[$idValor] ?? ''));
 
             if ($txt === '') {
                 continue;
             }
 
             if (!preg_match('/^\d{1,3}(\.\d{1,2})?$/', $txt) || (float) $txt <= 0 || (float) $txt > 100) {
-                $errores[] = 'La prima "' . $fila['nombre'] . '": el porcentaje debe ser mayor que 0 y hasta 100 (máximo 2 decimales).';
+                $errores[] = 'La prima ' . $etiquetaFila($fila) . ': el porcentaje debe ser mayor que 0 y hasta 100 (máximo 2 decimales).';
                 continue;
             }
 
             $nuevoPct = round((float) $txt, 2);
 
-            if (abs($nuevoPct - (float) $fila['porcentaje']) >= 0.005) {
-                $cambios[$idPrima] = $nuevoPct;
+            if (abs($nuevoPct - (float) $fila['valor']) >= 0.005) {
+                $cambios[$idValor] = $nuevoPct;
             }
         }
     }
@@ -227,20 +303,20 @@ if ($accion === 'actualizar_porcentajes') {
         irA($destinoPct);
     }
 
-    if ($modelo->actualizarPorcentajes($cambios)) {
-        foreach ($cambios as $idPrima => $nuevoPct) {
+    if ($modelo->actualizarValores($cambios)) {
+        foreach ($cambios as $idValor => $nuevoPct) {
             registrarBitacora(
                 $conexion,
                 'Nuevas primas',
                 'Editar',
-                'Actualizó el porcentaje de la prima "' . $activas[$idPrima]['nombre'] . '": ' .
-                $fmt((float) $activas[$idPrima]['porcentaje']) . '% → ' . $fmt($nuevoPct) . '%.'
+                'Actualizó el porcentaje de la prima ' . $etiquetaFila($activas[$idValor]) . ': ' .
+                fmtNum((float) $activas[$idValor]['valor']) . '% → ' . fmtNum($nuevoPct) . '%.'
             );
         }
 
         $_SESSION['exito'] = count($cambios) === 1
-            ? 'Se actualizó el porcentaje de 1 prima.'
-            : 'Se actualizó el porcentaje de ' . count($cambios) . ' primas.';
+            ? 'Se actualizó 1 porcentaje.'
+            : 'Se actualizaron ' . count($cambios) . ' porcentajes.';
         irA(RUTA_LISTA);
     }
 
@@ -257,9 +333,9 @@ if (!in_array($accion, ['guardar', 'actualizar'], true)) {
     irA(RUTA_LISTA);
 }
 
-$editando   = $accion === 'actualizar';
-$id         = $editando ? (int) filter_input(INPUT_POST, 'id_nueva_prima', FILTER_VALIDATE_INT) : 0;
-$nombre     = normalizarNombre((string) ($_POST['nombre'] ?? ''));
+$editando  = $accion === 'actualizar';
+$id        = $editando ? (int) filter_input(INPUT_POST, 'id_nueva_prima', FILTER_VALIDATE_INT) : 0;
+$nombre    = normalizarNombre((string) ($_POST['nombre'] ?? ''));
 
 // Si escribe una de las primas clásicas con otras mayúsculas/minúsculas, se guarda con el nombre exacto
 foreach (['Prima por antigüedad', 'Prima por hijos', 'Prima por profesionalización'] as $clasica) {
@@ -267,15 +343,24 @@ foreach (['Prima por antigüedad', 'Prima por hijos', 'Prima por profesionalizac
         $nombre = $clasica;
     }
 }
-$fecha      = trim((string) ($_POST['fecha'] ?? ''));
-$porcentaje = normalizarPorcentaje((string) ($_POST['porcentaje'] ?? ''));
+
+$fecha     = trim((string) ($_POST['fecha'] ?? ''));
+$tipoValor = trim((string) ($_POST['tipo_valor'] ?? ''));
+$varios    = isset($_POST['varios']) && $_POST['varios'] === '1';
+$valores   = normalizarValores($_POST['valores'] ?? [], $varios);
 
 $destinoError = RUTA_REGISTRO . ($editando ? '?editar=' . $id : '');
 
-function volverConErrores(array $errores, string $destino, string $nombre, string $fecha, string $porcentaje): void
+function volverConErrores(array $errores, string $destino, string $nombre, string $fecha, string $tipoValor, array $valores, bool $varios): void
 {
     $_SESSION['errores'] = $errores;
-    $_SESSION['old'] = ['nombre' => $nombre, 'fecha' => $fecha, 'porcentaje' => $porcentaje];
+    $_SESSION['old'] = [
+        'nombre'     => $nombre,
+        'fecha'      => $fecha,
+        'tipo_valor' => $tipoValor,
+        'valores'    => $valores,
+        'varios'     => $varios,
+    ];
     irA($destino);
 }
 
@@ -288,7 +373,7 @@ if ($editando) {
     }
 }
 
-$errores = validarDatos($nombre, $fecha, $porcentaje);
+$errores = validarDatos($nombre, $fecha, $tipoValor, $valores, $varios);
 
 // No permitir la misma prima dos veces en el mismo día
 if (!$errores && $modelo->existeDuplicado($nombre, $fecha, $id)) {
@@ -297,21 +382,23 @@ if (!$errores && $modelo->existeDuplicado($nombre, $fecha, $id)) {
 }
 
 if ($errores) {
-    volverConErrores($errores, $destinoError, $nombre, $fecha, $porcentaje);
+    volverConErrores($errores, $destinoError, $nombre, $fecha, $tipoValor, $valores, $varios);
 }
 
-$porcentajeNum = round((float) $porcentaje, 2);
+$valoresNum = array_map(static fn($v) => round((float) $v, 2), $valores);
+$textoValores = describirValores($tipoValor, $valoresNum);
+$textoTipo = $tipoValor === 'porcentaje' ? 'porcentaje' : 'monto fijo';
 
 /* ----- Registrar ----- */
 if (!$editando) {
-    $nuevoId = $modelo->registrar($nombre, $fecha, $porcentajeNum);
+    $nuevoId = $modelo->registrar($nombre, $fecha, $tipoValor, $valoresNum);
 
     if ($nuevoId > 0) {
         registrarBitacora(
             $conexion,
             'Nuevas primas',
             'Crear',
-            "Registró la prima \"$nombre\" con fecha " . fechaLegible($fecha) . " y porcentaje $porcentajeNum%."
+            "Registró la prima \"$nombre\" con fecha " . fechaLegible($fecha) . ", tipo $textoTipo y valor(es): $textoValores."
         );
         $_SESSION['exito'] = 'La prima se registró correctamente.';
         irA(RUTA_LISTA);
@@ -320,25 +407,25 @@ if (!$editando) {
     if ($modelo->esDuplicado) {
         volverConErrores(
             ['Ya existe la prima "' . $nombre . '" registrada con la fecha ' . fechaLegible($fecha) . '. No se guardó nada duplicado.'],
-            $destinoError, $nombre, $fecha, $porcentaje
+            $destinoError, $nombre, $fecha, $tipoValor, $valores, $varios
         );
     }
 
     volverConErrores(
         ['Ocurrió un error al registrar la prima. ' . ($modelo->ultimoError ?? '')],
-        $destinoError, $nombre, $fecha, $porcentaje
+        $destinoError, $nombre, $fecha, $tipoValor, $valores, $varios
     );
 }
 
 /* ----- Actualizar ----- */
-if ($modelo->actualizar($id, $nombre, $fecha, $porcentajeNum)) {
+if ($modelo->actualizar($id, $nombre, $fecha, $tipoValor, $valoresNum)) {
     registrarBitacora(
         $conexion,
         'Nuevas primas',
         'Editar',
         "Actualizó la prima \"{$actual['nombre']}\": nombre \"{$actual['nombre']}\" → \"$nombre\", fecha " .
         fechaLegible($actual['fecha']) . ' → ' . fechaLegible($fecha) .
-        ", porcentaje {$actual['porcentaje']}% → $porcentajeNum%."
+        ', valor(es) ' . describirValores($actual['tipo_valor'], soloValores($actual)) . " → $textoValores."
     );
     $_SESSION['exito'] = 'La prima se actualizó correctamente.';
     irA(RUTA_LISTA);
@@ -347,11 +434,11 @@ if ($modelo->actualizar($id, $nombre, $fecha, $porcentajeNum)) {
 if ($modelo->esDuplicado) {
     volverConErrores(
         ['Ya existe la prima "' . $nombre . '" registrada con la fecha ' . fechaLegible($fecha) . '. No se guardó nada duplicado.'],
-        $destinoError, $nombre, $fecha, $porcentaje
+        $destinoError, $nombre, $fecha, $tipoValor, $valores, $varios
     );
 }
 
 volverConErrores(
     ['No fue posible actualizar la prima. ' . ($modelo->ultimoError ?? '')],
-    $destinoError, $nombre, $fecha, $porcentaje
+    $destinoError, $nombre, $fecha, $tipoValor, $valores, $varios
 );

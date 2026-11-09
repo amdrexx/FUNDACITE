@@ -20,10 +20,9 @@ $modelo = new NuevaPrima($conexion);
 /* =====================================================
    PRIMAS ACTIVAS (las que se pueden actualizar)
    ===================================================== */
-$vigentes = array_values(array_filter(
-    $modelo->listar(),
-    fn($p) => ($p['estatus'] ?? '') === 'Activo'
-));
+// Cada fila es un VALOR de porcentaje (una prima con varios valores aparece varias veces).
+// Las primas de monto fijo no se actualizan por porcentaje.
+$vigentes = $modelo->listarValoresPorcentaje();
 
 registrarBitacora($conexion, 'Nuevas primas', 'Consultar', 'Abrió la pantalla de actualización de porcentajes de primas.');
 
@@ -51,6 +50,7 @@ function fmtFecha(string $f): string {
 </head>
 <body>
 
+<?php include "includes/alerta.php"; ?>
 <?php include "includes/layout.php"; ?>
 
 <div class="main">
@@ -115,26 +115,26 @@ function fmtFecha(string $f): string {
                 <tbody>
                     <?php if (!empty($vigentes)): ?>
                         <?php foreach ($vigentes as $fila): ?>
-                            <tr data-id="<?= (int) $fila['id_nueva_prima'] ?>"
-                                data-actual="<?= htmlspecialchars(number_format((float) $fila['porcentaje'], 2, '.', '')) ?>">
+                            <tr data-id="<?= (int) $fila['id_prima_valor'] ?>"
+                                data-actual="<?= htmlspecialchars(number_format((float) $fila['valor'], 2, '.', '')) ?>">
                                 <td class="col-sel" style="text-align:center; display:none;">
-                                    <input type="checkbox" class="chk-fila" name="seleccion[]" value="<?= (int) $fila['id_nueva_prima'] ?>" checked>
+                                    <input type="checkbox" class="chk-fila" name="seleccion[]" value="<?= (int) $fila['id_prima_valor'] ?>" checked>
                                 </td>
-                                <td class="nombre-prima"><?= htmlspecialchars($fila['nombre']) ?></td>
+                                <td class="nombre-prima"><?= htmlspecialchars($fila['nombre']) ?><?= (int) $fila['total_valores'] > 1 ? ' (valor ' . (int) $fila['posicion'] . ')' : '' ?></td>
                                 <td><?= htmlspecialchars(fmtFecha($fila['fecha'])) ?></td>
-                                <td><?= number_format((float) $fila['porcentaje'], 2, ',', '.') ?>%</td>
+                                <td><?= number_format((float) $fila['valor'], 2, ',', '.') ?>%</td>
                                 <td>
                                     <div style="position:relative;">
                                         <input
                                             type="number"
                                             class="nuevo-pct"
-                                            name="nuevo[<?= (int) $fila['id_nueva_prima'] ?>]"
+                                            name="nuevo[<?= (int) $fila['id_prima_valor'] ?>]"
                                             step="0.01"
                                             min="0.01"
                                             max="100"
                                             inputmode="decimal"
                                             autocomplete="off"
-                                            value="<?= htmlspecialchars(number_format((float) $fila['porcentaje'], 2, '.', '')) ?>"
+                                            value="<?= htmlspecialchars(number_format((float) $fila['valor'], 2, '.', '')) ?>"
                                             style="width:100%; box-sizing:border-box; padding-right:34px;"
                                         >
                                         <span
@@ -147,7 +147,7 @@ function fmtFecha(string $f): string {
                     <?php else: ?>
                         <tr>
                             <td colspan="4" style="text-align:center;">
-                                No hay primas activas para actualizar.
+                                No hay primas activas por porcentaje para actualizar.
                             </td>
                         </tr>
                     <?php endif; ?>
@@ -172,8 +172,21 @@ function fmtFecha(string $f): string {
 </div>
 
 <script>
-function closeAlert() { FundaciteAlerta.cerrar(false); }
-function mostrarAlerta(mensaje) { FundaciteAlerta.mostrar(mensaje, 'warning'); }
+function closeAlert() {
+    const alerta = document.getElementById("customAlert");
+    if (alerta) alerta.classList.add("hidden");
+}
+
+function mostrarAlerta(mensaje) {
+    const alerta = document.getElementById("customAlert");
+    const caja   = document.getElementById("alertMessage");
+    if (alerta && caja) {
+        caja.textContent = mensaje;
+        alerta.classList.remove("hidden");
+    } else {
+        alert(mensaje);
+    }
+}
 
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -269,8 +282,8 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    form.addEventListener("submit", async function (e) {
-        if (enviando) { enviando = false; return; }
+    form.addEventListener("submit", function (e) {
+        if (enviando) { e.preventDefault(); return; }
 
         const errores = [];
         let cambios = 0;
@@ -319,11 +332,12 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         const mensaje = "¿Actualizar el porcentaje de " + cambios + (cambios === 1 ? " prima?" : " primas?");
-        e.preventDefault();
-        const aceptado = await FundaciteAlerta.confirmar(mensaje);
-        if (!aceptado) return;
+        if (!confirm(mensaje)) {
+            e.preventDefault();
+            return;
+        }
+
         enviando = true;
-        form.requestSubmit(e.submitter || undefined);
     });
 
     window.addEventListener("pageshow", function () { enviando = false; });
@@ -332,9 +346,31 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+<?php if (!empty($errores)): ?>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const mensaje = document.getElementById("alertMessage");
+    const alerta  = document.getElementById("customAlert");
+    if (mensaje && alerta) {
+        mensaje.textContent = <?= json_encode(implode("\n", $errores)) ?>;
+        alerta.classList.remove("hidden");
+    }
+});
+</script>
+<?php endif; ?>
 
-
-
+<?php if (!empty($exito)): ?>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const mensaje = document.getElementById("alertMessage");
+    const alerta  = document.getElementById("customAlert");
+    if (mensaje && alerta) {
+        mensaje.textContent = <?= json_encode($exito) ?>;
+        alerta.classList.remove("hidden");
+    }
+});
+</script>
+<?php endif; ?>
 
 </body>
 </html>

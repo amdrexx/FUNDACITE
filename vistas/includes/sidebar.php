@@ -84,6 +84,15 @@ style="display:flex;flex-direction:column;">
         </li>
         <?php endif; ?>
 
+         <?php if (esAdministradorODirector()): ?>
+        <li>
+            <a href="/FUNDACITE/vistas/lista_convenio.php" class="submenu-link">
+                <i class="bi bi-file-earmark-text-fill"></i>
+                <b>CONVENIO</b>
+            </a>
+        </li>
+        <?php endif; ?>
+
         <?php if (esAdministrador()): ?>
         <li>
             <a href="/FUNDACITE/vistas/lista_usuarios.php" class="submenu-link">
