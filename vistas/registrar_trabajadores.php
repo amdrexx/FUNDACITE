@@ -295,14 +295,14 @@ if ($idTrabajadorEdicion > 0) {
             <div class="form-actions full-width" style="display: flex; justify-content: space-between; align-items: center;">
                 <?php if ($idTrabajadorEdicion > 0 && $flujoContrato === 'contrato'): ?>
                     <a href="registrar_contrato.php?id_trabajador=<?php echo $idTrabajadorEdicion; ?>" style="color: #bbb; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 5px;">
-                        <i class="bi bi-arrow-left"></i> Volver al Contrato sin guardar
+                        <i class="bi bi-arrow-left"></i> Volver
                     </a>
                 <?php else: ?>
                     <div></div>
                 <?php endif; ?>
 
                 <button type="submit" class="btn-guardar" style="display: flex; align-items: center; gap: 8px;">
-                    <?php echo ($idTrabajadorEdicion > 0 && $flujoContrato === 'contrato') ? 'Guardar cambios y volver al Contrato' : 'Siguiente: Registrar Contrato'; ?>
+                    <?php echo ($idTrabajadorEdicion > 0 && $flujoContrato === 'contrato') ? 'Guardar cambios y volver al Contrato' : 'Siguiente'; ?>
                     <i class="bi bi-arrow-right"></i>
                 </button>
             </div>
