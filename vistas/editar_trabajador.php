@@ -19,6 +19,7 @@ $idTrabajador = intval($_GET['id'] ?? 0);
 
 $trabajador = new Trabajador($conexion);
 $dato = $trabajador->obtenerTrabajadorPorId($idTrabajador);
+$hijosRegistrados = $trabajador->listarHijosTrabajador($idTrabajador);
 
 if (!$dato) {
     die("Trabajador no encontrado.");
@@ -132,10 +133,24 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                 </div>
             </div>
 
-            <div class="field">
-                <label for="hijos">Cantidad de Hijos</label>
-                <input type="number" name="hijos" id="hijos" min="0" max="30" step="1" required
-                       value="<?php echo htmlspecialchars($dato['hijos'] ?? '0'); ?>">
+            <div class="field full-width" id="seccionHijos">
+                <label>¿El trabajador tiene hijos?</label>
+                <div class="radio-group">
+                    <label class="radio-option"><input type="radio" name="tiene_hijos" value="si" <?php echo !empty($hijosRegistrados) ? 'checked' : ''; ?>><span>Sí</span></label>
+                    <label class="radio-option"><input type="radio" name="tiene_hijos" value="no" <?php echo empty($hijosRegistrados) ? 'checked' : ''; ?>><span>No</span></label>
+                </div>
+                <div id="panelHijos" style="display:none; margin-top:14px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+                        <strong>Edad de cada hijo</strong>
+                        <button type="button" class="btn-guardar" id="agregarHijo">+ Agregar hijo</button>
+                    </div>
+                    <div id="listaEdadesHijos" class="form-grid" style="margin-top:10px;">
+                        <?php foreach ($hijosRegistrados as $hijo): ?>
+                        <div class="field fila-hijo"><label>Edad del hijo</label><div style="display:flex;gap:8px"><input type="number" name="edades_hijos[]" min="0" max="75" step="1" required value="<?php echo htmlspecialchars((string)$hijo['edad']); ?>"><button type="button" class="btn-eliminar-hijo" aria-label="Quitar hijo">Quitar</button></div><small class="clasificacion-hijo"></small></div>
+                        <?php endforeach; ?>
+                    </div>
+                    <p id="resumenHijos" class="full-width"></p>
+                </div>
             </div>
 
             <div class="field">
@@ -267,6 +282,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
     </form>
 </div>
 
-<script src="/FUNDACITE/vistas/js/valid_trabajadores.js?v=20260727"></script>
+<script src="/FUNDACITE/vistas/js/hijos_trabajador.js?v=20261110"></script>
+<script src="/FUNDACITE/vistas/js/valid_trabajadores.js?v=20261110"></script>
 </body>
 </html>

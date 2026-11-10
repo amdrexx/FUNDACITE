@@ -112,7 +112,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const correo = document.getElementById("correoElectronico").value.trim();
             const fechaNac = document.getElementById("fecha").value;
             const telefono = document.getElementById("numeroTelefono").value.trim();
-            const hijos = Number(document.getElementById("hijos").value);
             const anosServicio = Number(document.getElementById("anos_servicio_administracion_publica").value);
             const nivelEducacion = document.getElementById("nivel_educacion").value.trim();
             const estadoCivil = document.getElementById("estadoCivil").value;
@@ -134,7 +133,6 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!correo) errores.push("Correo Electrónico");
             if (!fechaNac) errores.push("Fecha de Nacimiento");
             if (!telefono) errores.push("Número de Teléfono");
-            if (document.getElementById("hijos").value === "") errores.push("Cantidad de Hijos");
             if (document.getElementById("anos_servicio_administracion_publica").value === "") errores.push("Años de Servicio en la Administración Pública");
             if (!nivelEducacion) errores.push("Nivel de Educación");
             if (!idCargo) errores.push("Cargo a Asignar");
@@ -159,9 +157,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (edad < EDAD_MINIMA || edad > EDAD_MAXIMA) errores.push(`Edad: debe estar entre ${EDAD_MINIMA} y ${EDAD_MAXIMA} años`);
             }
 
-            const hijosValor = document.getElementById("hijos").value;
             const anosServicioValor = document.getElementById("anos_servicio_administracion_publica").value;
-            if (hijosValor !== "" && (!Number.isInteger(hijos) || hijos < 0 || hijos > 30)) errores.push("Cantidad de Hijos: indique un entero entre 0 y 30");
             if (anosServicioValor !== "" && (!Number.isInteger(anosServicio) || anosServicio < 0 || anosServicio > 70)) errores.push("Años de Servicio: indique un entero entre 0 y 70");
 
 
@@ -187,9 +183,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const correo = document.querySelector('input[name="correoElectronico"]')?.value.trim() || '';
             const telefono = document.querySelector('input[name="numeroTelefono"]')?.value.trim() || '';
             const estatus = document.querySelector('select[name="estatus_laboral"]')?.value.trim() || '';
-            const hijosInput = document.querySelector('input[name="hijos"]');
             const anosServicioInput = document.querySelector('input[name="anos_servicio_administracion_publica"]');
-            const hijos = Number(hijosInput?.value);
             const anosServicio = Number(anosServicioInput?.value);
             const nivelEducacion = document.querySelector('[name="nivel_educacion"]')?.value.trim() || '';
             const direccion = document.querySelector('textarea[name="direccion_texto"]')?.value.trim() || '';
@@ -199,7 +193,6 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!correo) errores.push("Correo Electrónico");
             if (!telefono) errores.push("Número de Teléfono");
             if (!estatus) errores.push("Estatus Laboral");
-            if (!hijosInput?.value) errores.push("Cantidad de Hijos");
             if (!anosServicioInput?.value) errores.push("Años de Servicio en la Administración Pública");
             if (!nivelEducacion) errores.push("Nivel de Educación");
             if (!parroquia) errores.push("Parroquia");
@@ -208,7 +201,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (correo && !regexCorreo.test(correo)) errores.push("Correo Electrónico: formato no válido");
             if (telefono && !/^\d{11}$/.test(telefono)) errores.push("Número de Teléfono: debe tener 11 dígitos");
-            if (hijosInput?.value && (!Number.isInteger(hijos) || hijos < 0 || hijos > 30)) errores.push("Cantidad de Hijos: indique un entero entre 0 y 30");
             if (anosServicioInput?.value && (!Number.isInteger(anosServicio) || anosServicio < 0 || anosServicio > 70)) errores.push("Años de Servicio: indique un entero entre 0 y 70");
 
             if (errores.length > 0) {

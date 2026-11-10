@@ -124,7 +124,8 @@ class Trabajador
         $nombres,
         $apellidos,
         $fechaNacimiento,
-        $hijos,
+        $hijosMenores,
+        $hijosMayores,
         $anosServicioAdministracionPublica,
         $nivelEducacion,
         $genero,
@@ -144,7 +145,8 @@ class Trabajador
             nombres,
             apellidos,
             fecha_nacimiento,
-            hijos,
+            hijo_menor,
+            hijo_mayor,
             anos_servicio_administracion_publica,
             nivel_educacion,
             genero,
@@ -158,7 +160,7 @@ class Trabajador
         )
         VALUES
         (
-            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
         )";
 
         $stmt = $this->conexion->prepare($sql);
@@ -169,13 +171,14 @@ class Trabajador
         }
 
         $stmt->bind_param(
-            "sssssiisssssssii",
+            "sssssiiisssssssii",
             $tipoDocumento,
             $cedula,
             $nombres,
             $apellidos,
             $fechaNacimiento,
-            $hijos,
+            $hijosMenores,
+            $hijosMayores,
             $anosServicioAdministracionPublica,
             $nivelEducacion,
             $genero,
@@ -195,6 +198,37 @@ class Trabajador
         return false;
     }
 
+    /** Devuelve los hijos registrados individualmente para un trabajador. */
+    public function listarHijosTrabajador(int $idTrabajador): array
+    {
+        $stmt = $this->conexion->prepare("SELECT id_hijo, edad FROM HIJO_TRABAJADOR WHERE id_trabajador = ? ORDER BY id_hijo");
+        $stmt->bind_param("i", $idTrabajador);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    /** Reemplaza la lista de hijos y recalcula los contadores del trabajador. */
+    public function reemplazarHijosTrabajador(int $idTrabajador, array $edades): bool
+    {
+        $stmtDel = $this->conexion->prepare("DELETE FROM HIJO_TRABAJADOR WHERE id_trabajador = ?");
+        $stmtDel->bind_param("i", $idTrabajador);
+        if (!$stmtDel->execute()) return false;
+
+        $stmtIns = $this->conexion->prepare("INSERT INTO HIJO_TRABAJADOR (id_trabajador, edad) VALUES (?, ?)");
+        foreach ($edades as $edad) {
+            $edad = (int) $edad;
+            $stmtIns->bind_param("ii", $idTrabajador, $edad);
+            if (!$stmtIns->execute()) return false;
+        }
+
+        $menores = 0; $mayores = 0;
+        foreach ($edades as $edad) { ((int)$edad < 18) ? $menores++ : $mayores++; }
+        $stmtUpd = $this->conexion->prepare("UPDATE TRABAJADOR SET hijo_menor = ?, hijo_mayor = ? WHERE id_trabajador = ?");
+        $stmtUpd->bind_param("iii", $menores, $mayores, $idTrabajador);
+        return $stmtUpd->execute();
+    }
+
     public function listarTrabajadores($buscar = '')
     {
         $trabajadores = [];
@@ -204,7 +238,8 @@ class Trabajador
                     t.cedula,
                     t.nombres,
                     t.apellidos,
-                    t.hijos,
+                    t.hijo_menor,
+                    t.hijo_mayor,
                     t.anos_servicio_administracion_publica,
                     t.nivel_educacion,
                     t.tipo_personal,
@@ -264,7 +299,8 @@ class Trabajador
                         CURDATE()
                     ) AS edad,
 
-                    t.hijos,
+                    t.hijo_menor,
+                    t.hijo_mayor,
                     t.anos_servicio_administracion_publica,
                     t.nivel_educacion,
                     t.genero,
@@ -310,7 +346,8 @@ class Trabajador
         $telefono,
         $correo,
         $status,
-        $hijos,
+        $hijosMenores,
+        $hijosMayores,
         $anosServicioAdministracionPublica,
         $nivelEducacion,
         $tipoPersonal,
@@ -321,7 +358,8 @@ class Trabajador
                     telefono = ?,
                     correo = ?,
                     status = ?,
-                    hijos = ?,
+                    hijo_menor = ?,
+                    hijo_mayor = ?,
                     anos_servicio_administracion_publica = ?,
                     nivel_educacion = ?,
                     tipo_personal = ?,
@@ -330,12 +368,13 @@ class Trabajador
 
         $stmt = $this->conexion->prepare($sql);
         $stmt->bind_param(
-"ssssiissii",
+"ssssiiissii",
             $estadoCivil,
             $telefono,
             $correo,
             $status,
-            $hijos,
+            $hijosMenores,
+            $hijosMayores,
             $anosServicioAdministracionPublica,
             $nivelEducacion,
             $tipoPersonal,

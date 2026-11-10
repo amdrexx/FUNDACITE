@@ -46,7 +46,7 @@ registrarBitacora($conexion, 'Asignación de Cargos', 'Consultar', 'Consultó el
                 </div>
 
                 <div class="modulo-card" style="margin: 20px auto 0; padding: 10px;">
-                    <table class="tabla" style="width:100% !important; min-width:1050px;">
+                    <table class="tabla">
                     <thead>
                         <tr>
                             <th>Cédula</th>

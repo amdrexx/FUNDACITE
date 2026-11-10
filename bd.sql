@@ -69,7 +69,8 @@ CREATE TABLE TRABAJADOR (
     nacionalidad VARCHAR(50) DEFAULT 'Venezolano(a)',
     telefono VARCHAR(20),
     correo VARCHAR(100),
-    hijos TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    hijo_menor TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    hijo_mayor TINYINT UNSIGNED NOT NULL DEFAULT 0,
     anos_servicio_administracion_publica SMALLINT UNSIGNED NOT NULL DEFAULT 0,
     nivel_educacion VARCHAR(100),
     tipo_personal VARCHAR(50) NOT NULL DEFAULT 'Fijo' COMMENT 'Clasificación laboral propia del trabajador',
@@ -91,10 +92,21 @@ CREATE TABLE TRABAJADOR (
     CONSTRAINT chk_tipo_personal_trabajador CHECK (tipo_personal IN ('Fijo', 'Contratado', 'Obrero', 'Empleado', 'Jubilado'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE HIJO_TRABAJADOR (
+    id_hijo INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    id_trabajador INT UNSIGNED NOT NULL,
+    edad TINYINT UNSIGNED NOT NULL,
+    PRIMARY KEY (id_hijo),
+    INDEX idx_hijo_trabajador (id_trabajador),
+    CONSTRAINT chk_edad_hijo CHECK (edad <= 75),
+    CONSTRAINT fk_hijo_trabajador FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR(id_trabajador) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- ================================================================================
 -- 3. TABLAS DE PROCESOS Y GESTIÓN LABORAL
--- Para actualizar una instalación anterior, ejecutar primero
--- migrar_constancia_disfrute.sql; este archivo define el esquema para una BD nueva.
+-- Para actualizar una instalación anterior, ejecutar las migraciones correspondientes,
+-- incluyendo migrar_constancia_disfrute.sql y migracion_hijos_trabajador.sql.
+-- Este archivo define el esquema para una BD nueva.
 -- ================================================================================
 
 -- tipo_personal NO pertenece a CONTRATO: está definido en TRABAJADOR.
@@ -328,7 +340,8 @@ SELECT
     nacionalidad,
     telefono,
     correo,
-    hijos,
+    hijo_menor,
+    hijo_mayor,
     anos_servicio_administracion_publica,
     nivel_educacion,
     tipo_personal,
@@ -351,7 +364,8 @@ SELECT
     t.nacionalidad,
     t.telefono,
     t.correo,
-    t.hijos,
+    t.hijo_menor,
+    t.hijo_mayor,
     t.anos_servicio_administracion_publica,
     t.nivel_educacion,
     t.tipo_personal,
@@ -1952,12 +1966,12 @@ START TRANSACTION;
 -- 1. Trabajadora con cargo Administrador
 INSERT INTO TRABAJADOR (
     tipo_documento, cedula, nombres, apellidos, fecha_nacimiento,
-    hijos, anos_servicio_administracion_publica, nivel_educacion,
+    hijo_menor, hijo_mayor, anos_servicio_administracion_publica, nivel_educacion,
     genero, estado_civil, telefono, correo, tipo_personal, status, id_dir, id_cargo
 )
 SELECT
     'Cédula', '99900001', 'Ana María', 'Torres Rojas', '1985-03-14',
-    1, 8, 'Universitario', 'Femenino', 'Casado(a)',
+    0, 0, 8, 'Universitario', 'Femenino', 'Casado(a)',
     '0412-5551001', 'ana.torres@example.com',
     'Contratado', 'Activo', NULL, c.id_cargo
 FROM CARGO AS c
@@ -1970,12 +1984,12 @@ LIMIT 1;
 -- 2. Trabajador con cargo Analista
 INSERT INTO TRABAJADOR (
     tipo_documento, cedula, nombres, apellidos, fecha_nacimiento,
-    hijos, anos_servicio_administracion_publica, nivel_educacion,
+    hijo_menor, hijo_mayor, anos_servicio_administracion_publica, nivel_educacion,
     genero, estado_civil, telefono, correo, tipo_personal, status, id_dir, id_cargo
 )
 SELECT
     'Cédula', '99900002', 'Carlos Eduardo', 'Pérez Gómez', '1992-07-22',
-    0, 4, 'Universitario', 'Masculino', 'Soltero(a)',
+    0, 0, 4, 'Universitario', 'Masculino', 'Soltero(a)',
     '0414-5551002', 'carlos.perez@example.com',
     'Fijo', 'Activo', NULL, c.id_cargo
 FROM CARGO AS c
@@ -1988,12 +2002,12 @@ LIMIT 1;
 -- 3. Trabajador con cargo Técnico
 INSERT INTO TRABAJADOR (
     tipo_documento, cedula, nombres, apellidos, fecha_nacimiento,
-    hijos, anos_servicio_administracion_publica, nivel_educacion,
+    hijo_menor, hijo_mayor, anos_servicio_administracion_publica, nivel_educacion,
     genero, estado_civil, telefono, correo, tipo_personal, status, id_dir, id_cargo
 )
 SELECT
     'Cédula', '99900003', 'Luis Alberto', 'Méndez Silva', '1988-11-05',
-    2, 6, 'Técnico Superior Universitario', 'Masculino', 'Casado(a)',
+    0, 0, 6, 'Técnico Superior Universitario', 'Masculino', 'Casado(a)',
     '0416-5551003', 'luis.mendez@example.com',
     'Obrero', 'Activo', NULL, c.id_cargo
 FROM CARGO AS c
@@ -2006,12 +2020,12 @@ LIMIT 1;
 -- 4. Trabajadora con cargo Director
 INSERT INTO TRABAJADOR (
     tipo_documento, cedula, nombres, apellidos, fecha_nacimiento,
-    hijos, anos_servicio_administracion_publica, nivel_educacion,
+    hijo_menor, hijo_mayor, anos_servicio_administracion_publica, nivel_educacion,
     genero, estado_civil, telefono, correo, tipo_personal, status, id_dir, id_cargo
 )
 SELECT
     'Cédula', '99900004', 'María Fernanda', 'Rojas Díaz', '1980-02-18',
-    2, 12, 'Universitario', 'Femenino', 'Divorciado(a)',
+    0, 0, 12, 'Universitario', 'Femenino', 'Divorciado(a)',
     '0424-5551004', 'maria.rojas@example.com',
     'Jubilado', 'Activo', NULL, c.id_cargo
 FROM CARGO AS c
@@ -2024,12 +2038,12 @@ LIMIT 1;
 -- 5. Trabajador con cargo Presidente
 INSERT INTO TRABAJADOR (
     tipo_documento, cedula, nombres, apellidos, fecha_nacimiento,
-    hijos, anos_servicio_administracion_publica, nivel_educacion,
+    hijo_menor, hijo_mayor, anos_servicio_administracion_publica, nivel_educacion,
     genero, estado_civil, telefono, correo, tipo_personal, status, id_dir, id_cargo
 )
 SELECT
     'Cédula', '99900005', 'José Rafael', 'Castillo Vera', '1975-09-30',
-    3, 18, 'Postgrado', 'Masculino', 'Casado(a)',
+    0, 0, 18, 'Postgrado', 'Masculino', 'Casado(a)',
     '0412-5551005', 'jose.castillo@example.com',
     'Fijo', 'Activo', NULL, c.id_cargo
 FROM CARGO AS c

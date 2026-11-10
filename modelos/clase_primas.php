@@ -102,7 +102,7 @@ class Prima
 
     private function consultaTrabajadores(string $where): string
     {
-        $hijos = $this->tieneColumna('hijos') ? 't.hijos' : '0';
+        $hijos = ($this->tieneColumna('hijo_menor') && $this->tieneColumna('hijo_mayor')) ? '(t.hijo_menor + t.hijo_mayor)' : ($this->tieneColumna('hijos') ? 't.hijos' : '0');
         $anos  = $this->tieneColumna('anos_servicio_administracion_publica')
             ? 't.anos_servicio_administracion_publica' : '0';
         $nivel = $this->tieneColumna('nivel_educacion') ? "COALESCE(t.nivel_educacion, '')" : "''";

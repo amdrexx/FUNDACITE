@@ -143,7 +143,8 @@ class ContratoControlador {
                     trim($borrador['nombres'] ?? ''),
                     trim($borrador['apellidos'] ?? ''),
                     trim($borrador['fecha'] ?? ''),
-                    (int) ($borrador['hijos'] ?? 0),
+                    count(array_filter((($borrador['tiene_hijos'] ?? 'no') === 'si' ? ($borrador['edades_hijos'] ?? []) : []), fn($edad) => (int)$edad < 18)),
+                    count(array_filter((($borrador['tiene_hijos'] ?? 'no') === 'si' ? ($borrador['edades_hijos'] ?? []) : []), fn($edad) => (int)$edad >= 18)),
                     (int) ($borrador['anos_servicio_administracion_publica'] ?? 0),
                     trim($borrador['nivel_educacion'] ?? ''),
                     trim($borrador['genero'] ?? ''),
@@ -157,6 +158,10 @@ class ContratoControlador {
                 );
                 if (!$id_trabajador) {
                     throw new RuntimeException('No se pudo guardar el trabajador.');
+                }
+                $edadesHijos = (($borrador['tiene_hijos'] ?? 'no') === 'si') ? array_map('intval', (array)($borrador['edades_hijos'] ?? [])) : [];
+                if (!$modeloTrabajador->reemplazarHijosTrabajador($id_trabajador, $edadesHijos)) {
+                    throw new RuntimeException('No se pudo guardar la lista de hijos del trabajador.');
                 }
 
                 // Presidente y Director tienen un solo titular: se desasigna el cargo

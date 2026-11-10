@@ -79,6 +79,8 @@ registrarBitacora($conexion, 'Trabajadores', 'Consultar', $buscar !== '' ? "Cons
                 <tr>
                     <th>Persona (Cédula)</th>
                     <th>Cargo</th>
+                    <th>Hijos menores</th>
+                    <th>Hijos mayores</th>
                     <th>Tipo de Personal</th>
                     <th>Tipo de Contrato</th>
                     <th>Estatus Laboral</th>
@@ -96,6 +98,8 @@ registrarBitacora($conexion, 'Trabajadores', 'Consultar', $buscar !== '' ? "Cons
                                 ?>
                             </td>
                             <td><?php echo htmlspecialchars($fila['nombre_cargo'] ?? 'Sin cargo'); ?></td>
+                            <td><?php echo (int)($fila['hijo_menor'] ?? 0); ?></td>
+                            <td><?php echo (int)($fila['hijo_mayor'] ?? 0); ?></td>
                             <td><?php echo htmlspecialchars($fila['tipo_personal'] ?? 'No especificado'); ?></td>
                             <td><?php echo htmlspecialchars($fila['tipo_contrato'] ?? 'Sin contrato'); ?></td>
                             <td><?php echo htmlspecialchars($fila['status'] ?? ''); ?></td>

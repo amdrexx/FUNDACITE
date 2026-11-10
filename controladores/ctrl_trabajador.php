@@ -67,7 +67,16 @@ if ($accion === 'actualizar' || isset($_POST['editar_trabajador'])) {
     $correo           = trim($_POST['correoElectronico'] ?? '');
     $telefono         = trim($_POST['numeroTelefono'] ?? '');
     $status           = trim($_POST['estatus_laboral'] ?? '');
-    $hijos            = filter_var($_POST['hijos'] ?? '', FILTER_VALIDATE_INT);
+    $edadesHijos      = $_POST['edades_hijos'] ?? [];
+    $edadesHijos      = is_array($edadesHijos) ? array_values($edadesHijos) : [];
+    $erroresHijos     = [];
+    if (($_POST['tiene_hijos'] ?? 'no') !== 'si') $edadesHijos = [];
+    foreach ($edadesHijos as $edadHijo) { if (filter_var($edadHijo, FILTER_VALIDATE_INT) === false || (int)$edadHijo < 0 || (int)$edadHijo > 75) $erroresHijos[] = 'Cada edad de hijo debe estar entre 0 y 75 años.'; }
+    $edadesHijos = array_map('intval', $edadesHijos);
+    if (($_POST['tiene_hijos'] ?? 'no') === 'si' && count($edadesHijos) === 0) $erroresHijos[] = 'Agregue al menos un hijo o seleccione No.';
+    if (count($edadesHijos) > 30) $erroresHijos[] = 'Puede registrar como máximo 30 hijos.';
+    $hijosMenores     = count(array_filter($edadesHijos, fn($edad) => $edad < 18));
+    $hijosMayores     = count(array_filter($edadesHijos, fn($edad) => $edad >= 18));
     $anosServicio     = filter_var($_POST['anos_servicio_administracion_publica'] ?? '', FILTER_VALIDATE_INT);
     $nivelEducacion   = trim($_POST['nivel_educacion'] ?? '');
     $tipoPersonal     = trim($_POST['tipo_personal'] ?? '');
@@ -99,9 +108,7 @@ if ($accion === 'actualizar' || isset($_POST['editar_trabajador'])) {
     } elseif (!preg_match('/^\d{11}$/', $telefono)) {
         $errores[] = "El teléfono debe tener 11 dígitos.";
     }
-    if ($hijos === false || $hijos < 0 || $hijos > 30) {
-        $errores[] = "Ingrese una cantidad de hijos entre 0 y 30.";
-    }
+    $errores = array_merge($errores, $erroresHijos);
     if ($anosServicio === false || $anosServicio < 0 || $anosServicio > 70) {
         $errores[] = "Ingrese años de servicio entre 0 y 70.";
     }
@@ -168,7 +175,8 @@ if ($accion === 'actualizar' || isset($_POST['editar_trabajador'])) {
             $telefono,
             $correo,
             $status,
-            $hijos,
+            $hijosMenores,
+            $hijosMayores,
             $anosServicio,
             $nivelEducacion,
             $tipoPersonal,
@@ -177,6 +185,9 @@ if ($accion === 'actualizar' || isset($_POST['editar_trabajador'])) {
 
         if (!$actualizado) {
             throw new RuntimeException('Error al actualizar los datos del trabajador.');
+        }
+        if (!$trabajador->reemplazarHijosTrabajador($idTrabajador, $edadesHijos)) {
+            throw new RuntimeException('No se pudo guardar la lista de hijos del trabajador.');
         }
 
         $conexion->commit();
@@ -223,7 +234,16 @@ $genero          = trim($_POST['genero'] ?? '');
 $estadoCivil     = trim($_POST['estadoCivil'] ?? '');
 $correo          = trim($_POST['correoElectronico'] ?? '');
 $telefono        = trim($_POST['numeroTelefono'] ?? '');
-$hijos           = filter_var($_POST['hijos'] ?? '', FILTER_VALIDATE_INT);
+$edadesHijos      = $_POST['edades_hijos'] ?? [];
+$edadesHijos      = is_array($edadesHijos) ? array_values($edadesHijos) : [];
+$erroresHijos     = [];
+if (($_POST['tiene_hijos'] ?? 'no') !== 'si') $edadesHijos = [];
+foreach ($edadesHijos as $edadHijo) {
+    if (filter_var($edadHijo, FILTER_VALIDATE_INT) === false || (int)$edadHijo < 0 || (int)$edadHijo > 75) $erroresHijos[] = 'Cada edad de hijo debe estar entre 0 y 75 años.';
+}
+if (($_POST['tiene_hijos'] ?? 'no') === 'si' && count($edadesHijos) === 0) $erroresHijos[] = 'Agregue al menos un hijo o seleccione No.';
+if (count($edadesHijos) > 30) $erroresHijos[] = 'Puede registrar como máximo 30 hijos.';
+$edadesHijos = array_map('intval', $edadesHijos);
 $anosServicio    = filter_var($_POST['anos_servicio_administracion_publica'] ?? '', FILTER_VALIDATE_INT);
 $nivelEducacion  = trim($_POST['nivel_educacion'] ?? '');
 $tipoPersonal    = trim($_POST['tipo_personal'] ?? '');
@@ -259,7 +279,7 @@ if (empty($telefono)) $errores[] = "Ingrese el teléfono.";
 elseif (!preg_match('/^0\d{10}$/', $telefono)) $errores[] = "El teléfono debe tener 11 dígitos y comenzar por 0.";
 if (empty($correo)) $errores[] = "Ingrese el correo.";
 elseif (!filter_var($correo, FILTER_VALIDATE_EMAIL)) $errores[] = "El correo electrónico no tiene un formato válido.";
-if ($hijos === false || $hijos < 0 || $hijos > 30) $errores[] = "Ingrese una cantidad de hijos entre 0 y 30.";
+$errores = array_merge($errores, $erroresHijos);
 if ($anosServicio === false || $anosServicio < 0 || $anosServicio > 70) $errores[] = "Ingrese años de servicio entre 0 y 70.";
 
 if (empty($nivelEducacion)) $errores[] = "Seleccione el nivel de educación.";

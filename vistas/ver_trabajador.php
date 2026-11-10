@@ -13,6 +13,7 @@ $idTrabajador = intval($_GET['id'] ?? 0);
 
 $trabajador = new Trabajador($conexion);
 $dato = $trabajador->obtenerTrabajadorPorId($idTrabajador);
+$hijosFicha = $trabajador->listarHijosTrabajador($idTrabajador);
 
 if (!$dato) {
     die("Trabajador no encontrado.");
@@ -91,7 +92,9 @@ $estatusActivo = mb_strtolower($estatus, 'UTF-8') === 'activo';
                         <div class="worker-detail"><dt>Cargo</dt><dd><?php echo htmlspecialchars($dato['nombre_cargo'] ?? 'Sin cargo'); ?></dd></div>
                         <div class="worker-detail"><dt>Tipo de personal</dt><dd><?php echo htmlspecialchars($dato['tipo_personal'] ?? 'No especificado'); ?></dd></div>
                         <div class="worker-detail"><dt>Nivel de educación</dt><dd><?php echo htmlspecialchars($dato['nivel_educacion'] ?? 'No registrado'); ?></dd></div>
-                        <div class="worker-detail"><dt>Cantidad de hijos</dt><dd><?php echo htmlspecialchars((string) ($dato['hijos'] ?? 0)); ?></dd></div>
+                        <div class="worker-detail"><dt>Hijos menores de 18 años</dt><dd><?php echo (int)($dato['hijo_menor'] ?? 0); ?></dd></div>
+                        <div class="worker-detail"><dt>Hijos de 18 años o más</dt><dd><?php echo (int)($dato['hijo_mayor'] ?? 0); ?></dd></div>
+                        <div class="worker-detail worker-detail--service"><dt>Edades registradas</dt><dd><?php if (!$hijosFicha): ?>Sin hijos registrados<?php else: ?><?php foreach ($hijosFicha as $indice => $hijo): ?>Hijo <?php echo $indice + 1; ?>: <?php echo $hijo['edad'] === null ? 'Edad pendiente de actualizar' : (int)$hijo['edad'] . ' años'; ?><?php if ($indice < count($hijosFicha)-1) echo ' · '; ?><?php endforeach; ?><?php endif; ?></dd></div>
                         <div class="worker-detail worker-detail--service"><dt>Años de servicio en la Administración Pública</dt><dd><?php echo htmlspecialchars((string) ($dato['anos_servicio_administracion_publica'] ?? 0)); ?></dd></div>
                     </dl>
                 </section>
