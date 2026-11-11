@@ -84,7 +84,7 @@ style="display:flex;flex-direction:column;">
         </li>
         <?php endif; ?>
 
-         <?php if (esAdministradorODirector()): ?>
+         <?php if (esAdministradorODirectorOAnalista()): ?>
         <li>
             <a href="/FUNDACITE/vistas/lista_convenio.php" class="submenu-link">
                 <i class="bi bi-file-earmark-text-fill"></i>
@@ -116,7 +116,7 @@ style="display:flex;flex-direction:column;">
         </li>
         <?php endif; ?>
         
-        <?php if (esAdministradorODirector() || esUsuarioEstandar()): ?>
+        <?php if (esAdministradorODirectorOAnalista() || esUsuarioEstandar()): ?>
         <li>
             <a href="/FUNDACITE/vistas/lista_constancias.php" class="submenu-link">
                 <i class="bi bi-file-earmark-medical"></i>
