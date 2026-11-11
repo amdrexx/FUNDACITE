@@ -1,0 +1,18 @@
+CAMBIO DE EDAD DE HIJOS A FECHA DE NACIMIENTO
+
+1. Haga un respaldo de bd_rrhh_fundacite_yaracuy antes de comenzar.
+2. Abra phpMyAdmin, seleccione la base bd_rrhh_fundacite_yaracuy y ejecute:
+   migracion_fecha_nacimiento_hijos.sql
+3. La migración crea HIJO_TRABAJADOR si no existe, incorpora fecha_nacimiento,
+   conserva hijo_menor e hijo_mayor en TRABAJADOR y elimina la columna edad.
+4. Si existía edad, no es posible recuperar el día y mes reales de nacimiento.
+   Se estima el 1 de enero del año correspondiente. Revise esas fechas con los
+   expedientes y corríjalas desde Editar trabajador.
+5. Para que los contadores se actualicen exactamente el día en que un hijo
+   cumple 18 años, el evento ev_actualizar_contadores_hijos_diario debe estar
+   habilitado. Compruebe con SHOW VARIABLES LIKE 'event_scheduler';. Si está OFF,
+   el administrador de MariaDB debe habilitarlo con SET GLOBAL event_scheduler=ON.
+   Además, el proyecto recalcula los contadores cuando consulta los trabajadores.
+
+La edad del trabajador y la de cada hijo se calculan con TIMESTAMPDIFF a partir
+ de sus respectivas fechas_nacimiento; no se almacenan como edades fijas.

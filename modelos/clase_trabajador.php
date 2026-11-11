@@ -198,39 +198,54 @@ class Trabajador
         return false;
     }
 
-    /** Devuelve los hijos registrados individualmente para un trabajador. */
+    /** Devuelve los hijos y calcula su edad directamente desde la fecha de nacimiento. */
     public function listarHijosTrabajador(int $idTrabajador): array
     {
-        $stmt = $this->conexion->prepare("SELECT id_hijo, edad FROM HIJO_TRABAJADOR WHERE id_trabajador = ? ORDER BY id_hijo");
+        $stmt = $this->conexion->prepare("SELECT id_hijo, fecha_nacimiento, TIMESTAMPDIFF(YEAR, fecha_nacimiento, CURDATE()) AS edad FROM HIJO_TRABAJADOR WHERE id_trabajador = ? ORDER BY id_hijo");
+        if (!$stmt) return [];
         $stmt->bind_param("i", $idTrabajador);
         $stmt->execute();
         $res = $stmt->get_result();
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
 
-    /** Reemplaza la lista de hijos y recalcula los contadores del trabajador. */
-    public function reemplazarHijosTrabajador(int $idTrabajador, array $edades): bool
+    /** Actualiza los contadores persistidos usando la edad real de los hijos hoy. */
+    public function actualizarContadoresHijos(?int $idTrabajador = null): bool
+    {
+        $sql = "UPDATE TRABAJADOR t
+                LEFT JOIN (
+                    SELECT id_trabajador,
+                           SUM(fecha_nacimiento > DATE_SUB(CURDATE(), INTERVAL 18 YEAR)) AS menores,
+                           SUM(fecha_nacimiento <= DATE_SUB(CURDATE(), INTERVAL 18 YEAR)) AS mayores
+                    FROM HIJO_TRABAJADOR GROUP BY id_trabajador
+                ) h ON h.id_trabajador = t.id_trabajador
+                SET t.hijo_menor = COALESCE(h.menores, 0),
+                    t.hijo_mayor = COALESCE(h.mayores, 0)";
+        if ($idTrabajador !== null) $sql .= " WHERE t.id_trabajador = " . (int)$idTrabajador;
+        return (bool)$this->conexion->query($sql);
+    }
+
+    /** Reemplaza la lista de hijos usando fechas de nacimiento, no edades estáticas. */
+    public function reemplazarHijosTrabajador(int $idTrabajador, array $fechasNacimiento): bool
     {
         $stmtDel = $this->conexion->prepare("DELETE FROM HIJO_TRABAJADOR WHERE id_trabajador = ?");
+        if (!$stmtDel) return false;
         $stmtDel->bind_param("i", $idTrabajador);
         if (!$stmtDel->execute()) return false;
 
-        $stmtIns = $this->conexion->prepare("INSERT INTO HIJO_TRABAJADOR (id_trabajador, edad) VALUES (?, ?)");
-        foreach ($edades as $edad) {
-            $edad = (int) $edad;
-            $stmtIns->bind_param("ii", $idTrabajador, $edad);
+        $stmtIns = $this->conexion->prepare("INSERT INTO HIJO_TRABAJADOR (id_trabajador, fecha_nacimiento) VALUES (?, ?)");
+        if (!$stmtIns) return false;
+        foreach ($fechasNacimiento as $fecha) {
+            $fecha = trim((string)$fecha);
+            $stmtIns->bind_param("is", $idTrabajador, $fecha);
             if (!$stmtIns->execute()) return false;
         }
-
-        $menores = 0; $mayores = 0;
-        foreach ($edades as $edad) { ((int)$edad < 18) ? $menores++ : $mayores++; }
-        $stmtUpd = $this->conexion->prepare("UPDATE TRABAJADOR SET hijo_menor = ?, hijo_mayor = ? WHERE id_trabajador = ?");
-        $stmtUpd->bind_param("iii", $menores, $mayores, $idTrabajador);
-        return $stmtUpd->execute();
+        return $this->actualizarContadoresHijos($idTrabajador);
     }
 
     public function listarTrabajadores($buscar = '')
     {
+        $this->actualizarContadoresHijos();
         $trabajadores = [];
 
         $sql = "SELECT 
@@ -285,6 +300,7 @@ class Trabajador
 
     public function obtenerTrabajadorPorId($idTrabajador)
     {
+        $this->actualizarContadoresHijos((int)$idTrabajador);
         $sql = "SELECT 
                     t.id_trabajador,
                     t.tipo_documento AS tipoDoc,

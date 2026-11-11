@@ -133,7 +133,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                 </div>
             </div>
 
-            <div class="field full-width" id="seccionHijos">
+            <div class="field" id="seccionHijos">
                 <label>¿El trabajador tiene hijos?</label>
                 <div class="radio-group">
                     <label class="radio-option"><input type="radio" name="tiene_hijos" value="si" <?php echo !empty($hijosRegistrados) ? 'checked' : ''; ?>><span>Sí</span></label>
@@ -141,15 +141,15 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                 </div>
                 <div id="panelHijos" style="display:none; margin-top:14px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-                        <strong>Edad de cada hijo</strong>
+                        <strong>Fecha de nacimiento de cada hijo</strong>
                         <button type="button" class="btn-guardar" id="agregarHijo">+ Agregar hijo</button>
                     </div>
-                    <div id="listaEdadesHijos" class="form-grid" style="margin-top:10px;">
+                    <div id="listaFechasHijos" class="form-grid" style="margin-top:10px;">
                         <?php foreach ($hijosRegistrados as $hijo): ?>
-                        <div class="field fila-hijo"><label>Edad del hijo</label><div style="display:flex;gap:8px"><input type="number" name="edades_hijos[]" min="0" max="75" step="1" required value="<?php echo htmlspecialchars((string)$hijo['edad']); ?>"><button type="button" class="btn-eliminar-hijo" aria-label="Quitar hijo">Quitar</button></div><small class="clasificacion-hijo"></small></div>
+                        <div class="field fila-hijo"><label>Fecha de nacimiento del hijo</label><div style="display:flex;gap:8px"><input type="date" name="fechas_nacimiento_hijos[]" max="<?php echo date('Y-m-d'); ?>" required value="<?php echo htmlspecialchars((string)$hijo['fecha_nacimiento']); ?>"><button type="button" class="btn-eliminar-hijo" aria-label="Quitar hijo">Quitar</button></div><small class="clasificacion-hijo"></small></div>
                         <?php endforeach; ?>
                     </div>
-                    <p id="resumenHijos" class="full-width"></p>
+                    
                 </div>
             </div>
 
@@ -218,9 +218,9 @@ unset($_SESSION['errores'], $_SESSION['exito']);
 
             <!-- El cargo se administra exclusivamente desde Asignación de cargo. -->
             <div class="field">
-                <label>Cargo actual (solo consulta)</label>
+                <label>Cargo actual</label>
                 <input type="text" value="<?php echo htmlspecialchars($dato['nombre_cargo'] ?? 'Sin cargo asignado', ENT_QUOTES, 'UTF-8'); ?>" readonly>
-                <small style="color:#d5dce5;">Para asignar o desvincular un cargo, utilice el módulo Asignación de cargo.</small>
+                <small style="color:#d5dce5;">Para asignar o desvincular un cargo, utilice Asignación de cargo.</small>
             </div>
 
             <!-- Dirección: Estado -->
@@ -282,7 +282,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
     </form>
 </div>
 
-<script src="/FUNDACITE/vistas/js/hijos_trabajador.js?v=20261110"></script>
+<script src="/FUNDACITE/vistas/js/hijos_trabajador.js?v=20261111"></script>
 <script src="/FUNDACITE/vistas/js/valid_trabajadores.js?v=20261110"></script>
 </body>
 </html>

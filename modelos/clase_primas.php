@@ -27,6 +27,17 @@ class Prima
        COLUMNAS OPCIONALES DE TRABAJADOR
     ===================================================== */
 
+    private ?bool $tablaHijosExiste = null;
+
+    private function tieneTablaHijos(): bool
+    {
+        if ($this->tablaHijosExiste === null) {
+            $res = $this->conexion->query("SHOW TABLES LIKE 'HIJO_TRABAJADOR'");
+            $this->tablaHijosExiste = ($res && $res->num_rows > 0);
+        }
+        return $this->tablaHijosExiste;
+    }
+
     private function tieneColumna(string $nombre): bool
     {
         if ($this->columnasTrabajador === null) {
@@ -102,7 +113,9 @@ class Prima
 
     private function consultaTrabajadores(string $where): string
     {
-        $hijos = ($this->tieneColumna('hijo_menor') && $this->tieneColumna('hijo_mayor')) ? '(t.hijo_menor + t.hijo_mayor)' : ($this->tieneColumna('hijos') ? 't.hijos' : '0');
+        $hijos = $this->tieneTablaHijos()
+            ? '(SELECT COUNT(*) FROM HIJO_TRABAJADOR ht WHERE ht.id_trabajador = t.id_trabajador)'
+            : (($this->tieneColumna('hijo_menor') && $this->tieneColumna('hijo_mayor')) ? '(t.hijo_menor + t.hijo_mayor)' : ($this->tieneColumna('hijos') ? 't.hijos' : '0'));
         $anos  = $this->tieneColumna('anos_servicio_administracion_publica')
             ? 't.anos_servicio_administracion_publica' : '0';
         $nivel = $this->tieneColumna('nivel_educacion') ? "COALESCE(t.nivel_educacion, '')" : "''";

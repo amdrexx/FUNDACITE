@@ -128,7 +128,7 @@ registrarBitacora($conexion, 'Trabajadores', 'Consultar', $buscar !== '' ? "Cons
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="6" style="text-align:center;">No se encontraron trabajadores registrados.</td>
+                        <td colspan="8" style="text-align:center;">No se encontraron trabajadores registrados.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

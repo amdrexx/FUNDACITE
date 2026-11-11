@@ -94,7 +94,7 @@ $estatusActivo = mb_strtolower($estatus, 'UTF-8') === 'activo';
                         <div class="worker-detail"><dt>Nivel de educación</dt><dd><?php echo htmlspecialchars($dato['nivel_educacion'] ?? 'No registrado'); ?></dd></div>
                         <div class="worker-detail"><dt>Hijos menores de 18 años</dt><dd><?php echo (int)($dato['hijo_menor'] ?? 0); ?></dd></div>
                         <div class="worker-detail"><dt>Hijos de 18 años o más</dt><dd><?php echo (int)($dato['hijo_mayor'] ?? 0); ?></dd></div>
-                        <div class="worker-detail worker-detail--service"><dt>Edades registradas</dt><dd><?php if (!$hijosFicha): ?>Sin hijos registrados<?php else: ?><?php foreach ($hijosFicha as $indice => $hijo): ?>Hijo <?php echo $indice + 1; ?>: <?php echo $hijo['edad'] === null ? 'Edad pendiente de actualizar' : (int)$hijo['edad'] . ' años'; ?><?php if ($indice < count($hijosFicha)-1) echo ' · '; ?><?php endforeach; ?><?php endif; ?></dd></div>
+                        <div class="worker-detail worker-detail--service"><dt>Hijos registrados (edad calculada)</dt><dd><?php if (!$hijosFicha): ?>Sin hijos registrados<?php else: ?><?php foreach ($hijosFicha as $indice => $hijo): ?>Hijo <?php echo $indice + 1; ?>: <?php echo htmlspecialchars($hijo['fecha_nacimiento']); ?> (<?php echo (int)$hijo['edad']; ?> años)<?php if ($indice < count($hijosFicha)-1) echo ' · '; ?><?php endforeach; ?><?php endif; ?></dd></div>
                         <div class="worker-detail worker-detail--service"><dt>Años de servicio en la Administración Pública</dt><dd><?php echo htmlspecialchars((string) ($dato['anos_servicio_administracion_publica'] ?? 0)); ?></dd></div>
                     </dl>
                 </section>
