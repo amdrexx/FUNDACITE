@@ -30,6 +30,21 @@ class DiasDisfrute {
         return $this->diasSegunConvenioVigente();
     }
 
+    /** id y días del CONVENIO vigente hoy (o null si no hay). */
+    private function convenioVigente(): ?array {
+        $sql = "SELECT id_convenio, dias_disfrute FROM CONVENIO
+                WHERE fecha_inicio <= CURDATE() AND fecha_vencimiento >= CURDATE()
+                ORDER BY fecha_inicio DESC, id_convenio DESC
+                LIMIT 1";
+        $resultado = $this->db->query($sql);
+        if (!$resultado) {
+            $this->ultimoError = $this->db->error;
+            return null;
+        }
+        $fila = $resultado->fetch_assoc();
+        return $fila ?: null;
+    }
+
     /** Consulta directa a CONVENIO para obtener los días del convenio vigente hoy. */
     private function diasSegunConvenioVigente(): ?int {
         $sql = "SELECT dias_disfrute FROM CONVENIO
@@ -216,7 +231,9 @@ class DiasDisfrute {
 
             // La cantidad de días siempre se toma del convenio colectivo vigente,
             // nunca de un valor fijo ni del que haya enviado el formulario.
-            $dias_correspondientes = $this->diasSegunConvenioVigente();
+            $convenioVigente = $this->convenioVigente();
+            $dias_correspondientes = $convenioVigente ? (int) $convenioVigente['dias_disfrute'] : null;
+            $id_convenio = $convenioVigente ? (int) $convenioVigente['id_convenio'] : null;
             if ($dias_correspondientes === null) {
                 throw new RuntimeException('No hay un convenio vigente registrado que indique los días de disfrute correspondientes. Registre o actualice el convenio colectivo antes de continuar.');
             }
@@ -227,13 +244,13 @@ class DiasDisfrute {
             // La solicitud se crea pendiente. Los días hábiles del convenio vigente
             // comienzan a contarse desde la fecha/hora en que el Director o Administrador apruebe.
             $sqlDis = "INSERT INTO DISFRUTE_DE_VACACIONES
-                       (id_trabajador, codigo_disfrute, motivo, fecha_inicio,
+                       (id_trabajador, id_convenio, codigo_disfrute, motivo, fecha_inicio,
                         fecha_finalizacion, observaciones, tipo_remuneracion,
                         requiere_suplente, dias_correspondientes, estado, fecha_solicitud)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pendiente', NOW())";
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pendiente', NOW())";
             $stmtDis = $this->db->prepare($sqlDis);
             if (!$stmtDis) throw new Exception("Error al preparar DISFRUTE_DE_VACACIONES: " . $this->db->error);
-            $stmtDis->bind_param("isssssssi", $id_trabajador, $codigo_disfrute, $motivo, $fecha_inicio, $fecha_final_val, $observaciones, $tipo_remuneracion, $requiere_suplente, $dias_correspondientes);
+            $stmtDis->bind_param("iisssssssi", $id_trabajador, $id_convenio, $codigo_disfrute, $motivo, $fecha_inicio, $fecha_final_val, $observaciones, $tipo_remuneracion, $requiere_suplente, $dias_correspondientes);
             if (!$stmtDis->execute()) {
                 throw new Exception("Error al ejecutar DISFRUTE_DE_VACACIONES: " . $stmtDis->error);
             }
@@ -341,10 +358,13 @@ class DiasDisfrute {
                     d.estado,
                     CONCAT(t.apellidos, ' ', t.nombres) AS trabajador,
                     t.cedula,
-                    c.nombre_cargo AS cargo
+                    c.nombre_cargo AS cargo,
+                    d.id_convenio,
+                    cv.nombre_gremio AS convenio_gremio
                 FROM DISFRUTE_DE_VACACIONES d
                 INNER JOIN TRABAJADOR t ON d.id_trabajador = t.id_trabajador
-                LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo";
+                LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo
+                LEFT JOIN CONVENIO cv ON cv.id_convenio = d.id_convenio";
 
         $condiciones = [];
         $tipos = '';
@@ -414,10 +434,13 @@ class DiasDisfrute {
                     d.estado,
                     CONCAT(t.apellidos, ' ', t.nombres) AS trabajador,
                     t.cedula,
-                    c.nombre_cargo AS cargo
+                    c.nombre_cargo AS cargo,
+                    d.id_convenio,
+                    cv.nombre_gremio AS convenio_gremio
                 FROM DISFRUTE_DE_VACACIONES d
                 INNER JOIN TRABAJADOR t ON d.id_trabajador = t.id_trabajador
                 LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo
+                LEFT JOIN CONVENIO cv ON cv.id_convenio = d.id_convenio
                 WHERE d.id_dis = ?
                 LIMIT 1";
 

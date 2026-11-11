@@ -14,6 +14,7 @@ class Prima
 {
     private mysqli $conexion;
     private ?array $columnasTrabajador = null;
+    private ?string $exprEdadHijo = null;
 
     /** Último error de base de datos (para mostrarlo en pantalla). */
     public ?string $ultimoError = null;
@@ -27,15 +28,24 @@ class Prima
        COLUMNAS OPCIONALES DE TRABAJADOR
     ===================================================== */
 
-    private ?bool $tablaHijosExiste = null;
-
-    private function tieneTablaHijos(): bool
+    /**
+     * Expresión SQL con la edad de un hijo (alias h de HIJO_TRABAJADOR):
+     *  - si la tabla tiene fecha_nacimiento, la edad se calcula al día de hoy
+     *    (así el hijo pasa solo de 0-5 a 6-21 años al cumplir 6);
+     *  - si solo tiene la columna edad (esquema anterior), se usa esa.
+     */
+    private function exprEdadHijo(): string
     {
-        if ($this->tablaHijosExiste === null) {
-            $res = $this->conexion->query("SHOW TABLES LIKE 'HIJO_TRABAJADOR'");
-            $this->tablaHijosExiste = ($res && $res->num_rows > 0);
+        if ($this->exprEdadHijo === null) {
+            $this->exprEdadHijo = 'h.edad';
+            $res = $this->conexion->query("SHOW COLUMNS FROM HIJO_TRABAJADOR LIKE 'fecha_nacimiento'");
+
+            if ($res && $res->num_rows > 0) {
+                $this->exprEdadHijo = 'TIMESTAMPDIFF(YEAR, h.fecha_nacimiento, CURDATE())';
+            }
         }
-        return $this->tablaHijosExiste;
+
+        return $this->exprEdadHijo;
     }
 
     private function tieneColumna(string $nombre): bool
@@ -113,9 +123,7 @@ class Prima
 
     private function consultaTrabajadores(string $where): string
     {
-        $hijos = $this->tieneTablaHijos()
-            ? '(SELECT COUNT(*) FROM HIJO_TRABAJADOR ht WHERE ht.id_trabajador = t.id_trabajador)'
-            : (($this->tieneColumna('hijo_menor') && $this->tieneColumna('hijo_mayor')) ? '(t.hijo_menor + t.hijo_mayor)' : ($this->tieneColumna('hijos') ? 't.hijos' : '0'));
+        $edadHijo = $this->exprEdadHijo();
         $anos  = $this->tieneColumna('anos_servicio_administracion_publica')
             ? 't.anos_servicio_administracion_publica' : '0';
         $nivel = $this->tieneColumna('nivel_educacion') ? "COALESCE(t.nivel_educacion, '')" : "''";
@@ -131,7 +139,17 @@ class Prima
                     t.id_cargo,
                     COALESCE(c.nombre_cargo, '') AS cargo,
                     COALESCE(t.tipo_personal, '') AS tipo_personal,
-                    {$hijos} AS hijos,
+                    (SELECT COUNT(*) FROM HIJO_TRABAJADOR h
+                      WHERE h.id_trabajador = t.id_trabajador) AS hijos_registrados,
+                    (SELECT COUNT(*) FROM HIJO_TRABAJADOR h
+                      WHERE h.id_trabajador = t.id_trabajador AND {$edadHijo} BETWEEN 0 AND 5) AS hijos_menores_tabla,
+                    (SELECT COUNT(*) FROM HIJO_TRABAJADOR h
+                      WHERE h.id_trabajador = t.id_trabajador AND {$edadHijo} BETWEEN 6 AND 21) AS hijos_mayores_tabla,
+                    (SELECT COUNT(*) FROM HIJO_TRABAJADOR h
+                      WHERE h.id_trabajador = t.id_trabajador AND {$edadHijo} > 21) AS hijos_fuera_rango,
+                    COALESCE((SELECT GROUP_CONCAT({$edadHijo} ORDER BY {$edadHijo} SEPARATOR ', ')
+                              FROM HIJO_TRABAJADOR h
+                              WHERE h.id_trabajador = t.id_trabajador), '') AS edades_hijos,
                     {$nivel} AS nivel_educacion,
                     COALESCE(NULLIF({$anos}, 0),
                              TIMESTAMPDIFF(
@@ -179,7 +197,18 @@ class Prima
         $fila['id_cargo'] = isset($fila['id_cargo']) ? (int) $fila['id_cargo'] : null;
         $fila['salario_cargo_id'] = isset($fila['salario_cargo_id']) ? (int) $fila['salario_cargo_id'] : null;
 
-        $fila['hijos']         = (int) $fila['hijos'];
+        // Hijos para la PRIMA: se clasifican por la edad de cada hijo (HIJO_TRABAJADOR),
+        // con un corte propio de la prima (distinto al legal menor/mayor de edad del trabajador):
+        //   'hijos_menores' = de 0 a 5 años   -> primer valor de la prima por hijos
+        //   'hijos_mayores' = de 6 a 21 años  -> segundo valor
+        //   más de 21 años no cuenta.
+        // Los contadores TRABAJADOR.hijo_menor / hijo_mayor siguen el criterio legal
+        // (0-17 / 18-21), por eso NO se usan aquí.
+        $fila['hijos_menores']     = (int) $fila['hijos_menores_tabla'];
+        $fila['hijos_mayores']     = (int) $fila['hijos_mayores_tabla'];
+        $fila['hijos_fuera_rango'] = (int) $fila['hijos_fuera_rango'];
+        $fila['hijos']             = $fila['hijos_menores'] + $fila['hijos_mayores'];
+        unset($fila['hijos_registrados'], $fila['hijos_menores_tabla'], $fila['hijos_mayores_tabla']);
         $fila['anos_servicio'] = max(0, (int) $fila['anos_servicio']);
 
         return array_merge($fila, $salario);

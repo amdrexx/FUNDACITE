@@ -181,7 +181,7 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                             <?php if (!$modoTrabajadorExistente): ?>
                                 <a href="../controladores/ctrl_contrato.php?accion=cancelar_registro" style="color:#bbb; text-decoration:none;">Cancelar registro</a>
                             <?php endif; ?>
-                            <button type="submit" name="registrar_contrato" class="btn-guardar">Finalizar y Registrar Contrato</button>
+                            <button type="submit" name="registrar_contrato" class="btn-guardar">Finalizar</button>
                         </div>
                     </div>
                 </div>

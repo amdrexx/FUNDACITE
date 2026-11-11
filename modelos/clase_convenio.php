@@ -123,6 +123,15 @@ class Convenio
         return $stmt->execute();
     }
 
+    public function tieneSolicitudes($idConvenio): bool
+    {
+        $idConvenio = (int) $idConvenio;
+        $stmt = $this->conexion->prepare("SELECT 1 FROM DISFRUTE_DE_VACACIONES WHERE id_convenio = ? LIMIT 1");
+        $stmt->bind_param("i", $idConvenio);
+        $stmt->execute();
+        return $stmt->get_result()->num_rows > 0;
+    }
+
     public function eliminarConvenio($idConvenio)
     {
         $sql = "DELETE FROM CONVENIO WHERE id_convenio = ?";

@@ -82,6 +82,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
             <input type="hidden" name="id_trabajador" value="<?php echo htmlspecialchars($dato['id_trabajador']); ?>">
             <input type="hidden" name="id_dir" value="<?php echo htmlspecialchars($dato['id_dir'] ?? ''); ?>">
 
+        <h3 class="form-section-title full-width">Datos personales</h3>
             <!-- NO EDITABLES -->
             <div class="field">
                 <label>Tipo de Documento</label>
@@ -103,11 +104,6 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                 <input type="text" value="<?php echo htmlspecialchars($dato['apellidos'] ?? ''); ?>" readonly>
             </div>
 
-            <div class="field">
-                <label>Fecha de Nacimiento</label>
-                <input type="text" value="<?php echo htmlspecialchars($dato['fecha'] ?? ''); ?>" readonly>
-            </div>
-            
             <div class="field">
                 <label>Género</label>
                 <div class="radio-group">
@@ -133,7 +129,29 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                 </div>
             </div>
 
-            <div class="field" id="seccionHijos">
+            <div class="field">
+                <label>Estado Civil</label>
+                <select name="estadoCivil" required>
+                    <option value="">Seleccione...</option>
+                    <option value="Soltero(a)" <?php echo (($dato['estadoCivil'] ?? '') == 'Soltero(a)') ? 'selected' : ''; ?>>Soltero(a)</option>
+                    <option value="Casado(a)" <?php echo (($dato['estadoCivil'] ?? '') == 'Casado(a)') ? 'selected' : ''; ?>>Casado(a)</option>
+                    <option value="Divorciado(a)" <?php echo (($dato['estadoCivil'] ?? '') == 'Divorciado(a)') ? 'selected' : ''; ?>>Divorciado(a)</option>
+                    <option value="Viudo(a)" <?php echo (($dato['estadoCivil'] ?? '') == 'Viudo(a)') ? 'selected' : ''; ?>>Viudo(a)</option>
+                </select>
+            </div>
+
+             <div class="field">
+                <label>Fecha de Nacimiento</label>
+                <input type="text" value="<?php echo htmlspecialchars($dato['fecha'] ?? ''); ?>" readonly>
+            </div>
+
+            <div class="field">
+                <label>Edad</label>
+                <input type="text" value="<?php echo htmlspecialchars($dato['edad'] ?? ''); ?>" readonly>
+            </div>
+
+            
+            <div class="field full-width" id="seccionHijos">
                 <label>¿El trabajador tiene hijos?</label>
                 <div class="radio-group">
                     <label class="radio-option"><input type="radio" name="tiene_hijos" value="si" <?php echo !empty($hijosRegistrados) ? 'checked' : ''; ?>><span>Sí</span></label>
@@ -144,15 +162,38 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                         <strong>Fecha de nacimiento de cada hijo</strong>
                         <button type="button" class="btn-guardar" id="agregarHijo">+ Agregar hijo</button>
                     </div>
-                    <div id="listaFechasHijos" class="form-grid" style="margin-top:10px;">
+                    <div id="listaEdadesHijos" class="form-grid" style="margin-top:10px;">
                         <?php foreach ($hijosRegistrados as $hijo): ?>
-                        <div class="field fila-hijo"><label>Fecha de nacimiento del hijo</label><div style="display:flex;gap:8px"><input type="date" name="fechas_nacimiento_hijos[]" max="<?php echo date('Y-m-d'); ?>" required value="<?php echo htmlspecialchars((string)$hijo['fecha_nacimiento']); ?>"><button type="button" class="btn-eliminar-hijo" aria-label="Quitar hijo">Quitar</button></div><small class="clasificacion-hijo"></small></div>
+                        <div class="field fila-hijo">
+                           
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                                <input type="date" name="fechas_nacimiento_hijos[]" required value="<?php echo htmlspecialchars((string)($hijo['fecha_nacimiento'] ?? '')); ?>">
+                                <input type="text" class="edad-hijo-calculada" placeholder="Edad" readonly style="max-width:110px">
+                                <button type="button" class="btn-eliminar-hijo" aria-label="Quitar hijo">Quitar</button>
+                            </div>
+                            <small class="clasificacion-hijo"></small>
+                        </div>
                         <?php endforeach; ?>
                     </div>
-                    
+                  
                 </div>
             </div>
 
+            <h3 class="form-section-title full-width">Contacto</h3>
+
+            <div class="field">
+                <label>Correo Electrónico</label>
+                <input type="email" name="correoElectronico" value="<?php echo htmlspecialchars($dato['correoElectronico'] ?? ''); ?>" required>
+            </div>
+
+            <div class="field">
+                <label>Número de Teléfono</label>
+                <input type="text" name="numeroTelefono" value="<?php echo htmlspecialchars($dato['numeroTelefono'] ?? ''); ?>" required>
+            </div>
+
+
+            <h3 class="form-section-title full-width">Datos laborales</h3>
+            
             <div class="field">
                 <label for="anos_servicio_administracion_publica">Años de Servicio en la Administración Pública</label>
                 <input type="number" name="anos_servicio_administracion_publica" id="anos_servicio_administracion_publica" min="0" max="70" step="1" required
@@ -169,40 +210,6 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                         </option>
                     <?php endforeach; ?>
                 </select>
-            </div>
-
-            <div class="field">
-                <label for="tipo_personal">Tipo de Personal</label>
-                <select name="tipo_personal" id="tipo_personal" required>
-                    <option value="">Seleccione el tipo de personal...</option>
-                    <?php foreach (['Fijo', 'Contratado', 'Obrero', 'Empleado', 'Jubilado'] as $tipoPersonal): ?>
-                        <option value="<?php echo htmlspecialchars($tipoPersonal, ENT_QUOTES, 'UTF-8'); ?>" <?php echo (($dato['tipo_personal'] ?? '') === $tipoPersonal) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($tipoPersonal, ENT_QUOTES, 'UTF-8'); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <!-- EDITABLES -->
-            <div class="field">
-                <label>Estado Civil</label>
-                <select name="estadoCivil" required>
-                    <option value="">Seleccione...</option>
-                    <option value="Soltero(a)" <?php echo (($dato['estadoCivil'] ?? '') == 'Soltero(a)') ? 'selected' : ''; ?>>Soltero(a)</option>
-                    <option value="Casado(a)" <?php echo (($dato['estadoCivil'] ?? '') == 'Casado(a)') ? 'selected' : ''; ?>>Casado(a)</option>
-                    <option value="Divorciado(a)" <?php echo (($dato['estadoCivil'] ?? '') == 'Divorciado(a)') ? 'selected' : ''; ?>>Divorciado(a)</option>
-                    <option value="Viudo(a)" <?php echo (($dato['estadoCivil'] ?? '') == 'Viudo(a)') ? 'selected' : ''; ?>>Viudo(a)</option>
-                </select>
-            </div>
-
-            <div class="field">
-                <label>Correo Electrónico</label>
-                <input type="email" name="correoElectronico" value="<?php echo htmlspecialchars($dato['correoElectronico'] ?? ''); ?>" required>
-            </div>
-
-            <div class="field">
-                <label>Número de Teléfono</label>
-                <input type="text" name="numeroTelefono" value="<?php echo htmlspecialchars($dato['numeroTelefono'] ?? ''); ?>" required>
             </div>
 
             <div class="field">
@@ -223,6 +230,20 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                 <small style="color:#d5dce5;">Para asignar o desvincular un cargo, utilice Asignación de cargo.</small>
             </div>
 
+            <div class="field">
+                <label for="tipo_personal">Tipo de Personal</label>
+                <select name="tipo_personal" id="tipo_personal" required>
+                    <option value="">Seleccione el tipo de personal...</option>
+                    <?php foreach (['Fijo', 'Contratado', 'Obrero', 'Empleado', 'Jubilado'] as $tipoPersonal): ?>
+                        <option value="<?php echo htmlspecialchars($tipoPersonal, ENT_QUOTES, 'UTF-8'); ?>" <?php echo (($dato['tipo_personal'] ?? '') === $tipoPersonal) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($tipoPersonal, ENT_QUOTES, 'UTF-8'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+
+            <h3 class="form-section-title full-width">Dirección</h3>
             <!-- Dirección: Estado -->
             <div class="field">
                 <label>Estado</label>

@@ -94,23 +94,19 @@ CREATE TABLE TRABAJADOR (
 
 CREATE TABLE HIJO_TRABAJADOR (
     id_hijo INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    id_trabajador INT UNSIGNED NOT NULL,
-    edad TINYINT UNSIGNED NOT NULL,
+    id_trabajador INT(10) UNSIGNED NOT NULL,
+    fecha_nacimiento DATE NULL,
     PRIMARY KEY (id_hijo),
-    INDEX idx_hijo_trabajador (id_trabajador),
-    CONSTRAINT chk_edad_hijo CHECK (edad <= 75),
-    CONSTRAINT fk_hijo_trabajador FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR(id_trabajador) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
+    KEY idx_hijo_trabajador (id_trabajador),
+    CONSTRAINT fk_hijo_trabajador_trabajador
+        FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR (id_trabajador)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 -- ================================================================================
 -- 3. TABLAS DE PROCESOS Y GESTIÓN LABORAL
--- Para actualizar una instalación anterior, ejecutar las migraciones correspondientes,
--- incluyendo migrar_constancia_disfrute.sql y migracion_hijos_trabajador.sql.
--- Este archivo define el esquema para una BD nueva.
 -- ================================================================================
 
--- tipo_personal NO pertenece a CONTRATO: está definido en TRABAJADOR.
--- Esta tabla conserva tipo_contrato (modalidad contractual) y sus fechas.
+
 CREATE TABLE CONTRATO (
     id_contrato INT UNSIGNED NOT NULL AUTO_INCREMENT,
     id_trabajador INT UNSIGNED NOT NULL,
@@ -158,6 +154,7 @@ CREATE TABLE CONSTANCIA_DE_TRABAJO (
 CREATE TABLE DISFRUTE_DE_VACACIONES (
     id_dis INT UNSIGNED NOT NULL AUTO_INCREMENT,
     id_trabajador INT UNSIGNED NOT NULL,
+    id_convenio INT UNSIGNED NULL COMMENT 'Convenio colectivo vigente al momento de la solicitud',
     codigo_disfrute VARCHAR(50) NOT NULL,
     motivo TEXT NOT NULL,
     fecha_inicio DATE NOT NULL,
@@ -175,7 +172,9 @@ CREATE TABLE DISFRUTE_DE_VACACIONES (
     INDEX idx_disfrute_codigo (codigo_disfrute),
     INDEX idx_disfrute_trabajador (id_trabajador),
     INDEX idx_disfrute_estado (estado),
+    INDEX idx_disfrute_convenio (id_convenio),
     FOREIGN KEY (id_trabajador) REFERENCES TRABAJADOR(id_trabajador) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_disfrute_convenio FOREIGN KEY (id_convenio) REFERENCES CONVENIO(id_convenio) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT chk_fechas_disfrute CHECK (fecha_finalizacion IS NULL OR fecha_finalizacion >= fecha_inicio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -203,8 +202,6 @@ CREATE TABLE USUARIO (
     CONSTRAINT chk_tipo_usuario CHECK (tipo_usuario IN ('Administrador', 'Director', 'Analista', 'Usuario Estándar'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Historial de titularidad/asignación de cargos. Cada cambio crea una nueva fila;
--- el registro anterior se conserva con su fecha_fin y estado FINALIZADA.
 CREATE TABLE ASIGNACION_CARGO (
     id_asignacion BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     id_trabajador INT UNSIGNED NOT NULL,
@@ -257,9 +254,6 @@ CREATE TABLE SALARIO (
     CONSTRAINT chk_salario_monto CHECK (monto >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- PRIMA: primas asignadas por trabajador. Esta estructura reemplaza el catálogo
--- genérico PRIMA del ZIP independiente, que no guardaba trabajador ni monto.
--- Mantener UNIQUE(id_trabajador, tipo_prima) para evitar duplicados por trabajador.
 CREATE TABLE PRIMA (
     id_prima    INT UNSIGNED NOT NULL AUTO_INCREMENT,
     nombre      VARCHAR(100) NOT NULL,
@@ -302,7 +296,7 @@ CREATE TABLE TRABAJADOR_PRIMA (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ================================================================================
--- 6. TABLA DE AUDITORÍA
+-- 6. TABLA DE BITACCORA
 -- ================================================================================
 
 CREATE TABLE BITACORA (
@@ -1952,15 +1946,6 @@ INSERT INTO USUARIO (
 -- ==============================================================================
 -- 8. TRABAJADORES DE PRUEBA: UN REGISTRO PARA CADA CARGO
 -- ==============================================================================
--- El trabajador "Admin Sistema" creado anteriormente ya ocupa el cargo
--- Administrador y está asociado al usuario inicial "admin".
--- Se agregan además cinco trabajadores ficticios (uno por cada cargo) para
--- disponer de datos de prueba completos en el módulo de trabajadores.
--- Las cédulas 99900001 a 99900005 son ficticias.
--- id_dir queda en NULL porque este bloque no crea direcciones de prueba.
--- El cargo se busca por nombre, no se presupone el valor de AUTO_INCREMENT.
--- NOT EXISTS evita duplicar los trabajadores si este bloque se vuelve a ejecutar.
-
 START TRANSACTION;
 
 -- 1. Trabajadora con cargo Administrador
@@ -2058,14 +2043,6 @@ COMMIT;
 -- ================================================================================
 -- 9. CONTRATOS DE PRUEBA: UN CONTRATO PARA CADA TRABAJADOR
 -- ================================================================================
--- El tipo de personal ya está guardado en TRABAJADOR.
--- El contrato conserva únicamente su modalidad y fechas.
--- Se incluyen todos los trabajadores de prueba y el trabajador Admin Sistema.
--- Las fechas contractuales de prueba son ficticias y se usan únicamente para pruebas.
--- Los contratos determinados tienen fecha de finalización posterior a la fecha
--- actual de referencia (2026-11-06); los indeterminados no tienen fecha_fin.
--- NOT EXISTS evita duplicar contratos si se vuelve a ejecutar este bloque.
-
 START TRANSACTION;
 
 INSERT INTO CONTRATO (
@@ -2122,9 +2099,6 @@ WHERE t.id_cargo IS NOT NULL
 
 COMMIT;
 
--- Historial inicial de los cargos actuales de los trabajadores de prueba.
--- Para los registros antiguos se usa la fecha del primer contrato que
--- coincide con el cargo actual; si no existe contrato, se registra la fecha actual.
 INSERT INTO ASIGNACION_CARGO
     (id_trabajador, id_cargo, fecha_asignacion, id_usuario_asignador, estado, gaceta)
 SELECT

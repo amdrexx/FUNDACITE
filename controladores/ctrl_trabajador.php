@@ -67,18 +67,21 @@ if ($accion === 'actualizar' || isset($_POST['editar_trabajador'])) {
     $correo           = trim($_POST['correoElectronico'] ?? '');
     $telefono         = trim($_POST['numeroTelefono'] ?? '');
     $status           = trim($_POST['estatus_laboral'] ?? '');
-    $fechasHijos = $_POST['fechas_nacimiento_hijos'] ?? [];
-    $fechasHijos = is_array($fechasHijos) ? array_values($fechasHijos) : [];
-    $erroresHijos = [];
+    $fechasHijos      = $_POST['fechas_nacimiento_hijos'] ?? [];
+    $fechasHijos      = is_array($fechasHijos) ? array_values(array_map('trim', $fechasHijos)) : [];
+    $erroresHijos     = [];
     if (($_POST['tiene_hijos'] ?? 'no') !== 'si') $fechasHijos = [];
+    $hoyIso = date('Y-m-d');
     foreach ($fechasHijos as $fechaHijo) {
-        $dt = DateTime::createFromFormat('Y-m-d', (string)$fechaHijo);
-        if (!$dt || $dt->format('Y-m-d') !== $fechaHijo || $dt > new DateTime('today')) $erroresHijos[] = 'Ingrese fechas de nacimiento válidas para todos los hijos (no futuras).';
+        $edadHijo = Trabajador::edadDesdeFecha($fechaHijo);
+        if ($fechaHijo === '' || $edadHijo === null || $fechaHijo > $hoyIso || $edadHijo < 0 || $edadHijo > 75) {
+            $erroresHijos[] = 'Cada fecha de nacimiento de hijo debe ser una fecha válida, no futura, de 0 a 75 años de edad.';
+        }
     }
     if (($_POST['tiene_hijos'] ?? 'no') === 'si' && count($fechasHijos) === 0) $erroresHijos[] = 'Agregue al menos un hijo o seleccione No.';
     if (count($fechasHijos) > 30) $erroresHijos[] = 'Puede registrar como máximo 30 hijos.';
-    $hijosMenores = count(array_filter($fechasHijos, fn($f) => $f > date('Y-m-d', strtotime('-18 years'))));
-    $hijosMayores = count($fechasHijos) - $hijosMenores;
+    $hijosMenores     = count(array_filter($fechasHijos, fn($f) => (Trabajador::edadDesdeFecha($f) ?? 99) < 18));
+    $hijosMayores     = count(array_filter($fechasHijos, fn($f) => (Trabajador::edadDesdeFecha($f) ?? 99) >= 18));
     $anosServicio     = filter_var($_POST['anos_servicio_administracion_publica'] ?? '', FILTER_VALIDATE_INT);
     $nivelEducacion   = trim($_POST['nivel_educacion'] ?? '');
     $tipoPersonal     = trim($_POST['tipo_personal'] ?? '');
@@ -236,13 +239,16 @@ $genero          = trim($_POST['genero'] ?? '');
 $estadoCivil     = trim($_POST['estadoCivil'] ?? '');
 $correo          = trim($_POST['correoElectronico'] ?? '');
 $telefono        = trim($_POST['numeroTelefono'] ?? '');
-$fechasHijos = $_POST['fechas_nacimiento_hijos'] ?? [];
-$fechasHijos = is_array($fechasHijos) ? array_values($fechasHijos) : [];
-$erroresHijos = [];
+$fechasHijos      = $_POST['fechas_nacimiento_hijos'] ?? [];
+$fechasHijos      = is_array($fechasHijos) ? array_values(array_map('trim', $fechasHijos)) : [];
+$erroresHijos     = [];
 if (($_POST['tiene_hijos'] ?? 'no') !== 'si') $fechasHijos = [];
+$hoyIsoRegistro = date('Y-m-d');
 foreach ($fechasHijos as $fechaHijo) {
-    $dt = DateTime::createFromFormat('Y-m-d', (string)$fechaHijo);
-    if (!$dt || $dt->format('Y-m-d') !== $fechaHijo || $dt > new DateTime('today')) $erroresHijos[] = 'Ingrese fechas de nacimiento válidas para todos los hijos (no futuras).';
+    $edadHijo = Trabajador::edadDesdeFecha($fechaHijo);
+    if ($fechaHijo === '' || $edadHijo === null || $fechaHijo > $hoyIsoRegistro || $edadHijo < 0 || $edadHijo > 75) {
+        $erroresHijos[] = 'Cada fecha de nacimiento de hijo debe ser una fecha válida, no futura, de 0 a 75 años de edad.';
+    }
 }
 if (($_POST['tiene_hijos'] ?? 'no') === 'si' && count($fechasHijos) === 0) $erroresHijos[] = 'Agregue al menos un hijo o seleccione No.';
 if (count($fechasHijos) > 30) $erroresHijos[] = 'Puede registrar como máximo 30 hijos.';
@@ -274,16 +280,7 @@ if (empty($cedula)) $errores[] = "Ingrese la cédula.";
 elseif (!preg_match('/^\d{6,8}$/', $cedula)) $errores[] = "La cédula debe contener entre 6 y 8 dígitos.";
 if (empty($nombres)) $errores[] = "Ingrese los nombres.";
 if (empty($apellidos)) $errores[] = "Ingrese los apellidos.";
-if (empty($fechaNacimiento)) {
-    $errores[] = "Ingrese la fecha de nacimiento.";
-} else {
-    $fechaNacValidada = DateTime::createFromFormat('Y-m-d', $fechaNacimiento);
-    if (!$fechaNacValidada || $fechaNacValidada->format('Y-m-d') !== $fechaNacimiento || $fechaNacValidada > new DateTime('today')) {
-        $errores[] = "Ingrese una fecha de nacimiento válida que no sea futura.";
-    } elseif ($fechaNacValidada->diff(new DateTime('today'))->y > 75) {
-        $errores[] = "La edad del trabajador no puede superar los 75 años.";
-    }
-}
+if (empty($fechaNacimiento)) $errores[] = "Ingrese la fecha de nacimiento.";
 if (empty($genero)) $errores[] = "Seleccione el género.";
 if (empty($estadoCivil)) $errores[] = "Seleccione el estado civil.";
 if (empty($telefono)) $errores[] = "Ingrese el teléfono.";

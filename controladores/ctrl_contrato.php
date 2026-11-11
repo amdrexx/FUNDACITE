@@ -143,8 +143,8 @@ class ContratoControlador {
                     trim($borrador['nombres'] ?? ''),
                     trim($borrador['apellidos'] ?? ''),
                     trim($borrador['fecha'] ?? ''),
-                    count(array_filter((($borrador['tiene_hijos'] ?? 'no') === 'si' ? ($borrador['fechas_nacimiento_hijos'] ?? []) : []), fn($fecha) => $fecha > date('Y-m-d', strtotime('-18 years')))),
-                    count((($borrador['tiene_hijos'] ?? 'no') === 'si' ? ($borrador['fechas_nacimiento_hijos'] ?? []) : [])) - count(array_filter((($borrador['tiene_hijos'] ?? 'no') === 'si' ? ($borrador['fechas_nacimiento_hijos'] ?? []) : []), fn($fecha) => $fecha > date('Y-m-d', strtotime('-18 years')))),
+                    count(array_filter((($borrador['tiene_hijos'] ?? 'no') === 'si' ? ($borrador['fechas_nacimiento_hijos'] ?? []) : []), fn($f) => (Trabajador::edadDesdeFecha($f) ?? 99) < 18)),
+                    count(array_filter((($borrador['tiene_hijos'] ?? 'no') === 'si' ? ($borrador['fechas_nacimiento_hijos'] ?? []) : []), fn($f) => (Trabajador::edadDesdeFecha($f) ?? 99) >= 18)),
                     (int) ($borrador['anos_servicio_administracion_publica'] ?? 0),
                     trim($borrador['nivel_educacion'] ?? ''),
                     trim($borrador['genero'] ?? ''),
@@ -159,7 +159,7 @@ class ContratoControlador {
                 if (!$id_trabajador) {
                     throw new RuntimeException('No se pudo guardar el trabajador.');
                 }
-                $fechasHijos = (($borrador['tiene_hijos'] ?? 'no') === 'si') ? array_values((array)($borrador['fechas_nacimiento_hijos'] ?? [])) : [];
+                $fechasHijos = (($borrador['tiene_hijos'] ?? 'no') === 'si') ? array_values(array_map('trim', (array)($borrador['fechas_nacimiento_hijos'] ?? []))) : [];
                 if (!$modeloTrabajador->reemplazarHijosTrabajador($id_trabajador, $fechasHijos)) {
                     throw new RuntimeException('No se pudo guardar la lista de hijos del trabajador.');
                 }

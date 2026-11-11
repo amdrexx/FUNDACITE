@@ -20,7 +20,6 @@ $objprima = new Prima($conexion);
 const TIPO_ANTIGUEDAD = 'Prima por antigüedad';
 const TIPO_PROFESIONALIZACION = 'Prima por profesionalización';
 const TIPO_HIJOS = 'Prima por hijos';
-const MONTOS_HIJO_VALIDOS = [56.00, 12.50];
 // Primas fijas del sistema; cualquier otra prima viene del catálogo de "nuevas primas"
 const TIPOS_FIJOS = [TIPO_ANTIGUEDAD, TIPO_PROFESIONALIZACION, TIPO_HIJOS];
 
@@ -79,7 +78,7 @@ function fallo(string $mensaje, int $idEditar = 0): void
    Devuelve ['condicion','porcentaje','monto'] o ['error' => mensaje]
 --------------------------------------------------------------------------- */
 
-function calcularPrima(array $trab, string $tipo, array $post, ?array $montosHijo = null): array
+function calcularPrima(array $trab, string $tipo, array $post, ?array $tarifasHijo = null): array
 {
     $base = (float) $trab['base_prima'];
 
@@ -138,45 +137,37 @@ function calcularPrima(array $trab, string $tipo, array $post, ?array $montosHij
     }
 
     if ($tipo === TIPO_HIJOS) {
-        $cantidad = (int) $trab['hijos'];
+        // Los hijos se leen de la base de datos (HIJO_TRABAJADOR), no del formulario:
+        //   hijos de 0 a 5 años  -> primer valor de la prima por hijos del catálogo
+        //   hijos de 6 a 21 años -> segundo valor
+        // (corte propio de la prima; no coincide con el menor/mayor de edad legal)
+        $menores = (int) ($trab['hijos_menores'] ?? 0);
+        $mayores = (int) ($trab['hijos_mayores'] ?? 0);
 
-        if ($cantidad < 1) {
-            $enviado = trim((string) ($post['cantidad_hijos'] ?? ''));
-            $cantidad = ctype_digit($enviado) ? (int) $enviado : 0;
+        if ($menores + $mayores < 1) {
+            return ['error' => (int) ($trab['hijos_fuera_rango'] ?? 0) > 0
+                ? 'El trabajador no tiene hijos de 0 a 21 años (los hijos registrados superan los 21 años).'
+                : 'El trabajador no tiene hijos con edad registrada. Regístrelos primero en el módulo de trabajadores.'];
         }
 
-        if ($cantidad < 1 || $cantidad > 20) {
-            return ['error' => 'La cantidad de hijos debe estar entre 1 y 20.'];
+        if (!$tarifasHijo) {
+            return ['error' => 'La prima por hijos del catálogo debe ser de monto fijo con dos valores: primero el del hijos de 0 a 5 años y luego el de hijos de 6 a 21 años.'];
         }
 
-        $montos = $post['monto_hijo'] ?? [];
-        $montos = is_array($montos) ? array_values($montos) : [$montos];
+        $fmt = static fn(float $n): string => number_format($n, 2, ',', '.');
+        $partes = [];
 
-        if (count($montos) !== $cantidad) {
-            return ['error' => "Debe indicar el monto de cada uno de los $cantidad hijos."];
+        if ($menores > 0) {
+            $partes[] = $menores . ($menores === 1 ? ' hijo' : ' hijos') . ' de 0 a 5 años x ' . $fmt($tarifasHijo['menor']);
         }
-
-        // Montos permitidos por hijo: los del catálogo (prima de tipo monto) o los de siempre
-        $permitidosHijo = $montosHijo ?: MONTOS_HIJO_VALIDOS;
-        $validos = [];
-        $total = 0.0;
-
-        foreach ($montos as $m) {
-            $m = round((float) str_replace(',', '.', trim((string) $m)), 2);
-
-            if (!in_array($m, $permitidosHijo, true)) {
-                return ['error' => 'Solo se permiten los montos definidos para la prima por hijos ('
-                    . implode(' o ', array_map(static fn($x) => number_format($x, 2, ',', '.') . ' Bs.', $permitidosHijo)) . ').'];
-            }
-
-            $validos[] = number_format($m, 2, '.', '');
-            $total += $m;
+        if ($mayores > 0) {
+            $partes[] = $mayores . ($mayores === 1 ? ' hijo' : ' hijos') . ' de 6 a 21 años x ' . $fmt($tarifasHijo['mayor']);
         }
 
         return [
-            'condicion'  => $cantidad . ($cantidad === 1 ? ' hijo: ' : ' hijos: ') . implode(', ', $validos),
+            'condicion'  => implode(' + ', $partes),
             'porcentaje' => 0.0,
-            'monto'      => round($total, 2),
+            'monto'      => round($menores * $tarifasHijo['menor'] + $mayores * $tarifasHijo['mayor'], 2),
         ];
     }
 
@@ -312,13 +303,19 @@ function calcularPrimaTipo(array $trab, string $tipo, array $post, array $catalo
     $infoCatalogo = $catalogo[$tipo] ?? null;
 
     if (in_array($tipo, TIPOS_FIJOS, true)) {
-        // Prima por hijos: si en el catálogo es de monto fijo, esos son los montos permitidos por hijo
-        $montosHijo = null;
-        if ($tipo === TIPO_HIJOS && $infoCatalogo !== null && ($infoCatalogo['tipo_valor'] ?? '') === 'monto') {
-            $montosHijo = array_map(static fn($v) => round((float) $v['valor'], 2), $infoCatalogo['valores']);
+        // Prima por hijos: en el catálogo es de monto fijo con dos valores
+        // (1.º = hijo menor 0-5 años, 2.º = hijo mayor 6-21 años)
+        $tarifasHijo = null;
+        if ($tipo === TIPO_HIJOS && $infoCatalogo !== null
+            && ($infoCatalogo['tipo_valor'] ?? '') === 'monto'
+            && count($infoCatalogo['valores']) >= 2) {
+            $tarifasHijo = [
+                'menor' => round((float) $infoCatalogo['valores'][0]['valor'], 2),
+                'mayor' => round((float) $infoCatalogo['valores'][1]['valor'], 2),
+            ];
         }
 
-        $calc = calcularPrima($trab, $tipo, postParaTipo($tipo, $post), $montosHijo);
+        $calc = calcularPrima($trab, $tipo, postParaTipo($tipo, $post), $tarifasHijo);
 
         if (!isset($calc['error'])) {
             $calc['id_valor'] = null;

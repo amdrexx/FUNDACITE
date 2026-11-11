@@ -65,6 +65,12 @@ if (isset($_POST['eliminar_convenio'])) {
         exit;
     }
 
+    if ($convenio->tieneSolicitudes($idConvenio)) {
+        $_SESSION['flash_alerta'] = ['tipo' => 'warning', 'mensaje' => 'No se puede eliminar: el convenio está asociado a solicitudes de días de disfrute.'];
+        header("Location: ../vistas/lista_convenio.php");
+        exit;
+    }
+
     $antes = bitacoraSnapshot($conexion, 'convenio', $idConvenio);
 
     if ($convenio->eliminarConvenio($idConvenio)) {

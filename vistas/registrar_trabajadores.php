@@ -161,6 +161,34 @@ if ($idTrabajadorEdicion > 0) {
                 <input type="text" id="edad" placeholder="Se calculará automáticamente" readonly>
             </div>
 
+            <div class="field full-width" id="seccionHijos">
+                <label>¿El trabajador tiene hijos?</label>
+                <div class="radio-group">
+                    <label class="radio-option"><input type="radio" name="tiene_hijos" value="si" <?php echo !empty($hijosRegistrados) ? 'checked' : ''; ?>><span>Sí</span></label>
+                    <label class="radio-option"><input type="radio" name="tiene_hijos" value="no" <?php echo empty($hijosRegistrados) ? 'checked' : ''; ?>><span>No</span></label>
+                </div>
+                <div id="panelHijos" style="display:none; margin-top:14px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+                        <strong>Fecha de nacimiento de cada hijo</strong>
+                        <button type="button" class="btn-guardar" id="agregarHijo">+ Agregar hijo</button>
+                    </div>
+                    <div id="listaEdadesHijos" class="form-grid" style="margin-top:10px;">
+                        <?php foreach ($hijosRegistrados as $hijo): ?>
+                        <div class="field fila-hijo">
+                           
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                                <input type="date" name="fechas_nacimiento_hijos[]" required value="<?php echo htmlspecialchars((string)($hijo['fecha_nacimiento'] ?? '')); ?>">
+                                <input type="text" class="edad-hijo-calculada" placeholder="Edad" readonly style="max-width:110px">
+                                <button type="button" class="btn-eliminar-hijo" aria-label="Quitar hijo">Quitar</button>
+                            </div>
+                            <small class="clasificacion-hijo"></small>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                  
+                </div>
+            </div>
+            
             <h3 class="form-section-title full-width">Contacto</h3>
 
             <!-- Correo Electrónico -->
@@ -177,6 +205,8 @@ if ($idTrabajadorEdicion > 0) {
                         value="<?php echo htmlspecialchars($old['numeroTelefono'] ?? ''); ?>">
             </div>
 
+             
+
             <h3 class="form-section-title full-width">Datos laborales</h3>
 
             <!-- Tipo de Personal -->
@@ -192,26 +222,8 @@ if ($idTrabajadorEdicion > 0) {
                 </select>
             </div>
 
-            <!-- Hijos: se almacena fecha de nacimiento y se calcula la edad -->
-            <div class="field-full width" id="seccionHijos">
-                <label>¿El trabajador tiene hijos?</label>
-                <div class="radio-group">
-                    <label class="radio-option"><input type="radio" name="tiene_hijos" value="si" <?php echo (($old['tiene_hijos'] ?? (!empty($old['fechas_nacimiento_hijos']) ? 'si' : 'no')) === 'si') ? 'checked' : ''; ?>><span>Sí</span></label>
-                    <label class="radio-option"><input type="radio" name="tiene_hijos" value="no" <?php echo (($old['tiene_hijos'] ?? (!empty($old['fechas_nacimiento_hijos']) ? 'si' : 'no')) === 'no') ? 'checked' : ''; ?>><span>No</span></label>
-                </div>
-                <div id="panelHijos" style="display:none; margin-top:14px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-                        <strong>Fecha de nacimiento de cada hijo</strong>
-                        <button type="button" class="btn-guardar" id="agregarHijo">+ Agregar hijo</button>
-                    </div>
-                    <div id="listaFechasHijos" class="form-grid" style="margin-top:10px;">
-                        <?php foreach (($old['fechas_nacimiento_hijos'] ?? []) as $i => $fechaHijo): ?>
-                        <div class="field fila-hijo"><label>Fecha de nacimiento del hijo</label><div style="display:flex;gap:8px"><input type="date" name="fechas_nacimiento_hijos[]" max="<?php echo date('Y-m-d'); ?>" required value="<?php echo htmlspecialchars((string)$fechaHijo); ?>"><button type="button" class="btn-eliminar-hijo" aria-label="Quitar hijo">Quitar</button></div><small class="clasificacion-hijo"></small></div>
-                        <?php endforeach; ?>
-                    </div>
-                   
-                </div>
-            </div>
+            <!-- Hijos: cada registro conserva su fecha de nacimiento individual -->
+           
 
             <!-- Años de Servicio -->
             <div class="field">
