@@ -35,7 +35,8 @@ class clase_contrato {
         ?string $fecha_fin,
         string $lugar_trabajo,
         string $nombre_presidente,
-        string $cedula_presidente
+        string $cedula_presidente,
+        int $posee_convenio
     ) {
         $esIndeterminado = stripos($tipo_contrato, 'indefinido') !== false || stripos($tipo_contrato, 'indeterminado') !== false;
         if (!$esIndeterminado && ($fecha_fin === null || trim($fecha_fin) === '')) {
@@ -50,6 +51,10 @@ class clase_contrato {
             $this->ultimoError = 'La fecha de finalización no puede ser anterior a la fecha de inicio del contrato.';
             return false;
         }
+        if (!in_array($posee_convenio, [0, 1], true)) {
+            $this->ultimoError = 'Indique si este contrato posee convenio.';
+            return false;
+        }
 
         try {
             $id_cargo = $this->obtenerCargoDeTrabajador($id_trabajador);
@@ -60,10 +65,10 @@ class clase_contrato {
             }
 
             $sql = "INSERT INTO CONTRATO (
-                        id_trabajador, id_cargo, tipo_contrato, fecha_contrato,
-                        fecha_fin, lugar_trabajo, nombre_presidente,
+                        id_trabajador, id_cargo, tipo_contrato, posee_convenio,
+                        fecha_contrato, fecha_fin, lugar_trabajo, nombre_presidente,
                         cedula_presidente
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             $stmt = $this->conexion->prepare($sql);
             if (!$stmt) {
@@ -72,10 +77,11 @@ class clase_contrato {
             }
 
             $stmt->bind_param(
-                "iissssss",
+                "iisisssss",
                 $id_trabajador,
                 $id_cargo,
                 $tipo_contrato,
+                $posee_convenio,
                 $fecha_contrato,
                 $fecha_fin,
                 $lugar_trabajo,
@@ -105,7 +111,8 @@ class clase_contrato {
         ?string $fecha_fin,
         string $lugar_trabajo,
         string $nombre_presidente,
-        string $cedula_presidente
+        string $cedula_presidente,
+        int $posee_convenio
     ) {
         $esIndeterminado = stripos($tipo_contrato, 'indefinido') !== false || stripos($tipo_contrato, 'indeterminado') !== false;
         if (!$esIndeterminado && ($fecha_fin === null || trim($fecha_fin) === '')) {
@@ -118,6 +125,10 @@ class clase_contrato {
 
         if ($fecha_fin !== null && $fecha_fin < $fecha_contrato) {
             $this->ultimoError = 'La fecha de finalización no puede ser anterior a la fecha de inicio del contrato.';
+            return false;
+        }
+        if (!in_array($posee_convenio, [0, 1], true)) {
+            $this->ultimoError = 'Indique si este contrato posee convenio.';
             return false;
         }
 
@@ -135,6 +146,7 @@ class clase_contrato {
                     id_trabajador = ?,
                     id_cargo = ?,
                     tipo_contrato = ?,
+                    posee_convenio = ?,
                     fecha_contrato = ?,
                     fecha_fin = ?,
                     lugar_trabajo = ?,
@@ -149,10 +161,11 @@ class clase_contrato {
         }
 
         $stmt->bind_param(
-            "iissssssi",
+            "iisisssssi",
             $id_trabajador,
             $id_cargo,
             $tipo_contrato,
+            $posee_convenio,
             $fecha_contrato,
             $fecha_fin,
             $lugar_trabajo,
@@ -200,6 +213,7 @@ class clase_contrato {
                     ct.id_trabajador,
                     ct.id_cargo,
                     ct.tipo_contrato,
+                    ct.posee_convenio,
                     t.tipo_personal,
                     ct.fecha_contrato,
                     ct.fecha_fin,
@@ -238,6 +252,7 @@ class clase_contrato {
                     ct.id_trabajador,
                     ct.id_cargo,
                     ct.tipo_contrato,
+                    ct.posee_convenio,
                     t.tipo_personal,
                     ct.fecha_contrato,
                     ct.fecha_fin,
@@ -277,6 +292,7 @@ class clase_contrato {
         $sql = "SELECT
                     ct.id_contrato,
                     ct.tipo_contrato,
+                    ct.posee_convenio,
                     t.tipo_personal,
                     ct.fecha_contrato,
                     ct.fecha_fin,

@@ -177,7 +177,7 @@ try {
             <td colspan="2"><span class="etiqueta">5. Código de Permiso</span><div class="valor"><?= escaparPdf($datosDisfrute['codigo_disfrute']) ?></div></td>
         </tr>
         <tr>
-            <td class="alto-76" colspan="2"><span class="etiqueta">7. Duración del disfrute</span><div class="valor">N° de días: <?= escaparPdf((int) ($datosDisfrute['dias_correspondientes'] ?? 30)) ?></div></td>
+            <td class="alto-76" colspan="2"><span class="etiqueta">7. Duración del disfrute</span><div class="valor">N° de días: <?= escaparPdf($datosDisfrute['dias_correspondientes'] !== null ? (string)$datosDisfrute['dias_correspondientes'] : 'Sin convenio') ?></div></td>
             <td class="fecha-celda" colspan="3"><span class="fecha-titulo">Iniciación</span><table class="fecha-partes"><tr><td><strong>Día</strong><?= escaparPdf($diaInicio) ?></td><td><strong>Mes</strong><?= escaparPdf($mesInicio) ?></td><td><strong>Año</strong><?= escaparPdf($anoInicio) ?></td></tr></table></td>
             <td class="fecha-celda" colspan="3"><span class="fecha-titulo">Regreso</span><table class="fecha-partes"><tr><td><strong>Día</strong><?= escaparPdf($diaRegreso) ?></td><td><strong>Mes</strong><?= escaparPdf($mesRegreso) ?></td><td><strong>Año</strong><?= escaparPdf($anoRegreso) ?></td></tr></table></td>
             <td><span class="etiqueta">8. Tipo de disfrute</span><div class="valor"><span class="cuadro"></span>Vacaciones</div></td>

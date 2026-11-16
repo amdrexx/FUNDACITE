@@ -31,8 +31,12 @@ if (!$contrato) {
 $status = $_GET['status'] ?? null;
 $mensajeExito = $_SESSION['exito_contrato'] ?? null;
 $mensajeError = isset($_SESSION['error_contrato']) && is_array($_SESSION['error_contrato']) ? implode("\n", $_SESSION['error_contrato']) : null;
+$datosFormularioContrato = $_SESSION['old_contrato'] ?? $contrato;
+$tipoContratoInicial = strtolower((string) ($contrato['tipo_contrato'] ?? ''));
+$contratoIndeterminadoInicial = strpos($tipoContratoInicial, 'indeterminado') !== false
+    || strpos($tipoContratoInicial, 'indefinido') !== false;
 
-unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
+unset($_SESSION['exito_contrato'], $_SESSION['error_contrato'], $_SESSION['old_contrato']);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -97,6 +101,21 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                         <input type="text" value="<?php echo htmlspecialchars($contrato['tipo_personal'] ?? 'No especificado', ENT_QUOTES, 'UTF-8'); ?>" readonly>
                     </div>
 
+                    <div class="field full-width">
+                        <label>¿Posee convenio?</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="posee_convenio" value="1" <?php echo (string)($datosFormularioContrato['posee_convenio'] ?? '0') === '1' ? 'checked' : ''; ?> required>
+                                <span>Sí</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="posee_convenio" value="0" <?php echo (string)($datosFormularioContrato['posee_convenio'] ?? '0') === '0' ? 'checked' : ''; ?> required>
+                                <span>No</span>
+                            </label>
+                        </div>
+                        <small>Si selecciona Sí, se aplicarán los días establecidos en el convenio vigente asociado al gremio del trabajador.</small>
+                    </div>
+
                     <!-- Lugar de Trabajo -->
                     <div class="field">
                         <label>Lugar de Trabajo</label>
@@ -112,7 +131,9 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                     <!-- Fecha de Finalización -->
                     <div class="field">
                         <label>Fecha de Finalización</label>
-                        <input type="date" name="fecha_fin" id="fecha_fin" value="<?php echo htmlspecialchars($contrato['fecha_fin'] ?? ''); ?>">
+                        <input type="date" name="fecha_fin" id="fecha_fin"
+                               value="<?php echo htmlspecialchars($contratoIndeterminadoInicial ? '' : ($contrato['fecha_fin'] ?? '')); ?>"
+                               <?php echo $contratoIndeterminadoInicial ? 'disabled aria-disabled="true"' : 'required'; ?>>
                     </div>
 
                     <h3 class="form-section-title full-width">Datos del Representante (Presidente)</h3>

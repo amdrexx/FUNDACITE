@@ -14,51 +14,92 @@ class DiasDisfrute {
     }
 
     /**
-     * Todos los trabajadores activos pueden registrar días de disfrute.
-     * La antigüedad y el tipo de contrato no condicionan este módulo.
+     * La antigüedad y el tipo de contrato no condicionan el módulo.
+     * La elegibilidad efectiva exige convenio vigente y días definidos;
+     * esa validación se realiza con obtenerReglaDiasTrabajador().
      */
     public function esElegibleDiasDisfrute($tipoContrato = '', $fechaIngreso = '') {
         return true;
     }
 
     /**
-     * Días hábiles de disfrute definidos por el CONVENIO colectivo vigente
-     * hoy (dias_disfrute del convenio cuyo periodo cubre la fecha actual).
-     * Devuelve null si no hay ningún convenio vigente registrado.
+     * Regla individual: solo se reconocen los días del convenio vigente
+     * asociado al gremio del trabajador cuando el contrato más reciente indica
+     * que posee convenio. Sin convenio aplicable no existe una cantidad asignable.
      */
+    public function obtenerReglaDiasTrabajador(int $idTrabajador): array {
+        $sql = "SELECT COALESCE(ct.posee_convenio, 0) AS posee_convenio,
+                       t.id_gremio, cv.id_convenio, cv.dias_disfrute
+                FROM TRABAJADOR t
+                LEFT JOIN CONTRATO ct ON ct.id_contrato = (
+                    SELECT ct2.id_contrato
+                    FROM CONTRATO ct2
+                    WHERE ct2.id_trabajador = t.id_trabajador
+                    ORDER BY ct2.id_contrato DESC
+                    LIMIT 1
+                )
+                LEFT JOIN CONVENIO cv ON cv.id_convenio = (
+                    SELECT c2.id_convenio
+                    FROM CONVENIO c2
+                    WHERE c2.id_gremio = t.id_gremio
+                      AND c2.estado = 'Vigente'
+                      AND c2.fecha_inicio <= CURDATE()
+                      AND (c2.fecha_vencimiento IS NULL OR c2.fecha_vencimiento >= CURDATE())
+                    ORDER BY c2.fecha_inicio DESC, c2.id_convenio DESC
+                    LIMIT 1
+                )
+                WHERE t.id_trabajador = ? LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            $this->ultimoError = $this->db->error;
+            return [
+                'id_convenio' => null,
+                'dias_disfrute' => null,
+                'posee_convenio' => 0,
+                'motivo' => 'No se pudo consultar el convenio del trabajador.'
+            ];
+        }
+        $stmt->bind_param('i', $idTrabajador);
+        if (!$stmt->execute()) {
+            $this->ultimoError = $stmt->error;
+            $stmt->close();
+            return [
+                'id_convenio' => null,
+                'dias_disfrute' => null,
+                'posee_convenio' => 0,
+                'motivo' => 'No se pudo consultar el convenio del trabajador.'
+            ];
+        }
+        $fila = $stmt->get_result()->fetch_assoc() ?: [];
+        $stmt->close();
+
+        $posee = (int)($fila['posee_convenio'] ?? 0) === 1;
+        $tieneConvenioVigente = $posee
+            && !empty($fila['id_convenio'])
+            && isset($fila['dias_disfrute'])
+            && (int)$fila['dias_disfrute'] > 0;
+
+        if (!$posee) {
+            $motivo = 'El contrato más reciente indica que no posee convenio colectivo.';
+        } elseif (empty($fila['id_convenio'])) {
+            $motivo = 'El gremio del trabajador no tiene un convenio vigente.';
+        } elseif (!$tieneConvenioVigente) {
+            $motivo = 'El convenio del gremio no tiene una cantidad de días válida.';
+        } else {
+            $motivo = '';
+        }
+
+        return [
+            'posee_convenio' => $posee ? 1 : 0,
+            'id_convenio' => $tieneConvenioVigente ? (int)$fila['id_convenio'] : null,
+            'dias_disfrute' => $tieneConvenioVigente ? (int)$fila['dias_disfrute'] : null,
+            'motivo' => $motivo
+        ];
+    }
+
+    /** No existe una cantidad general: los días provienen exclusivamente del convenio. */
     public function calcularDiasDisfrute($fechaIngreso = null) {
-        return $this->diasSegunConvenioVigente();
-    }
-
-    /** id y días del CONVENIO vigente hoy (o null si no hay). */
-    private function convenioVigente(): ?array {
-        $sql = "SELECT id_convenio, dias_disfrute FROM CONVENIO
-                WHERE fecha_inicio <= CURDATE() AND fecha_vencimiento >= CURDATE()
-                ORDER BY fecha_inicio DESC, id_convenio DESC
-                LIMIT 1";
-        $resultado = $this->db->query($sql);
-        if (!$resultado) {
-            $this->ultimoError = $this->db->error;
-            return null;
-        }
-        $fila = $resultado->fetch_assoc();
-        return $fila ?: null;
-    }
-
-    /** Consulta directa a CONVENIO para obtener los días del convenio vigente hoy. */
-    private function diasSegunConvenioVigente(): ?int {
-        $sql = "SELECT dias_disfrute FROM CONVENIO
-                WHERE fecha_inicio <= CURDATE() AND fecha_vencimiento >= CURDATE()
-                ORDER BY fecha_inicio DESC, id_convenio DESC
-                LIMIT 1";
-        $resultado = $this->db->query($sql);
-        if (!$resultado) {
-            $this->ultimoError = $this->db->error;
-            return null;
-        }
-
-        $fila = $resultado->fetch_assoc();
-        return $fila ? (int) $fila['dias_disfrute'] : null;
+        return null;
     }
 
     public function motivoNoElegibilidadDiasDisfrute($tipoContrato = '', $fechaIngreso = '') {
@@ -108,7 +149,11 @@ class DiasDisfrute {
      * fecha de aprobación. El día de aprobación cuenta como día 1 cuando
      * es laborable. Se excluyen sábados, domingos y feriados aplicables.
      */
-    public function calcularFechaFinalizacion($fechaAprobacion, $cantidadDias = 30): ?string {
+    public function calcularFechaFinalizacion($fechaAprobacion, $cantidadDias = null): ?string {
+        if ($cantidadDias === null || (int)$cantidadDias <= 0) {
+            $this->ultimoError = 'No se puede calcular la fecha de finalización sin una cantidad de días establecida por un convenio vigente.';
+            return null;
+        }
         try {
             $zonaHoraria = new DateTimeZone('America/Caracas');
             if ($fechaAprobacion instanceof DateTimeInterface) {
@@ -119,7 +164,7 @@ class DiasDisfrute {
                 $fecha = $fecha->setTime(0, 0, 0);
             }
 
-            $cantidadDias = max(1, (int) $cantidadDias);
+            $cantidadDias = (int) $cantidadDias;
             $contados = 0;
             $limite = 0;
 
@@ -151,11 +196,25 @@ class DiasDisfrute {
         $sql = "SELECT
                     t.id_trabajador,
                     t.cedula,
+                    COALESCE(co.posee_convenio, 0) AS posee_convenio,
+                    t.id_gremio,
+                    cv.id_convenio AS id_convenio_vigente,
+                    cv.dias_disfrute AS dias_correspondientes,
                     CONCAT(t.apellidos, ' ', t.nombres) AS nombre_completo,
                     c.nombre_cargo AS cargo,
                     ingreso.fecha_primer_contrato,
                     co.tipo_contrato
                 FROM TRABAJADOR t
+                LEFT JOIN CONVENIO cv ON cv.id_convenio = (
+                    SELECT c3.id_convenio
+                    FROM CONVENIO c3
+                    WHERE c3.id_gremio = t.id_gremio
+                      AND c3.estado = 'Vigente'
+                      AND c3.fecha_inicio <= CURDATE()
+                      AND (c3.fecha_vencimiento IS NULL OR c3.fecha_vencimiento >= CURDATE())
+                    ORDER BY c3.fecha_inicio DESC, c3.id_convenio DESC
+                    LIMIT 1
+                )
                 LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo
                 LEFT JOIN (
                     SELECT id_trabajador, MIN(fecha_contrato) AS fecha_primer_contrato
@@ -179,11 +238,29 @@ class DiasDisfrute {
         }
 
         $trabajadores = $resultado->fetch_all(MYSQLI_ASSOC);
-        $diasConvenioVigente = $this->diasSegunConvenioVigente();
         foreach ($trabajadores as &$trabajador) {
-            $trabajador['elegible_disfrute'] = true;
-            $trabajador['motivo_inelegibilidad'] = '';
-            $trabajador['dias_correspondientes'] = $diasConvenioVigente;
+            $poseeConvenio = (int)($trabajador['posee_convenio'] ?? 0) === 1;
+            $tieneConvenioVigente = !empty($trabajador['id_convenio_vigente']);
+            $diasConvenio = isset($trabajador['dias_correspondientes'])
+                ? (int)$trabajador['dias_correspondientes']
+                : 0;
+
+            $trabajador['elegible_disfrute'] = $poseeConvenio
+                && $tieneConvenioVigente
+                && $diasConvenio > 0;
+
+            if (!$poseeConvenio) {
+                $trabajador['motivo_inelegibilidad'] = 'No posee convenio colectivo';
+                $trabajador['dias_correspondientes'] = null;
+            } elseif (!$tieneConvenioVigente) {
+                $trabajador['motivo_inelegibilidad'] = 'Su gremio no tiene un convenio vigente';
+                $trabajador['dias_correspondientes'] = null;
+            } elseif ($diasConvenio <= 0) {
+                $trabajador['motivo_inelegibilidad'] = 'El convenio no tiene días de disfrute válidos';
+                $trabajador['dias_correspondientes'] = null;
+            } else {
+                $trabajador['motivo_inelegibilidad'] = '';
+            }
         }
         unset($trabajador);
 
@@ -229,14 +306,15 @@ class DiasDisfrute {
                 throw new InvalidArgumentException('La indicación de suplente no es válida.');
             }
 
-            // La cantidad de días siempre se toma del convenio colectivo vigente,
-            // nunca de un valor fijo ni del que haya enviado el formulario.
-            $convenioVigente = $this->convenioVigente();
-            $dias_correspondientes = $convenioVigente ? (int) $convenioVigente['dias_disfrute'] : null;
-            $id_convenio = $convenioVigente ? (int) $convenioVigente['id_convenio'] : null;
-            if ($dias_correspondientes === null) {
-                throw new RuntimeException('No hay un convenio vigente registrado que indique los días de disfrute correspondientes. Registre o actualice el convenio colectivo antes de continuar.');
+            // Solo se registra disfrute cuando hay convenio vigente para el gremio.
+            $reglaDias = $this->obtenerReglaDiasTrabajador((int)$id_trabajador);
+            if (empty($reglaDias['id_convenio'])
+                || empty($reglaDias['dias_disfrute'])
+                || (int)$reglaDias['dias_disfrute'] <= 0) {
+                throw new DomainException($reglaDias['motivo'] ?: 'No existe un convenio vigente que establezca los días de disfrute de este trabajador.');
             }
+            $dias_correspondientes = (int)$reglaDias['dias_disfrute'];
+            $id_convenio = (int)$reglaDias['id_convenio'];
 
             $zonaHoraria = new DateTimeZone('America/Caracas');
             $fecha_inicio = (new DateTimeImmutable('today', $zonaHoraria))->format('Y-m-d');
@@ -360,11 +438,12 @@ class DiasDisfrute {
                     t.cedula,
                     c.nombre_cargo AS cargo,
                     d.id_convenio,
-                    cv.nombre_gremio AS convenio_gremio
+                    g.nombre AS convenio_gremio
                 FROM DISFRUTE_DE_VACACIONES d
                 INNER JOIN TRABAJADOR t ON d.id_trabajador = t.id_trabajador
                 LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo
-                LEFT JOIN CONVENIO cv ON cv.id_convenio = d.id_convenio";
+                LEFT JOIN CONVENIO cv ON cv.id_convenio = d.id_convenio
+                LEFT JOIN GREMIO g ON g.id_gremio = cv.id_gremio";
 
         $condiciones = [];
         $tipos = '';
@@ -436,11 +515,12 @@ class DiasDisfrute {
                     t.cedula,
                     c.nombre_cargo AS cargo,
                     d.id_convenio,
-                    cv.nombre_gremio AS convenio_gremio
+                    g.nombre AS convenio_gremio
                 FROM DISFRUTE_DE_VACACIONES d
                 INNER JOIN TRABAJADOR t ON d.id_trabajador = t.id_trabajador
                 LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo
                 LEFT JOIN CONVENIO cv ON cv.id_convenio = d.id_convenio
+                LEFT JOIN GREMIO g ON g.id_gremio = cv.id_gremio
                 WHERE d.id_dis = ?
                 LIMIT 1";
 
@@ -455,7 +535,8 @@ class DiasDisfrute {
     /**
      * Actualiza el estado y registra la fecha de aprobación/desaprobación.
      * Al aprobar, fecha_inicio pasa a ser la fecha efectiva de aprobación y
-     * fecha_finalizacion se calcula a 30 días hábiles desde ese día.
+     * fecha_finalizacion se calcula usando exclusivamente los días guardados
+     * desde el convenio vigente al momento de registrar la solicitud.
      */
     public function cambiarEstadoDiasDisfrute($id_dis, $nuevoEstado, $justificacion = '') {
         if (!in_array($nuevoEstado, ['Aprobado', 'Desaprobado'], true)) {
@@ -488,14 +569,12 @@ class DiasDisfrute {
                 $filaActual = $stmtActual->get_result()->fetch_assoc();
                 $stmtActual->close();
 
-                $diasCorrespondientes = ($filaActual && $filaActual['dias_correspondientes'] !== null)
-                    ? (int) $filaActual['dias_correspondientes']
-                    : $this->diasSegunConvenioVigente();
-
-                if ($diasCorrespondientes === null) {
-                    $this->ultimoError = 'No se pudo determinar la cantidad de días correspondientes para esta solicitud. Registre o actualice el convenio colectivo vigente.';
+                if (!$filaActual || $filaActual['dias_correspondientes'] === null
+                    || (int)$filaActual['dias_correspondientes'] <= 0) {
+                    $this->ultimoError = 'Esta solicitud no tiene una cantidad de días respaldada por un convenio. No puede aprobarse hasta registrar una solicitud vinculada a un convenio vigente.';
                     return false;
                 }
+                $diasCorrespondientes = (int)$filaActual['dias_correspondientes'];
 
                 $fechaInicioReal = $momentoDecision->format('Y-m-d');
                 $fechaFinalizacion = $this->calcularFechaFinalizacion($momentoDecision, $diasCorrespondientes);

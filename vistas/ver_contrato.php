@@ -271,6 +271,7 @@ if (!$contratoActual) {
                     <dl class="contract-details">
                         <div class="contract-detail"><dt>Tipo</dt><dd><?php echo htmlspecialchars($contratoActual['tipo_contrato']); ?></dd></div>
                         <div class="contract-detail"><dt>Tipo de Personal</dt><dd><?php echo htmlspecialchars($contratoActual['tipo_personal'] ?? 'No especificado'); ?></dd></div>
+                        <div class="contract-detail"><dt>¿Posee convenio?</dt><dd><?php echo !empty($contratoActual['posee_convenio']) ? 'Sí' : 'No'; ?></dd></div>
                         <div class="contract-detail"><dt>Fecha de inicio</dt><dd><?php echo !empty($contratoActual['fecha_contrato']) ? date("d/m/Y", strtotime($contratoActual['fecha_contrato'])) : 'N/A'; ?></dd></div>
                         <div class="contract-detail"><dt>Fecha de finalización</dt><dd><?php echo (!empty($contratoActual['fecha_fin']) && $contratoActual['fecha_fin'] !== '0000-00-00') ? date("d/m/Y", strtotime($contratoActual['fecha_fin'])) : 'Indefinido'; ?></dd></div>
                     </dl>

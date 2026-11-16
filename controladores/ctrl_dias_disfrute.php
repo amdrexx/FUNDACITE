@@ -220,6 +220,21 @@ if (isset($_POST['accion'])) {
                 exit;
             }
 
+            // No se permite registrar disfrute sin los días definidos por un convenio vigente.
+            $reglaDiasTrabajador = $diasDisfruteModelo->obtenerReglaDiasTrabajador($id_trabajador);
+            if (empty($reglaDiasTrabajador['id_convenio'])
+                || empty($reglaDiasTrabajador['dias_disfrute'])
+                || (int)$reglaDiasTrabajador['dias_disfrute'] <= 0) {
+                $_SESSION['errores'] = [
+                    $reglaDiasTrabajador['motivo']
+                        ?: 'No existe un convenio vigente asociado al gremio del trabajador. No se pueden asignar días de disfrute sin una cantidad establecida en un convenio.'
+                ];
+                $datosFormulario['cedula'] = $trab['cedula'] ?? '';
+                $_SESSION['old'] = $datosFormulario;
+                header("Location: /FUNDACITE/vistas/registrar_dias_disfrute.php");
+                exit;
+            }
+
             // Cada trabajador solo puede tener UNA solicitud de días de
             // disfrute activa (Pendiente) a la vez. Si la anterior venció
             // (15 días calendario sin decisión) o ya fue aprobada/desaprobada,
@@ -236,19 +251,8 @@ if (isset($_POST['accion'])) {
                 exit;
             }
 
-            // La cantidad de días corresponde a la que indique el convenio
-            // colectivo vigente; si no hay ninguno, no se puede registrar.
-            $dias_correspondientes = $diasDisfruteModelo->calcularDiasDisfrute();
-            if ($dias_correspondientes === null) {
-                $_SESSION['errores'] = [
-                    'No hay un convenio vigente registrado que indique los días de disfrute correspondientes. '
-                    . 'Registre o actualice el convenio colectivo antes de continuar.'
-                ];
-                $datosFormulario['cedula'] = $trab['cedula'] ?? '';
-                $_SESSION['old'] = $datosFormulario;
-                header("Location: /FUNDACITE/vistas/registrar_dias_disfrute.php");
-                exit;
-            }
+            // Se guarda la cantidad establecida por el convenio vigente del gremio.
+            $dias_correspondientes = (int) $reglaDiasTrabajador['dias_disfrute'];
 
             // Código individual del registro de días de disfrute.
             $codigo_disfrute = str_replace('-', '', $fecha_inicio) . '-' . str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);

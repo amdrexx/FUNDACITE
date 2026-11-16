@@ -50,6 +50,7 @@ unset($_SESSION['error_registro'], $_SESSION['exito_registro']);
     <title>Editar Usuario</title>
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/password-toggle.css">
     <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
 </head>
 <body>
@@ -83,13 +84,27 @@ unset($_SESSION['error_registro'], $_SESSION['exito_registro']);
             <!-- Nueva Contraseña -->
             <div class="field">
                 <label>Nueva Contraseña <small style="color: #bbb;">(Dejar en blanco para conservar)</small></label>
-                <input type="password" name="contrasena" id="contrasena" placeholder="Escriba para cambiar la clave">
+                <div class="password-input-wrapper">
+                    <input type="password" name="contrasena" id="contrasena"
+                           placeholder="Escriba para cambiar la clave" autocomplete="new-password">
+                    <button type="button" class="password-toggle" data-password-toggle
+                            aria-label="Mostrar contraseña" title="Mostrar contraseña" aria-pressed="false">
+                        <i class="bi bi-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Confirmar Nueva Contraseña -->
             <div class="field">
                 <label>Confirmar Nueva Contraseña</label>
-                <input type="password" name="confirmar_contrasena" id="confirmar_contrasena" placeholder="Repita la nueva clave">
+                <div class="password-input-wrapper">
+                    <input type="password" name="confirmar_contrasena" id="confirmar_contrasena"
+                           placeholder="Repita la nueva clave" autocomplete="new-password">
+                    <button type="button" class="password-toggle" data-password-toggle
+                            aria-label="Mostrar contraseña" title="Mostrar contraseña" aria-pressed="false">
+                        <i class="bi bi-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Tipo de Usuario -->
@@ -117,5 +132,6 @@ unset($_SESSION['error_registro'], $_SESSION['exito_registro']);
 
 
 <script src="/FUNDACITE/vistas/js/valid_usuarios.js"></script>
+<script src="/FUNDACITE/vistas/js/password-toggle.js"></script>
 </body>
 </html>

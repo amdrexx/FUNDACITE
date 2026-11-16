@@ -92,9 +92,9 @@ registrarBitacora($conexion, 'Convenios', 'Consultar', $buscar !== '' ? "Consult
                         <tr>
                             <td><?php echo htmlspecialchars($fila['nombre_gremio'] ?? ''); ?></td>
                             <td><?php echo date('d/m/Y', strtotime($fila['fecha_inicio'])); ?></td>
-                            <td><?php echo date('d/m/Y', strtotime($fila['fecha_vencimiento'])); ?></td>
+                            <td><?php echo !empty($fila['fecha_vencimiento']) ? date('d/m/Y', strtotime($fila['fecha_vencimiento'])) : 'Sin vencimiento'; ?></td>
                             <td><?php echo (int) $fila['dias_disfrute']; ?></td>
-                            <td><?php echo Convenio::estadoVigencia($fila['fecha_inicio'], $fila['fecha_vencimiento']); ?></td>
+                            <td><?php echo Convenio::estadoVigencia($fila['fecha_inicio'], $fila['fecha_vencimiento'], $fila['estado'] ?? 'Vigente'); ?></td>
                             <td class="acciones">
 
                                 <a class="btn-editar" href="editar_convenio.php?id=<?php echo urlencode($fila['id_convenio']); ?>">

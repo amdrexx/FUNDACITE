@@ -114,7 +114,7 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', $buscar !== '' ? 
                             <td><?php echo htmlspecialchars($fila['codigo_disfrute'] ?? ''); ?></td>
                             <td><?php echo htmlspecialchars($fila['motivo'] ?? ''); ?></td>
                             <td><?php echo nl2br(htmlspecialchars($fila['observaciones'] ?? '', ENT_QUOTES, 'UTF-8')); ?></td>
-                            <td><?php echo $fila['dias_correspondientes'] !== null ? htmlspecialchars($fila['dias_correspondientes']) . ' días' : 'N/A'; ?></td>
+                            <td><?php echo $fila['dias_correspondientes'] !== null ? htmlspecialchars($fila['dias_correspondientes']) . ' días' : 'Sin convenio'; ?></td>
                              <td>
                                 <span class="badge-estado <?= $claseBadge; ?>">
                                     <i class="bi <?= $iconoBadge; ?>"></i>

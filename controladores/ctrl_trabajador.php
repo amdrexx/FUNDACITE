@@ -85,6 +85,7 @@ if ($accion === 'actualizar' || isset($_POST['editar_trabajador'])) {
     $anosServicio     = filter_var($_POST['anos_servicio_administracion_publica'] ?? '', FILTER_VALIDATE_INT);
     $nivelEducacion   = trim($_POST['nivel_educacion'] ?? '');
     $tipoPersonal     = trim($_POST['tipo_personal'] ?? '');
+    $idGremio         = (int) ($_POST['id_gremio'] ?? 0);
     $origenFlujo      = trim($_POST['origen_flujo'] ?? '');
 
     if ($status === 'Retirado' || $status === 'Suspendido') {
@@ -96,6 +97,7 @@ if ($accion === 'actualizar' || isset($_POST['editar_trabajador'])) {
     $direccionTexto   = trim($_POST['direccion_texto'] ?? '');
 
     $errores = [];
+    $infoActual = $idTrabajador > 0 ? $trabajador->obtenerTrabajadorPorId($idTrabajador) : null;
 
     if ($idTrabajador <= 0) {
         $errores[] = "ID de trabajador no válido para actualizar.";
@@ -123,6 +125,9 @@ if ($accion === 'actualizar' || isset($_POST['editar_trabajador'])) {
     if (!in_array($tipoPersonal, ['Fijo', 'Contratado', 'Obrero', 'Empleado', 'Jubilado'], true)) {
         $errores[] = "Seleccione un tipo de personal válido.";
     }
+    if (!$trabajador->gremioValidoParaTrabajador($idGremio, (int)($infoActual['id_gremio'] ?? 0))) {
+        $errores[] = "Seleccione un gremio activo.";
+    }
     if (empty($status)) {
         $errores[] = "Seleccione el estatus laboral.";
     }
@@ -143,8 +148,6 @@ if ($accion === 'actualizar' || isset($_POST['editar_trabajador'])) {
     }
 
     $antes = bitacoraSnapshot($conexion, 'trabajador', $idTrabajador);
-
-    $infoActual = $trabajador->obtenerTrabajadorPorId($idTrabajador);
 
     // En edición no se reemplaza automáticamente a Presidente/Director.
     // La sustitución automática solo ocurre al registrar un nuevo trabajador.
@@ -185,7 +188,8 @@ if ($accion === 'actualizar' || isset($_POST['editar_trabajador'])) {
             $anosServicio,
             $nivelEducacion,
             $tipoPersonal,
-            $idDir
+            $idDir,
+            $idGremio
         );
 
         if (!$actualizado) {
@@ -257,6 +261,7 @@ $nivelEducacion  = trim($_POST['nivel_educacion'] ?? '');
 $tipoPersonal    = trim($_POST['tipo_personal'] ?? '');
 $status          = trim($_POST['estatus_laboral'] ?? '');
 $idCargo         = intval($_POST['id_cargo'] ?? 0);
+$idGremio        = intval($_POST['id_gremio'] ?? 0);
 
 if ($status === 'Retirado' || $status === 'Suspendido') {
     $status = 'Inactivo';
@@ -294,6 +299,7 @@ if (empty($nivelEducacion)) $errores[] = "Seleccione el nivel de educación.";
 if (!in_array($tipoPersonal, ['Fijo', 'Contratado', 'Obrero', 'Empleado', 'Jubilado'], true)) $errores[] = "Seleccione un tipo de personal válido.";
 if (empty($status)) $errores[] = "Seleccione el estatus laboral.";
 if ($idCargo <= 0) $errores[] = "Seleccione el cargo a asignar.";
+if (!$trabajador->gremioValidoParaTrabajador($idGremio)) $errores[] = "Seleccione un gremio activo.";
 if (empty($codEst)) $errores[] = "Seleccione el estado.";
 if (empty($codMuni)) $errores[] = "Seleccione el municipio.";
 if (empty($codPar)) $errores[] = "Seleccione la parroquia.";

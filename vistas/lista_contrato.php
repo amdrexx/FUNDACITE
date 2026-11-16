@@ -28,8 +28,10 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
 <head>
     <meta charset="UTF-8">
     <title>Lista de Contratos</title>
-    <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
+     <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.scss">
     <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
 </head>
 
@@ -39,7 +41,7 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
 
 <div class="main" style="display: block !important; clear: both !important;">
 
-    <div style="max-width: 950px; width: 100%; margin: 0 auto; display: block; box-sizing: border-box;">
+    
 
         <!-- TABLA DE CONTRATOS (SOLO CONSULTA / VISTA DEL SIDEBAR) -->
         <div style="width: 100%; display: block; box-sizing: border-box;">
@@ -66,6 +68,7 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                             <th>Trabajador</th>
                             <th>Cargo</th>
                             <th>Tipo de Contrato</th>
+                            <th>¿Posee convenio?</th>
                             <th>Fecha Inicio</th>
                             <th>Fecha Fin</th>
                             <th style="text-align: center;">Acciones</th>
@@ -78,6 +81,7 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                                     <td><?php echo htmlspecialchars($con['nombre_trabajador'] ?? ''); ?></td>
                                     <td><?php echo htmlspecialchars($con['nombre_cargo'] ?? $con['cargo'] ?? 'Sin asignar'); ?></td>
                                     <td><?php echo htmlspecialchars($con['tipo_contrato'] ?? ''); ?></td>
+                                    <td><?php echo !empty($con['posee_convenio']) ? 'Sí' : 'No'; ?></td>
                                     <td><?php echo !empty($con['fecha_contrato']) ? date("d/m/Y", strtotime($con['fecha_contrato'])) : ''; ?></td>
                                     <td>
                                         <?php 
@@ -104,7 +108,7 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="6" style="text-align:center;">No se encontraron contratos registrados.</td>
+                                <td colspan="7" style="text-align:center;">No se encontraron contratos registrados.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>

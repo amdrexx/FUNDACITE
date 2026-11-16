@@ -51,6 +51,10 @@ class ContratoControlador {
             $lugar_trabajo = trim($_POST['lugar_trabajo'] ?? '');
             $nombre_presidente = trim($_POST['nombre_presidente'] ?? '');
             $cedula_presidente = trim($_POST['cedula_presidente'] ?? '');
+            $valorPoseeConvenio = $_POST['posee_convenio'] ?? null;
+            $posee_convenio = in_array((string)$valorPoseeConvenio, ['0', '1'], true)
+                ? (int)$valorPoseeConvenio
+                : -1;
 
             $esIndeterminado = stripos($tipo_contrato, 'indefinido') !== false || stripos($tipo_contrato, 'indeterminado') !== false;
             if ($esIndeterminado) {
@@ -59,13 +63,17 @@ class ContratoControlador {
 
             if (
                 empty($tipo_contrato) ||
-                empty($fecha_contrato) || 
-                empty($lugar_trabajo) || 
-                empty($nombre_presidente) || 
-                empty($cedula_presidente)
+                empty($fecha_contrato) ||
+                empty($lugar_trabajo) ||
+                empty($nombre_presidente) ||
+                empty($cedula_presidente) ||
+                !in_array($posee_convenio, [0, 1], true)
             ) {
-                $_SESSION['error_contrato'] = ['Complete todos los datos requeridos del contrato.'];
-                header("Location: ../vistas/registrar_contrato.php?status=error");
+                $_SESSION['error_contrato'] = ['Complete todos los datos requeridos del contrato e indique si posee convenio.'];
+                $destino = $esBorrador
+                    ? '../vistas/registrar_contrato.php?status=error'
+                    : '../vistas/registrar_contrato.php?id_trabajador=' . $id_trabajador . '&status=error';
+                header('Location: ' . $destino);
                 exit();
             }
 
@@ -97,7 +105,8 @@ class ContratoControlador {
                         $fecha_fin,
                         $lugar_trabajo,
                         $nombre_presidente,
-                        $cedula_presidente
+                        $cedula_presidente,
+                        $posee_convenio
                     )) {
                         throw new RuntimeException($this->modelo->ultimoError ?: 'No se pudo guardar el contrato.');
                     }
@@ -129,6 +138,11 @@ class ContratoControlador {
                     throw new RuntimeException('La cédula ya se encuentra registrada.');
                 }
 
+                $idGremio = (int) ($borrador['id_gremio'] ?? 0);
+                if (!$modeloTrabajador->gremioValidoParaTrabajador($idGremio)) {
+                    throw new RuntimeException('El gremio seleccionado ya no está activo. Regrese al formulario del trabajador y seleccione otro gremio.');
+                }
+
                 $idDir = $modeloTrabajador->crearDireccion(
                     (int) ($borrador['cod_par'] ?? 0),
                     trim($borrador['direccion_texto'] ?? '')
@@ -154,7 +168,8 @@ class ContratoControlador {
                     trim($borrador['tipo_personal'] ?? ''),
                     trim($borrador['estatus_laboral'] ?? 'Activo'),
                     $idDir,
-                    (int) ($borrador['id_cargo'] ?? 0)
+                    (int) ($borrador['id_cargo'] ?? 0),
+                    $idGremio
                 );
                 if (!$id_trabajador) {
                     throw new RuntimeException('No se pudo guardar el trabajador.');
@@ -188,7 +203,8 @@ class ContratoControlador {
                     $fecha_fin,
                     $lugar_trabajo,
                     $nombre_presidente,
-                    $cedula_presidente
+                    $cedula_presidente,
+                    $posee_convenio
                 )) {
                     throw new RuntimeException($this->modelo->ultimoError ?: 'No se pudo guardar el contrato.');
                 }
@@ -239,6 +255,17 @@ class ContratoControlador {
             $lugar_trabajo = trim($_POST['lugar_trabajo'] ?? '');
             $nombre_presidente = trim($_POST['nombre_presidente'] ?? '');
             $cedula_presidente = trim($_POST['cedula_presidente'] ?? '');
+            $valorPoseeConvenio = $_POST['posee_convenio'] ?? null;
+            $posee_convenio = in_array((string)$valorPoseeConvenio, ['0', '1'], true)
+                ? (int)$valorPoseeConvenio
+                : -1;
+
+            if (!in_array($posee_convenio, [0, 1], true)) {
+                $_SESSION['old_contrato'] = $_POST;
+                $_SESSION['error_contrato'] = ['Indique si este contrato posee convenio.'];
+                header("Location: ../vistas/editar_contrato.php?id={$id_contrato}&status=error");
+                exit();
+            }
 
             $esIndeterminado = stripos($tipo_contrato, 'indefinido') !== false || stripos($tipo_contrato, 'indeterminado') !== false;
             if ($esIndeterminado) {
@@ -274,8 +301,9 @@ class ContratoControlador {
                 $fecha_contrato, 
                 $fecha_fin, 
                 $lugar_trabajo, 
-                $nombre_presidente, 
-                $cedula_presidente
+                $nombre_presidente,
+                $cedula_presidente,
+                $posee_convenio
             );
 
             if ($resultado) {

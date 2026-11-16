@@ -90,6 +90,7 @@ $estatusActivo = mb_strtolower($estatus, 'UTF-8') === 'activo';
                     <dl class="worker-details">
                         <div class="worker-detail"><dt>Estatus laboral</dt><dd><?php echo htmlspecialchars($estatus); ?></dd></div>
                         <div class="worker-detail"><dt>Cargo</dt><dd><?php echo htmlspecialchars($dato['nombre_cargo'] ?? 'Sin cargo'); ?></dd></div>
+                        <div class="worker-detail"><dt>Gremio</dt><dd><?php echo htmlspecialchars($dato['nombre_gremio'] ?? 'Sin gremio registrado'); ?></dd></div>
                         <div class="worker-detail"><dt>Tipo de personal</dt><dd><?php echo htmlspecialchars($dato['tipo_personal'] ?? 'No especificado'); ?></dd></div>
                         <div class="worker-detail"><dt>Nivel de educación</dt><dd><?php echo htmlspecialchars($dato['nivel_educacion'] ?? 'No registrado'); ?></dd></div>
                         <div class="worker-detail"><dt>Hijos menores de 18 años</dt><dd><?php echo (int)($dato['hijo_menor'] ?? 0); ?></dd></div>
@@ -103,7 +104,7 @@ $estatusActivo = mb_strtolower($estatus, 'UTF-8') === 'activo';
                     <h3><i class="bi bi-telephone"></i> Contacto</h3>
                     <dl class="worker-details">
                         <div class="worker-detail"><dt>Correo electrónico</dt><dd><?php echo htmlspecialchars($dato['correoElectronico'] ?? 'No registrado'); ?></dd></div>
-                        <iv class="worker-detail"><dt>Teléfono</dt><dd><?php echo htmlspecialchars($dato['numeroTelefono'] ?? 'No registrado'); ?></dd></div>
+                        <div class="worker-detail"><dt>Teléfono</dt><dd><?php echo htmlspecialchars($dato['numeroTelefono'] ?? 'No registrado'); ?></dd></div>
                     </dl>
                 </section>
 
@@ -118,5 +119,5 @@ $estatusActivo = mb_strtolower($estatus, 'UTF-8') === 'activo';
     </div>
 </div>
 
-</body>d
+</body>
 </html>

@@ -49,6 +49,7 @@ if ($idTrabajadorEdicion > 0) {
         $old['tiene_hijos'] = !empty($hijosEdicion) ? 'si' : 'no';
     }
 }
+$gremios = $trabajador->listarGremios($idTrabajadorEdicion > 0 ? (int)($old['id_gremio'] ?? 0) : null);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -258,6 +259,24 @@ if ($idTrabajadorEdicion > 0) {
                     <?php endforeach; ?>
                 </select>
             </div>
+
+            <!-- Gremio al que pertenece el trabajador -->
+            <div class="field">
+                <label for="id_gremio">Gremio</label>
+                <select name="id_gremio" id="id_gremio" required>
+                    <option value="">Seleccione un gremio...</option>
+                    <?php foreach ($gremios as $gremio): ?>
+                        <option value="<?php echo (int)$gremio['id_gremio']; ?>"
+                            <?php echo ((string)($old['id_gremio'] ?? '') === (string)$gremio['id_gremio']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($gremio['nombre'], ENT_QUOTES, 'UTF-8'); ?><?php echo ($gremio['estado'] === 'Inactivo') ? ' (Inactivo - asignación actual)' : ''; ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <?php if (empty($gremios)): ?>
+                    <small>Primero debe registrar un gremio activo.</small>
+                <?php endif; ?>
+            </div>
+
 
             <!-- Estatus Laboral -->
             <div class="field">

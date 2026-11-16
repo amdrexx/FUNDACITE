@@ -1,7 +1,7 @@
 <div class="sidebar" id="sidebar"
 style="display:flex;flex-direction:column;">
 
-    <ul style="list-style:none;padding:0;margin:0;">
+    <ul style="list-style:none;padding:0;margin-top:20px;">
 
         <li>
             <a href="/FUNDACITE/vistas/dashboard.php" class="submenu-link">
@@ -84,7 +84,16 @@ style="display:flex;flex-direction:column;">
         </li>
         <?php endif; ?>
 
-         <?php if (esAdministradorODirectorOAnalista()): ?>
+         <?php if (esAdministradorODirector()): ?>
+        <li>
+            <a href="/FUNDACITE/vistas/lista_gremio.php" class="submenu-link">
+                <i class="bi bi-people-fill"></i>
+                <b>GREMIO</b>
+            </a>
+        </li>
+        <?php endif; ?>
+
+        <?php if (esAdministradorODirectorOAnalista()): ?>
         <li>
             <a href="/FUNDACITE/vistas/lista_convenio.php" class="submenu-link">
                 <i class="bi bi-file-earmark-text-fill"></i>

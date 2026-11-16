@@ -122,13 +122,14 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', !empty($detalleCo
                                 ? 'bi-check-circle-fill'
                                 : ($estadoFila === 'Desaprobado' ? 'bi-x-circle-fill' : ($estadoFila === 'Vencida' ? 'bi-clock-history' : 'bi-hourglass-split'));
                             $esVencida = $estadoFila === 'Vencida';
+                            $sinDiasConvenio = $fila['dias_correspondientes'] === null || (int)$fila['dias_correspondientes'] <= 0;
                         ?>
                         <tr>
                             <td><?php echo htmlspecialchars($fila['trabajador'] ?? ''); ?></td>
                             <td><?php echo htmlspecialchars($fila['codigo_disfrute'] ?? ''); ?></td>
                             <td><?php echo nl2br(htmlspecialchars($fila['observaciones'] ?? '', ENT_QUOTES, 'UTF-8')); ?></td>
                             <td><?php echo htmlspecialchars($fila['motivo'] ?? ''); ?></td>
-                            <td><?php echo $fila['dias_correspondientes'] !== null ? htmlspecialchars($fila['dias_correspondientes']) . ' días' : 'N/A'; ?></td>
+                            <td><?php echo $fila['dias_correspondientes'] !== null ? htmlspecialchars($fila['dias_correspondientes']) . ' días' : 'Sin convenio'; ?></td>
                             <td><?php echo htmlspecialchars($fila['fecha_inicio'] ?? ''); ?></td>
                             <td><?php echo htmlspecialchars($fila['fecha_finalizacion'] ?? ''); ?></td>
                             <td>
@@ -148,7 +149,7 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', !empty($detalleCo
                                     <input type="hidden" name="origen" value="aprobacion_dias_disfrute.php">
                                     <input type="hidden" name="query" value="<?= htmlspecialchars($queryActual, ENT_QUOTES, 'UTF-8') ?>">
                                     <input type="hidden" name="accion_estado" value="Aprobar">
-                                    <button type="submit" name="cambiar_estado_disfrute" class="btn-aprobar" style="border:none; cursor:pointer;" <?= $estadoFila === 'Aprobado' ? 'disabled title="La solicitud ya está aprobada"' : '' ?>>
+                                    <button type="submit" name="cambiar_estado_disfrute" class="btn-aprobar" style="border:none; cursor:pointer;" <?= ($estadoFila === 'Aprobado' || $sinDiasConvenio) ? 'disabled title="' . ($sinDiasConvenio ? 'No existe cantidad de días respaldada por convenio' : 'La solicitud ya está aprobada') . '"' : '' ?>>
                                         <i class="bi bi-check-circle"></i> Aprobar
                                     </button>
                                 </form>

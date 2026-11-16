@@ -16,6 +16,11 @@ unset(
     $_SESSION['old_input'],
     $_SESSION['exito_registro']
 );
+
+require_once '../conexion.php';
+require_once '../modelos/clase_gremio.php';
+$gremioModelo = new Gremio($conexion);
+$gremios = $gremioModelo->listarDisponibles();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -49,11 +54,21 @@ unset(
 
             <h3 class="form-section-title full-width">Datos del convenio</h3>
 
-            <!-- Nombre del Gremio -->
+            <!-- Gremio asociado -->
             <div class="field">
-                <label>Nombre del Gremio</label>
-                <input type="text" name="nombre_gremio" id="nombre_gremio" maxlength="150" placeholder="Ingrese el nombre del gremio"
-                       value="<?php echo htmlspecialchars($old['nombre_gremio'] ?? ''); ?>">
+                <label for="id_gremio">Gremio</label>
+                <select name="id_gremio" id="id_gremio" required>
+                    <option value="">Seleccione un gremio...</option>
+                    <?php foreach ($gremios as $gremio): ?>
+                        <option value="<?php echo (int) $gremio['id_gremio']; ?>"
+                            <?php echo ((string)($old['id_gremio'] ?? '') === (string)$gremio['id_gremio']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($gremio['nombre'], ENT_QUOTES, 'UTF-8'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <?php if (empty($gremios)): ?>
+                    <small>Primero debe registrar al menos un gremio activo.</small>
+                <?php endif; ?>
             </div>
 
             <!-- Días de Disfrute -->
@@ -74,9 +89,10 @@ unset(
 
             <!-- Fecha de Vencimiento -->
             <div class="field">
-                <label>Fecha de Vencimiento</label>
+                <label for="fecha_vencimiento">Fecha de Vencimiento (opcional)</label>
                 <input type="date" name="fecha_vencimiento" id="fecha_vencimiento"
                        value="<?php echo htmlspecialchars($old['fecha_vencimiento'] ?? ''); ?>">
+                <small>Déjela vacía si el convenio no tiene fecha de vencimiento.</small>
             </div>
 
 
@@ -89,6 +105,6 @@ unset(
     </div>
 </div>
 
-<script src="/FUNDACITE/vistas/js/valid_convenio.js?v=1"></script>
+<script src="/FUNDACITE/vistas/js/valid_convenio.js?v=3"></script>
 </body>
 </html>

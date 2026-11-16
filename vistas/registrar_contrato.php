@@ -49,6 +49,9 @@ if ($modoTrabajadorExistente) {
 }
 $tokenTrabajadorPendiente = $modoTrabajadorExistente ? '' : ($_SESSION['token_trabajador_pendiente'] ?? '');
 $datosContrato = $_SESSION['old_contrato'] ?? [];
+$tipoContratoInicial = strtolower((string) ($datosContrato['tipo_contrato'] ?? 'Tiempo determinado'));
+$contratoIndeterminadoInicial = strpos($tipoContratoInicial, 'indeterminado') !== false
+    || strpos($tipoContratoInicial, 'indefinido') !== false;
 
 // -----------------------------------------------------------------------------
 // BÚSQUEDA EXCLUSIVA Y DINÁMICA DEL PRESIDENTE EN LA BASE DE DATOS
@@ -92,8 +95,10 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
 <head>
     <meta charset="UTF-8">
     <title>Datos del Contrato</title>
-    <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
+     <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.scss">
     <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
 </head>
 
@@ -130,8 +135,8 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                     <div class="field">
                         <label>Tipo de Contrato</label>
                         <select name="tipo_contrato" id="tipo_contrato" required>
-                            <option value="Tiempo determinado" style="color: black;" <?php echo empty($datosContrato['tipo_contrato']) || ($datosContrato['tipo_contrato'] ?? '') === 'Tiempo determinado' ? '' : ''; ?>>Tiempo determinado</option>
-                            <option value="Tiempo indeterminado" style="color: black;" <?php echo ($datosContrato['tipo_contrato'] ?? '') === 'Tiempo indeterminado' ? '' : ''; ?>>Tiempo indeterminado</option>
+                            <option value="Tiempo determinado" style="color: black;" <?php echo !$contratoIndeterminadoInicial ? 'selected' : ''; ?>>Tiempo determinado</option>
+                            <option value="Tiempo indeterminado" style="color: black;" <?php echo $contratoIndeterminadoInicial ? 'selected' : ''; ?>>Tiempo indeterminado</option>
                         </select>
                     </div>
 
@@ -139,6 +144,22 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                     <div class="field">
                         <label>Tipo de Personal</label>
                         <input type="text" value="<?php echo htmlspecialchars($infoTrabajador['tipo_personal'] ?? 'No especificado', ENT_QUOTES, 'UTF-8'); ?>" readonly>
+                    </div>
+
+                    <!-- Situación del convenio colectivo correspondiente a este contrato -->
+                    <div class="field full-width">
+                        <label>¿Posee convenio?</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="posee_convenio" value="1" <?php echo (string)($datosContrato['posee_convenio'] ?? '') === '1' ? 'checked' : ''; ?> required>
+                                <span>Sí</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="posee_convenio" value="0" <?php echo (string)($datosContrato['posee_convenio'] ?? '') === '0' ? 'checked' : ''; ?> required>
+                                <span>No</span>
+                            </label>
+                        </div>
+                        <small>Si selecciona Sí, se aplicarán los días establecidos en el convenio vigente asociado al gremio del trabajador. Si selecciona No, este contrato no genera días de disfrute por convenio.</small>
                     </div>
 
                     <!-- Lugar de Trabajo -->
@@ -156,7 +177,9 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                     <!-- Fecha de Finalización -->
                     <div class="field">
                         <label>Fecha de Finalización</label>
-                        <input type="date" name="fecha_fin" id="fecha_fin" value="<?php echo htmlspecialchars($datosContrato['fecha_fin'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                        <input type="date" name="fecha_fin" id="fecha_fin"
+                               value="<?php echo htmlspecialchars($contratoIndeterminadoInicial ? '' : ($datosContrato['fecha_fin'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                               <?php echo $contratoIndeterminadoInicial ? 'disabled aria-disabled="true"' : 'required'; ?>>
                     </div>
 
                     <h3 class="form-section-title full-width">Datos del Representante (Presidente)</h3>
@@ -193,6 +216,7 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
 
 
 
+<script src="/FUNDACITE/vistas/js/valid_contrato.js"></script>
 <script src="/FUNDACITE/vistas/js/valid_contrato_extra.js"></script>
 </body>
 </html>

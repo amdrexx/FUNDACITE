@@ -20,6 +20,7 @@ $idTrabajador = intval($_GET['id'] ?? 0);
 $trabajador = new Trabajador($conexion);
 $dato = $trabajador->obtenerTrabajadorPorId($idTrabajador);
 $hijosRegistrados = $trabajador->listarHijosTrabajador($idTrabajador);
+$gremios = $trabajador->listarGremios((int)($dato['id_gremio'] ?? 0));
 
 if (!$dato) {
     die("Trabajador no encontrado.");
@@ -237,6 +238,20 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                     <?php foreach (['Fijo', 'Contratado', 'Obrero', 'Empleado', 'Jubilado'] as $tipoPersonal): ?>
                         <option value="<?php echo htmlspecialchars($tipoPersonal, ENT_QUOTES, 'UTF-8'); ?>" <?php echo (($dato['tipo_personal'] ?? '') === $tipoPersonal) ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($tipoPersonal, ENT_QUOTES, 'UTF-8'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+
+            <div class="field">
+                <label for="id_gremio">Gremio</label>
+                <select name="id_gremio" id="id_gremio" required>
+                    <option value="">Seleccione un gremio...</option>
+                    <?php foreach ($gremios as $gremio): ?>
+                        <option value="<?php echo (int)$gremio['id_gremio']; ?>"
+                            <?php echo ((int)($dato['id_gremio'] ?? 0) === (int)$gremio['id_gremio']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($gremio['nombre'], ENT_QUOTES, 'UTF-8'); ?><?php echo ($gremio['estado'] === 'Inactivo') ? ' (Inactivo - asignación actual)' : ''; ?>
                         </option>
                     <?php endforeach; ?>
                 </select>

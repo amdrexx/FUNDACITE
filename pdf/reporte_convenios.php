@@ -32,9 +32,9 @@ foreach ($convenios as $fila) {
     $filas[] = [
         (string) ($fila['nombre_gremio'] ?? ''),
         reporteFecha($fila['fecha_inicio'] ?? ''),
-        reporteFecha($fila['fecha_vencimiento'] ?? ''),
+        !empty($fila['fecha_vencimiento']) ? reporteFecha($fila['fecha_vencimiento']) : 'Sin vencimiento',
         (string) ($fila['dias_disfrute'] ?? ''),
-        Convenio::estadoVigencia($fila['fecha_inicio'], $fila['fecha_vencimiento']),
+        Convenio::estadoVigencia($fila['fecha_inicio'], $fila['fecha_vencimiento'], $fila['estado'] ?? 'Vigente'),
     ];
 }
 

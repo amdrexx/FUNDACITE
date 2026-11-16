@@ -57,6 +57,15 @@ CREATE TABLE CARGO (
     PRIMARY KEY (id_cargo)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE GREMIO (
+    id_gremio INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    nombre VARCHAR(150) NOT NULL,
+    estado ENUM('Activo', 'Inactivo') NOT NULL DEFAULT 'Activo',
+    PRIMARY KEY (id_gremio),
+    UNIQUE KEY uq_gremio_nombre (nombre),
+    INDEX idx_gremio_estado (estado)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE TRABAJADOR (
     id_trabajador INT UNSIGNED NOT NULL AUTO_INCREMENT,
     tipo_documento VARCHAR(50) NOT NULL,
@@ -77,14 +86,17 @@ CREATE TABLE TRABAJADOR (
     status VARCHAR(20) NOT NULL DEFAULT 'Activo',
     id_dir INT UNSIGNED,
     id_cargo INT UNSIGNED,
+    id_gremio INT UNSIGNED,
     PRIMARY KEY (id_trabajador),
     UNIQUE KEY uq_cedula (cedula),
     INDEX idx_trabajador_status (status),
     INDEX idx_trabajador_cargo (id_cargo),
+    INDEX idx_trabajador_gremio (id_gremio),
     INDEX idx_trabajador_dir (id_dir),
     INDEX idx_trabajador_tipo_personal (tipo_personal),
     FOREIGN KEY (id_dir) REFERENCES DIRECCION(id_dir) ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (id_cargo) REFERENCES CARGO(id_cargo) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_trabajador_gremio FOREIGN KEY (id_gremio) REFERENCES GREMIO(id_gremio) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT chk_status CHECK (status IN ('Activo', 'Inactivo', 'Jubilado')),
     CONSTRAINT chk_tipo_documento CHECK (tipo_documento IN ('Cédula', 'Pasaporte', 'Cédula de Extranjería')),
     CONSTRAINT chk_genero CHECK (genero IS NULL OR genero IN ('Masculino', 'Femenino')),
@@ -112,6 +124,7 @@ CREATE TABLE CONTRATO (
     id_trabajador INT UNSIGNED NOT NULL,
     id_cargo INT UNSIGNED NOT NULL,
     tipo_contrato VARCHAR(50) NOT NULL,
+    posee_convenio TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Indica si este contrato reconoce los días establecidos en el convenio del gremio del trabajador',
     fecha_contrato DATE NOT NULL,
     fecha_fin DATE NULL,
     lugar_trabajo VARCHAR(255) NOT NULL,
@@ -127,13 +140,16 @@ CREATE TABLE CONTRATO (
 
 CREATE TABLE CONVENIO (
     id_convenio INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    id_gremio INT UNSIGNED NOT NULL,
     fecha_inicio DATE NOT NULL,
-    fecha_vencimiento DATE NOT NULL,
-    nombre_gremio VARCHAR(150) NOT NULL,
+    fecha_vencimiento DATE NULL DEFAULT NULL,
     dias_disfrute TINYINT UNSIGNED NOT NULL,
+    estado ENUM('Vigente', 'No vigente') NOT NULL DEFAULT 'Vigente',
     PRIMARY KEY (id_convenio),
-    INDEX idx_convenio_gremio (nombre_gremio),
-    CONSTRAINT chk_periodo_convenio CHECK (fecha_vencimiento >= fecha_inicio)
+    INDEX idx_convenio_gremio (id_gremio),
+    CONSTRAINT fk_convenio_gremio FOREIGN KEY (id_gremio)
+        REFERENCES GREMIO(id_gremio) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT chk_periodo_convenio CHECK (fecha_vencimiento IS NULL OR fecha_vencimiento >= fecha_inicio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE CONSTANCIA_DE_TRABAJO (
@@ -161,7 +177,7 @@ CREATE TABLE DISFRUTE_DE_VACACIONES (
     fecha_finalizacion DATE NULL,
     observaciones TEXT NOT NULL,
     justificacion_desaprobacion TEXT NULL,
-    dias_correspondientes TINYINT UNSIGNED NOT NULL DEFAULT 30,
+    dias_correspondientes TINYINT UNSIGNED NULL DEFAULT NULL COMMENT 'Cantidad de días hábiles tomada del convenio vigente; NULL si no existe convenio aplicable',
     tipo_remuneracion ENUM('remunerado', 'no_remunerado') NOT NULL,
     requiere_suplente ENUM('si', 'no') NOT NULL,
     fecha_solicitud DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -264,6 +280,7 @@ CREATE TABLE PRIMA (
     UNIQUE KEY uq_prima_nombre_fecha (nombre, fecha)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
 CREATE TABLE PRIMA_VALOR (
     id_prima_valor INT UNSIGNED NOT NULL AUTO_INCREMENT,
     id_prima       INT UNSIGNED NOT NULL,
@@ -274,6 +291,7 @@ CREATE TABLE PRIMA_VALOR (
         REFERENCES PRIMA (id_prima) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--  Tabla puente
 CREATE TABLE TRABAJADOR_PRIMA (
     id_trabajador_prima INT UNSIGNED NOT NULL AUTO_INCREMENT,
     id_trabajador       INT UNSIGNED NOT NULL,
@@ -1941,6 +1959,57 @@ INSERT INTO USUARIO (
     'Administrador',
     'Activo'
 );
+-- ================================================================================
+-- INSERT: LAS TRES PRIMAS DEL SISTEMA
+-- ================================================================================
+
+-- Prima por antigüedad: porcentajes (orden = años de servicio; 23 = "23 en adelante")
+INSERT INTO PRIMA (nombre, tipo_valor, fecha, estatus)
+VALUES ('Prima por antigüedad', 'porcentaje', CURDATE(), 'Activo');
+
+INSERT INTO PRIMA_VALOR (id_prima, valor, orden)
+SELECT p.id_prima, v.valor, v.orden
+FROM PRIMA AS p
+JOIN (
+    SELECT  1 AS orden,  1.00 AS valor UNION ALL SELECT  2,  2.00 UNION ALL SELECT  3,  3.00
+    UNION ALL SELECT  4,  4.00 UNION ALL SELECT  5,  5.00 UNION ALL SELECT  6,  6.20
+    UNION ALL SELECT  7,  7.40 UNION ALL SELECT  8,  8.60 UNION ALL SELECT  9,  9.80
+    UNION ALL SELECT 10, 11.00 UNION ALL SELECT 11, 12.40 UNION ALL SELECT 12, 13.80
+    UNION ALL SELECT 13, 15.20 UNION ALL SELECT 14, 16.60 UNION ALL SELECT 15, 18.00
+    UNION ALL SELECT 16, 19.60 UNION ALL SELECT 17, 21.20 UNION ALL SELECT 18, 22.80
+    UNION ALL SELECT 19, 24.40 UNION ALL SELECT 20, 26.00 UNION ALL SELECT 21, 27.80
+    UNION ALL SELECT 22, 29.60 UNION ALL SELECT 23, 30.00
+) AS v
+WHERE p.nombre = 'Prima por antigüedad';
+
+-- Prima por hijos: monto fijo (1.er valor = hijos de 0 a 5 años | 2.º valor = hijos de 6 a 21 años)
+INSERT INTO PRIMA (nombre, tipo_valor, fecha, estatus)
+VALUES ('Prima por hijos', 'monto', CURDATE(), 'Activo');
+
+INSERT INTO PRIMA_VALOR (id_prima, valor, orden)
+SELECT p.id_prima, v.valor, v.orden
+FROM PRIMA AS p
+JOIN (SELECT 1 AS orden, 52.00 AS valor UNION ALL SELECT 2, 12.50) AS v
+WHERE p.nombre = 'Prima por hijos';
+
+-- Prima por profesionalización: TSU 20 % | Lic./Ing. 25 % | Doc./Post. 35 %
+INSERT INTO PRIMA (nombre, tipo_valor, fecha, estatus)
+VALUES ('Prima por profesionalización', 'porcentaje', CURDATE(), 'Activo');
+
+INSERT INTO PRIMA_VALOR (id_prima, valor, orden)
+SELECT p.id_prima, v.valor, v.orden
+FROM PRIMA AS p
+JOIN (SELECT 1 AS orden, 20.00 AS valor UNION ALL SELECT 2, 25.00 UNION ALL SELECT 3, 35.00) AS v
+WHERE p.nombre = 'Prima por profesionalización';
+
+-- ================================================================================
+-- VERIFICACIÓN: antigüedad = 23 valores, hijos = 2, profesionalización = 3
+-- ================================================================================
+SELECT p.nombre, p.tipo_valor, COUNT(v.id_prima_valor) AS cantidad_valores
+FROM PRIMA AS p
+LEFT JOIN PRIMA_VALOR AS v ON v.id_prima = p.id_prima
+GROUP BY p.id_prima, p.nombre, p.tipo_valor
+ORDER BY p.id_prima;
 
 
 -- ==============================================================================

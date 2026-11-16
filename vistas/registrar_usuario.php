@@ -31,6 +31,7 @@ $trabajadores = $trabajadorObj->listarTrabajadoresSinUsuario();
     <title>Registro de Usuarios</title>
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
+    <link rel="stylesheet" href="/FUNDACITE/vistas/css/password-toggle.css">
     <script src="/FUNDACITE/vistas/js/bootstrap.min.js"></script>
 </head>
 <body>
@@ -68,13 +69,27 @@ $trabajadores = $trabajadorObj->listarTrabajadoresSinUsuario();
             <!-- Contraseña -->
             <div class="field">
                 <label>Contraseña</label>
-                <input type="password" name="contrasena" id="contrasena" placeholder="Ingrese la contraseña de acceso">
+                <div class="password-input-wrapper">
+                    <input type="password" name="contrasena" id="contrasena"
+                           placeholder="Ingrese la contraseña de acceso" autocomplete="new-password">
+                    <button type="button" class="password-toggle" data-password-toggle
+                            aria-label="Mostrar contraseña" title="Mostrar contraseña" aria-pressed="false">
+                        <i class="bi bi-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Confirmar Contraseña -->
             <div class="field">
                 <label>Confirmar Contraseña</label>
-                <input type="password" name="confirmar_contrasena" id="confirmar_contrasena" placeholder="Repita la contraseña">
+                <div class="password-input-wrapper">
+                    <input type="password" name="confirmar_contrasena" id="confirmar_contrasena"
+                           placeholder="Repita la contraseña" autocomplete="new-password">
+                    <button type="button" class="password-toggle" data-password-toggle
+                            aria-label="Mostrar contraseña" title="Mostrar contraseña" aria-pressed="false">
+                        <i class="bi bi-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Tipo de Usuario -->
@@ -103,5 +118,6 @@ $trabajadores = $trabajadorObj->listarTrabajadoresSinUsuario();
 
 
 <script src="/FUNDACITE/vistas/js/valid_usuarios.js"></script>
+<script src="/FUNDACITE/vistas/js/password-toggle.js"></script>
 </body>
 </html>

@@ -15,10 +15,7 @@ $soloPropio = esUsuarioEstandar() && count($trabajadores) === 1 && !empty($traba
 
 // Los días que le corresponden a cualquier trabajador son los que indique
 // el convenio colectivo vigente; ya no hay un valor fijo para todos.
-$diasConvenioVigente = $diasDisfruteModelo->calcularDiasDisfrute();
-$diasConvenioTexto = $diasConvenioVigente !== null
-    ? $diasConvenioVigente . ' días hábiles'
-    : 'Sin convenio vigente registrado';
+$diasConvenioTexto = 'Seleccione un trabajador con convenio vigente para consultar sus días.';
 
 $old = $_SESSION['old'] ?? null;
 $errores = $_SESSION['errores'] ?? [];
@@ -70,11 +67,6 @@ unset($_SESSION['errores'], $_SESSION['exito']);
             <div class="form-grid full-width">
                 <h2>DIAS DE DISFRUTE</h2>
 
-                <?php if ($diasConvenioVigente === null): ?>
-                    <div class="full-width" style="color:#ffd7d7;background:rgba(180,35,24,.25);border:1px solid rgba(180,35,24,.5);border-radius:8px;padding:10px 14px;margin-bottom:10px;">
-                        No hay un convenio vigente registrado. Debe registrar o actualizar el convenio colectivo antes de poder registrar días de disfrute.
-                    </div>
-                <?php endif; ?>
 
                 <!-- 1. Selección de trabajadores activos -->
                 <div class="field full-width">
@@ -90,6 +82,8 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                                 $seleccionado = $soloPropio || ($old && ($old['id_trabajador'] ?? '') == $t['id_trabajador']);
                             ?>
                             <option value="<?= (int) $t['id_trabajador'] ?>"
+                                data-dias="<?= $t['dias_correspondientes'] !== null ? (int)$t['dias_correspondientes'] : '' ?>"
+                                data-posee-convenio="<?= (int)($t['posee_convenio'] ?? 0) ?>"
                                 <?= !$elegible ? 'disabled' : '' ?>
                                 <?= ($seleccionado && $elegible) ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($t['cedula'] . ' - ' . $t['nombre_completo'], ENT_QUOTES, 'UTF-8') ?><?= !$elegible ? ' — No elegible: ' . htmlspecialchars($motivoNoElegible, ENT_QUOTES, 'UTF-8') : '' ?>
@@ -206,7 +200,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                 <button type="submit" name="accion" value="limpiar" class="btn-secundario">
                     Limpiar
                 </button>
-                <button type="submit" name="accion" value="guardar" class="btn-guardar" <?= $diasConvenioVigente === null ? 'disabled title="No hay un convenio vigente registrado."' : '' ?>>
+                <button type="submit" name="accion" value="guardar" class="btn-guardar">
                     Guardar
                 </button>
             </div>
@@ -224,17 +218,30 @@ document.addEventListener('DOMContentLoaded', function() {
     var cedulaDisplay = document.getElementById('cedula_display');
     var cargoDisplay = document.getElementById('cargo_display');
     var diasDisplay = document.getElementById('dias_correspondientes_display');
-    var diasConvenioTexto = <?= json_encode($diasConvenioTexto, JSON_UNESCAPED_UNICODE) ?>;
 
-    if (diasDisplay) diasDisplay.value = diasConvenioTexto;
+    function actualizarDiasTrabajador() {
+        var opcion = selectTrabajador.options[selectTrabajador.selectedIndex];
+        var valorDias = opcion ? opcion.getAttribute('data-dias') : '';
+        var dias = valorDias !== '' ? parseInt(valorDias, 10) : null;
+        if (diasDisplay) {
+            if (!opcion || !selectTrabajador.value) {
+                diasDisplay.value = 'Seleccione un trabajador con convenio vigente';
+            } else if (opcion.disabled || !Number.isInteger(dias) || dias <= 0) {
+                diasDisplay.value = 'No posee convenio vigente aplicable';
+            } else {
+                diasDisplay.value = dias + ' días hábiles (según convenio del gremio)';
+            }
+        }
+    }
 
+    actualizarDiasTrabajador();
     selectTrabajador.addEventListener('change', function() {
+        actualizarDiasTrabajador();
         var id = this.value;
         if (!id) {
             nombreCompleto.value = '';
             cedulaDisplay.value = '';
             cargoDisplay.value = '';
-            if (diasDisplay) diasDisplay.value = diasConvenioTexto;
             return;
         }
 
@@ -245,7 +252,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     nombreCompleto.value = data.nombre_completo || '';
                     cedulaDisplay.value = data.cedula || '';
                     cargoDisplay.value = data.cargo || '';
-                    if (diasDisplay) diasDisplay.value = diasConvenioTexto;
                     nombreCompleto.classList.add('campo-ok');
                     setTimeout(function() { nombreCompleto.classList.remove('campo-ok'); }, 1500);
                 } else {
@@ -257,10 +263,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 FundaciteAlerta.mostrar('Error al consultar datos del trabajador.', 'error');
             });
     });
-
-    if (selectTrabajador.value) {
-        selectTrabajador.dispatchEvent(new Event('change'));
-    }
 });
 </script>
 

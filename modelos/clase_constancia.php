@@ -48,7 +48,7 @@ class ConstanciaTrabajo {
                              ORDER BY s.fecha DESC, s.id_salario DESC LIMIT 1),
                             0
                         ) AS salario_monto,
-                        COALESCE((SELECT SUM(p.monto) FROM PRIMA p
+                        COALESCE((SELECT SUM(p.monto) FROM TRABAJADOR_PRIMA p
                                   WHERE p.id_trabajador = ? AND p.estatus = 'Activo'), 0) AS total_primas,
                         CASE
                             WHEN EXISTS (SELECT 1 FROM SALARIO s WHERE s.tipo_salario = 'base'
@@ -76,7 +76,7 @@ class ConstanciaTrabajo {
                              ORDER BY s.fecha DESC, s.id_salario DESC LIMIT 1),
                             0
                         ) AS salario_monto,
-                        COALESCE((SELECT SUM(p.monto) FROM PRIMA p
+                        COALESCE((SELECT SUM(p.monto) FROM TRABAJADOR_PRIMA p
                                   WHERE p.id_trabajador = ? AND p.estatus = 'Activo'), 0) AS total_primas,
                         CASE
                             WHEN EXISTS (SELECT 1 FROM SALARIO s WHERE s.tipo_salario = 'cargo'
@@ -169,9 +169,11 @@ class ConstanciaTrabajo {
 
 
     public function listarPrimasActivas(int $id_trabajador): array {
-        $sql = "SELECT tipo_prima, condicion, porcentaje, monto FROM PRIMA
-                WHERE id_trabajador = ? AND estatus = 'Activo'
-                ORDER BY tipo_prima ASC";
+        $sql = "SELECT pr.nombre AS tipo_prima, tp.condicion, tp.porcentaje, tp.monto
+                FROM TRABAJADOR_PRIMA tp
+                INNER JOIN PRIMA pr ON pr.id_prima = tp.id_prima
+                WHERE tp.id_trabajador = ? AND tp.estatus = 'Activo'
+                ORDER BY pr.nombre ASC";
         $stmt = $this->db->prepare($sql);
         if (!$stmt) return [];
         $stmt->bind_param('i', $id_trabajador);
@@ -185,7 +187,7 @@ class ConstanciaTrabajo {
     public function contarPrimasActivas(int $id_trabajador): int {
         if ($id_trabajador <= 0) return 0;
         $sql = "SELECT COUNT(*) AS cantidad
-                FROM PRIMA
+                FROM TRABAJADOR_PRIMA
                 WHERE id_trabajador = ? AND estatus = 'Activo'";
         $stmt = $this->db->prepare($sql);
         if (!$stmt) {

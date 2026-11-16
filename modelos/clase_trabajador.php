@@ -43,6 +43,54 @@ class Trabajador
     }
 
     /**
+     * Lista los gremios activos. Al editar, conserva también el gremio actual
+     * aunque haya pasado a Inactivo, para no perder la relación histórica.
+     */
+    public function listarGremios($idSeleccionado = null): array
+    {
+        if ((int) $idSeleccionado > 0) {
+            $stmt = $this->conexion->prepare(
+                "SELECT id_gremio, nombre, estado FROM GREMIO
+                 WHERE estado = 'Activo' OR id_gremio = ? ORDER BY nombre ASC"
+            );
+            if (!$stmt) return [];
+            $id = (int) $idSeleccionado;
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            $resultado = $stmt->get_result();
+            $gremios = $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
+            $stmt->close();
+            return $gremios;
+        }
+
+        $resultado = $this->conexion->query(
+            "SELECT id_gremio, nombre, estado FROM GREMIO
+             WHERE estado = 'Activo' ORDER BY nombre ASC"
+        );
+        return ($resultado && $resultado->num_rows > 0)
+            ? $resultado->fetch_all(MYSQLI_ASSOC)
+            : [];
+    }
+
+    public function gremioValidoParaTrabajador(int $idGremio, int $idGremioActual = 0): bool
+    {
+        if ($idGremio <= 0) return false;
+        if ($idGremioActual > 0 && $idGremio === $idGremioActual) {
+            $stmt = $this->conexion->prepare("SELECT 1 FROM GREMIO WHERE id_gremio = ? LIMIT 1");
+        } else {
+            $stmt = $this->conexion->prepare(
+                "SELECT 1 FROM GREMIO WHERE id_gremio = ? AND estado = 'Activo' LIMIT 1"
+            );
+        }
+        if (!$stmt) return false;
+        $stmt->bind_param('i', $idGremio);
+        $stmt->execute();
+        $valido = $stmt->get_result()->num_rows > 0;
+        $stmt->close();
+        return $valido;
+    }
+
+    /**
      * Lista las direcciones ya registradas en el maestro de direcciones
      */
     public function listarDirecciones()
@@ -135,7 +183,8 @@ class Trabajador
         $tipoPersonal,
         $status,
         $idDir = null,
-        $idCargo = null
+        $idCargo = null,
+        $idGremio = null
     )
     {
         $sql = "INSERT INTO TRABAJADOR
@@ -156,11 +205,12 @@ class Trabajador
             tipo_personal,
             status,
             id_dir,
-            id_cargo
+            id_cargo,
+            id_gremio
         )
         VALUES
         (
-            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
         )";
 
         $stmt = $this->conexion->prepare($sql);
@@ -171,7 +221,7 @@ class Trabajador
         }
 
         $stmt->bind_param(
-            "sssssiiisssssssii",
+            "sssssiiisssssssiii",
             $tipoDocumento,
             $cedula,
             $nombres,
@@ -188,7 +238,8 @@ class Trabajador
             $tipoPersonal,
             $status,
             $idDir,
-            $idCargo
+            $idCargo,
+            $idGremio
         );
 
         if ($stmt->execute()) {
@@ -264,11 +315,14 @@ class Trabajador
                     t.nivel_educacion,
                     t.tipo_personal,
                     t.status,
+                    t.id_gremio,
+                    g.nombre AS nombre_gremio,
                     c.nombre_cargo,
                     co.tipo_contrato,
                     primer.fecha_primer_contrato
                 FROM TRABAJADOR t
                 LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo
+                LEFT JOIN GREMIO g ON t.id_gremio = g.id_gremio
                 LEFT JOIN (
                     SELECT id_trabajador, MAX(id_contrato) AS id_contrato
                     FROM CONTRATO
@@ -331,6 +385,8 @@ class Trabajador
                     t.status AS estatus_laboral,
                     t.id_dir,
                     t.id_cargo,
+                    t.id_gremio,
+                    g.nombre AS nombre_gremio,
                     c.nombre_cargo,
                     d.nombre AS direccion,
                     p.cod_par,
@@ -341,6 +397,7 @@ class Trabajador
                     e.nombre AS estado
                 FROM TRABAJADOR t
                 LEFT JOIN CARGO c ON t.id_cargo = c.id_cargo
+                LEFT JOIN GREMIO g ON t.id_gremio = g.id_gremio
                 LEFT JOIN DIRECCION d ON t.id_dir = d.id_dir
                 LEFT JOIN PARROQUIA p ON d.cod_par = p.cod_par
                 LEFT JOIN MUNICIPIO m ON p.cod_muni = m.cod_muni
@@ -371,7 +428,8 @@ class Trabajador
         $anosServicioAdministracionPublica,
         $nivelEducacion,
         $tipoPersonal,
-        $idDir = null
+        $idDir = null,
+        $idGremio = null
     ) {
         $sql = "UPDATE TRABAJADOR
                 SET estado_civil = ?,
@@ -383,12 +441,13 @@ class Trabajador
                     anos_servicio_administracion_publica = ?,
                     nivel_educacion = ?,
                     tipo_personal = ?,
-                    id_dir = ?
+                    id_dir = ?,
+                    id_gremio = ?
                 WHERE id_trabajador = ?";
 
         $stmt = $this->conexion->prepare($sql);
         $stmt->bind_param(
-"ssssiiissii",
+"ssssiiissiii",
             $estadoCivil,
             $telefono,
             $correo,
@@ -399,6 +458,7 @@ class Trabajador
             $nivelEducacion,
             $tipoPersonal,
             $idDir,
+            $idGremio,
             $idTrabajador
         );
 

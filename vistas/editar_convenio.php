@@ -12,12 +12,15 @@ unset($_SESSION['error_edicion']);
 
 require_once '../conexion.php';
 require_once '../modelos/clase_convenio.php';
+require_once '../modelos/clase_gremio.php';
 require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
 $idConvenio = intval($_GET['id'] ?? 0);
 
 $convenio = new Convenio($conexion);
 $dato = $convenio->obtenerConvenioPorId($idConvenio);
+$gremioModelo = new Gremio($conexion);
+$gremios = $dato ? $gremioModelo->listarDisponibles((int)$dato['id_gremio']) : [];
 
 if (!$dato) {
     die("Convenio no encontrado.");
@@ -57,9 +60,16 @@ registrarBitacora($conexion, 'Convenios', 'Consultar', "Consultó el convenio ID
             <h3 class="form-section-title full-width">Datos del convenio</h3>
 
             <div class="field">
-                <label>Nombre del Gremio</label>
-                <input type="text" name="nombre_gremio" id="nombre_gremio" maxlength="150"
-                       value="<?php echo htmlspecialchars($dato['nombre_gremio']); ?>">
+                <label for="id_gremio">Gremio</label>
+                <select name="id_gremio" id="id_gremio" required>
+                    <option value="">Seleccione un gremio...</option>
+                    <?php foreach ($gremios as $gremio): ?>
+                        <option value="<?php echo (int) $gremio['id_gremio']; ?>"
+                            <?php echo ((int)$dato['id_gremio'] === (int)$gremio['id_gremio']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($gremio['nombre'], ENT_QUOTES, 'UTF-8'); ?><?php echo ($gremio['estado'] === 'Inactivo') ? ' (Inactivo - convenio actual)' : ''; ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
 
             <div class="field">
@@ -77,9 +87,10 @@ registrarBitacora($conexion, 'Convenios', 'Consultar', "Consultó el convenio ID
             </div>
 
             <div class="field">
-                <label>Fecha de Vencimiento</label>
+                <label for="fecha_vencimiento">Fecha de Vencimiento (opcional)</label>
                 <input type="date" name="fecha_vencimiento" id="fecha_vencimiento"
-                       value="<?php echo htmlspecialchars($dato['fecha_vencimiento']); ?>">
+                       value="<?php echo htmlspecialchars($dato['fecha_vencimiento'] ?? ''); ?>">
+                <small>Déjela vacía si el convenio no tiene fecha de vencimiento.</small>
             </div>
 
 
@@ -93,6 +104,6 @@ registrarBitacora($conexion, 'Convenios', 'Consultar', "Consultó el convenio ID
     </div>
 </div>
 
-<script src="/FUNDACITE/vistas/js/valid_convenio.js?v=1"></script>
+<script src="/FUNDACITE/vistas/js/valid_convenio.js?v=3"></script>
 </body>
 </html>

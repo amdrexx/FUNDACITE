@@ -118,7 +118,6 @@ body::before {
     width: 260px;
     height: calc(100% - 70px);   /* ocupa el resto de la pantalla */
     background: #1B262C;
-    transition: none;            /* ya no necesitamos animación */
     z-index: 1002;
     box-shadow: 4px 0 15px rgba(0,0,0,0.4);
     /* Cuando el menú es más largo que la pantalla, la barra lateral
@@ -144,20 +143,9 @@ body::before {
     border-radius: 8px;
 }
 
-.sidebar::-webkit-scrollbar-thumb:hover {
-    background: #3282B8;
-}
+
 .sidebar.active {
     left: 0;
-}
-
-.sidebar::after {
-    content: "";
-    position: absolute;
-    right: 0;
-    width: 4px;
-    height: 100%;
-    background: #3282B8;
 }
 
 .sidebar ul {
@@ -1014,9 +1002,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         max-width: 900px;
     }
 
-    .tabla{
-        display: block;
-        overflow-x: auto;
+    .tabla-container .modulo-card > .tabla {
+        display: table;
+        overflow: visible;
         white-space: nowrap;
     }
 }
@@ -1233,6 +1221,37 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     backdrop-filter: blur(10px);
     box-shadow: 0 10px 30px rgba(0,0,0,0.35);
     color: #fff;
+    box-sizing: border-box;
+}
+
+/* =====================================================
+   SINCRONIZACIÓN DE CONTENEDOR, TARJETA Y TABLAS
+   La tarjeta conserva el ancho del módulo; si la tabla
+   necesita más espacio, se desplaza dentro de la tarjeta.
+   ===================================================== */
+.tabla-container {
+    width: 100%;
+    max-width: 1600px;
+    min-width: 0;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+.tabla-container .modulo-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tabla-container .modulo-card > .tabla {
+    display: table;
+    width: 100%;
+    min-width: 100%;
     box-sizing: border-box;
 }
 

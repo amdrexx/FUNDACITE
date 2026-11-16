@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (inicio?.value && inicio.value > isoHoy) {
             errores.push('La fecha de ingreso/contrato no puede ser futura. Se permiten fechas anteriores.');
         }
-        if (inicio?.value && fin?.value && fin.value < inicio.value) {
+        if (inicio?.value && fin?.value && !fin.disabled && fin.value < inicio.value) {
             errores.push('La fecha de finalización no puede ser anterior a la fecha de inicio.');
         }
 

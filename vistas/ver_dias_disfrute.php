@@ -67,7 +67,7 @@ $claseBadge = $estado === 'Aprobado'
 $iconoBadge = $estado === 'Aprobado'
     ? 'bi-check-circle-fill'
     : ($estado === 'Desaprobado' ? 'bi-x-circle-fill' : ($estado === 'Vencida' ? 'bi-clock-history' : 'bi-hourglass-split'));
-$diasCorrespondientes = 30;
+$diasCorrespondientes = $registro['dias_correspondientes'] ?? null;
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -337,7 +337,7 @@ $diasCorrespondientes = 30;
                         <div class="cert-detail"><dt>Código</dt><dd><?php echo htmlspecialchars($codigo); ?></dd></div>
                         <div class="cert-detail"><dt>Fecha de inicio</dt><dd><?php echo htmlspecialchars($fechaInicio); ?></dd></div>
                         <div class="cert-detail"><dt>Fecha de finalización</dt><dd><?php echo htmlspecialchars($fechaFin); ?></dd></div>
-                        <div class="cert-detail"><dt>Días que le corresponden</dt><dd><?php echo htmlspecialchars((string) $diasCorrespondientes) . ' días hábiles'; ?></dd></div>
+                        <div class="cert-detail"><dt>Días que le corresponden</dt><dd><?php echo htmlspecialchars($diasCorrespondientes !== null ? (string)$diasCorrespondientes . ' días hábiles' : 'Sin cantidad establecida por convenio', ENT_QUOTES, 'UTF-8'); ?></dd></div>
                     </dl>
                 </section>
 

@@ -107,6 +107,9 @@ if (!function_exists('bitacoraDefinicion')) {
                 'cargo' => "SELECT c.nombre_cargo AS _nombre, c.nombre_cargo AS `Nombre`
                             FROM CARGO c WHERE c.id_cargo = ?",
 
+                'gremio' => "SELECT g.nombre AS _nombre, g.nombre AS `Nombre`, g.estado AS `Estado`
+                             FROM GREMIO g WHERE g.id_gremio = ?",
+
                 'prima' => "SELECT pr.tipo_prima AS _nombre, pr.tipo_prima AS `Tipo de prima`,
                                    pr.porcentaje AS `Porcentaje`, pr.estado AS `Estado`, pr.fecha AS `Fecha`
                             FROM PRIMA pr WHERE pr.id_prima = ?",
@@ -122,9 +125,11 @@ if (!function_exists('bitacoraDefinicion')) {
                                         t.estado_civil AS `Estado civil`, t.telefono AS `Teléfono`,
                                         t.correo AS `Correo`, t.status AS `Estatus laboral`,
                                         cg.nombre_cargo AS `Cargo`,
+                                        gr.nombre AS `Gremio`,
                                         $ubicacion AS `Dirección`
                                  FROM TRABAJADOR t
                                  LEFT JOIN CARGO cg ON cg.id_cargo = t.id_cargo
+                                 LEFT JOIN GREMIO gr ON gr.id_gremio = t.id_gremio
                                  LEFT JOIN DIRECCION d ON d.id_dir = t.id_dir
                                  LEFT JOIN PARROQUIA p ON p.cod_par = d.cod_par
                                  LEFT JOIN MUNICIPIO m ON m.cod_muni = p.cod_muni
@@ -138,6 +143,15 @@ if (!function_exists('bitacoraDefinicion')) {
                               FROM SALARIO s
                               LEFT JOIN CARGO c ON c.id_cargo = s.id_cargo
                               WHERE s.id_salario = ?",
+
+                'convenio' => "SELECT CONCAT('convenio del gremio ', g.nombre) AS _nombre,
+                                       g.nombre AS `Gremio`, c.fecha_inicio AS `Fecha de inicio`,
+                                       c.fecha_vencimiento AS `Fecha de vencimiento`,
+                                       c.dias_disfrute AS `Días de disfrute`,
+                                       c.estado AS `Estado`
+                                FROM CONVENIO c
+                                INNER JOIN GREMIO g ON g.id_gremio = c.id_gremio
+                                WHERE c.id_convenio = ?",
 
                 'contrato' => "SELECT CONCAT(k.tipo_contrato, ' de ', t.nombres, ' ', t.apellidos) AS _nombre,
                                       $trabajador AS `Trabajador`, c.nombre_cargo AS `Cargo`,
@@ -284,6 +298,7 @@ if (!function_exists('bitacoraModuloDeUrl')) {
             'prima'        => 'Primas',
             'asignar_cargo'=> 'Asignación de Cargos',
             'cargo'        => 'Cargos',
+            'gremio'       => 'Gremios',
             'parroquia'    => 'Parroquias',
             'municipio'    => 'Municipios',
             'estado'       => 'Estados',

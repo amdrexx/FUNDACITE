@@ -1,17 +1,4 @@
-// ============================================================================
-// ARCHIVO: vistas/js/inactividad.js
-// DESCRIPCIÓN: Cierra la sesión tras 5 minutos sin actividad.
-//
-//   · Actividad = clic, tecla, scroll, toque o mover el mouse.
-//   · Durante los últimos 15 s sin actividad aparece un aviso con cuenta
-//     regresiva; al llegar a 5 min se cierra la sesión (controladores/logout.php).
-//   · Mientras hay actividad envía un "latido" al servidor (máx. 1 cada 10 s)
-//     para que la sesión de PHP no expire mientras se llena un formulario largo.
-//   · Se sincroniza entre pestañas con localStorage: actividad en una pestaña
-//     cuenta para todas.
-//   · Se calcula con la hora real (Date.now), no acumulando temporizadores,
-//     porque el navegador frena los timers de pestañas en segundo plano.
-// ============================================================================
+
 (function () {
     'use strict';
 
