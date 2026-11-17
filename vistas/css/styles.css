@@ -93,3 +93,49 @@ body {
     font-weight: bold;
     text-decoration: underline;
 }
+
+/* ============================================================
+   FUNDACITE | Acceso adaptable
+   En escritorio conserva las dimensiones originales del login.
+   ============================================================ */
+@media (max-width: 640px) {
+    body {
+        min-height: 100svh;
+        height: auto;
+        padding: 18px;
+        background-attachment: scroll;
+    }
+
+    .contenedor {
+        width: min(100%, 420px);
+        padding: clamp(16px, 5vw, 26px);
+        border-radius: 16px;
+    }
+
+    .login-box {
+        width: 100%;
+        max-width: 320px;
+        padding: clamp(18px, 5vw, 26px);
+        margin: 0 auto;
+    }
+
+    .login-box h2 {
+        font-size: clamp(20px, 5vw, 24px);
+    }
+
+    .input-group input {
+        min-height: 42px;
+        font-size: 16px;
+    }
+
+    .btn {
+        width: 100%;
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 360px) {
+    body { padding: 10px; }
+    .contenedor { padding: 12px; }
+    .login-box { padding: 16px 13px; }
+}

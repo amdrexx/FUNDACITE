@@ -26,6 +26,7 @@ $parroquias = mysqli_fetch_all($resultado, MYSQLI_ASSOC);
 <head>
 
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Registro de Parroquia</title>
 
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">

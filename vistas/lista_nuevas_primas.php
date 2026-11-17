@@ -36,6 +36,7 @@ function fmtValores(array $p): string {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Lista de nuevas primas</title>
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">

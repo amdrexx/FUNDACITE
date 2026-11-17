@@ -1,4 +1,7 @@
-/* FUNDACITE responsive behaviour: mobile navigation and accessible table labels. */
+/* FUNDACITE: navegación adaptable y desplazamiento accesible de tablas.
+ * No modifica las columnas ni el contenido de las tablas: en pantallas
+ * reducidas solo habilita el desplazamiento horizontal dentro de su marco.
+ */
 (function () {
     'use strict';
 
@@ -16,7 +19,10 @@
             document.body.classList.toggle('sidebar-open', shouldOpen);
             toggle.classList.toggle('active', shouldOpen);
             toggle.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+            toggle.setAttribute('aria-label', shouldOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación');
             sidebar.setAttribute('aria-hidden', mobileQuery.matches && !shouldOpen ? 'true' : 'false');
+            backdrop.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
+            backdrop.tabIndex = shouldOpen ? 0 : -1;
         }
 
         toggle.addEventListener('click', function () {
@@ -25,6 +31,7 @@
 
         backdrop.addEventListener('click', function () {
             setOpen(false);
+            toggle.focus();
         });
 
         sidebar.querySelectorAll('a[href]').forEach(function (link) {
@@ -41,14 +48,9 @@
         });
 
         function syncBreakpoint() {
+            setOpen(false);
             if (!mobileQuery.matches) {
-                sidebar.classList.remove('active');
-                document.body.classList.remove('sidebar-open');
-                toggle.classList.remove('active');
-                toggle.setAttribute('aria-expanded', 'false');
                 sidebar.setAttribute('aria-hidden', 'false');
-            } else {
-                setOpen(false);
             }
         }
 
@@ -63,35 +65,16 @@
 
     function enhanceTables() {
         document.querySelectorAll('table.tabla').forEach(function (table) {
-            const headCells = Array.from(table.querySelectorAll('thead tr:first-child th'));
-            if (!headCells.length) return;
+            const firstRow = table.querySelector('thead tr:first-child') || table.querySelector('tr');
+            const columnCount = firstRow
+                ? Array.from(firstRow.children).filter(function (cell) {
+                    return cell.matches('th, td');
+                }).length
+                : 0;
 
-            const labels = headCells.map(function (cell) {
-                return cell.textContent.replace(/\s+/g, ' ').trim();
-            });
-            const columnCount = labels.length;
-            const isCompact = columnCount > 0 && columnCount <= 6;
-
-            if (isCompact) {
-                table.dataset.responsiveCards = 'true';
-            } else {
-                table.dataset.wide = 'true';
+            if (columnCount > 0) {
+                table.dataset.columnCount = String(columnCount);
             }
-
-            const rows = table.querySelectorAll('tbody tr');
-            rows.forEach(function (row) {
-                const cells = Array.from(row.children).filter(function (cell) {
-                    return cell.matches('td, th');
-                });
-                cells.forEach(function (cell, index) {
-                    if (!cell.matches('td')) return;
-                    if (cell.hasAttribute('colspan')) return;
-                    const label = labels[index] || '';
-                    if (label && !cell.hasAttribute('data-label')) {
-                        cell.setAttribute('data-label', label);
-                    }
-                });
-            });
 
             let viewport = table.parentElement;
             if (!viewport || !viewport.classList.contains('table-scroll')) {
@@ -100,6 +83,10 @@
                 viewport.tabIndex = 0;
                 viewport.setAttribute('role', 'region');
                 viewport.setAttribute('aria-label', 'Tabla de datos. En pantallas pequeñas puede desplazarse horizontalmente.');
+                const gridColumn = window.getComputedStyle(table).gridColumn;
+                if (gridColumn && gridColumn !== 'auto') {
+                    viewport.style.gridColumn = gridColumn;
+                }
                 table.parentNode.insertBefore(viewport, table);
                 viewport.appendChild(table);
             }

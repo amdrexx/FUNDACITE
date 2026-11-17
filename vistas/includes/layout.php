@@ -1,8 +1,9 @@
 <?php
 include "topbar.php";
 include "sidebar.php";
-include __DIR__ . '/alerta.php';
 ?>
+<button type="button" class="sidebar-backdrop" id="sidebarBackdrop" aria-label="Cerrar menú de navegación"></button>
+<?php include __DIR__ . '/alerta.php'; ?>
 <script src="/FUNDACITE/vistas/js/sub-menu.js"></script>
 <link rel="stylesheet" href="/FUNDACITE/vistas/css/inactividad.css">
 <script src="/FUNDACITE/vistas/js/responsive-ui.js"></script>

@@ -17,7 +17,7 @@ registrarBitacora($conexion, 'Gremios', 'Consultar', $buscar !== '' ? "Consultó
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gremios</title>
+    <title>Lista de Gremios</title>
    <link rel="stylesheet" href="/FUNDACITE/vistas/css/style_dashboard.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.css">
     <link rel="stylesheet" href="/FUNDACITE/vistas/css/bootstrap-icons.min.css">
@@ -29,7 +29,7 @@ registrarBitacora($conexion, 'Gremios', 'Consultar', $buscar !== '' ? "Consultó
 
 <div class="main">
     <div class="glass tabla-container">
-        <h2 style="text-align:center;color:white;">Catálogo de Gremios</h2>
+        <h2 style="text-align:center;color:white;">Lista de Gremios</h2>
 
         <form method="GET" action="lista_gremio.php" class="buscador-container" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
             <input type="text" name="buscar" class="input-busqueda" placeholder="Buscar gremio por nombre..." value="<?php echo htmlspecialchars($buscar, ENT_QUOTES, 'UTF-8'); ?>">
