@@ -1,7 +1,7 @@
 <?php
 session_start();
 include_once 'includes/guardian.php';
-requireAdministradorODirector();
+
 
 require_once '../conexion.php';
 require_once '../modelos/clase_gremio.php';
