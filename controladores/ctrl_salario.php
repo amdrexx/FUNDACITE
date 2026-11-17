@@ -10,6 +10,12 @@ require_once __DIR__ . "/helpers/bitacora_helper.php";
 
 $modelo = new clase_salario($conexion);
 
+// Plazo mínimo, en días, entre un salario y el siguiente
+// (debe coincidir con PLAZO_DIAS en la vista)
+if (!defined('PLAZO_DIAS')) {
+    define('PLAZO_DIAS', 20);
+}
+
 // =====================================
 // AUXILIARES
 // =====================================
@@ -58,6 +64,64 @@ function mensajeSalarioDuplicado($tipo) {
         : "Ya existe un sueldo base registrado en esa fecha. No se permiten dos sueldos base el mismo día.";
 }
 
+/**
+ * Última fecha de un salario VIGENTE del mismo tipo:
+ *  - tipo 'base'  : último sueldo base vigente.
+ *  - tipo 'cargo' : último sueldo vigente de ESE cargo (otros cargos no afectan).
+ * Los salarios Deshabilitados no cuentan: si se deshabilita uno, se puede registrar otro.
+ */
+function ultimaFechaVigente($conexion, $tipo, $idCargo = null) {
+    if ($tipo === 'cargo') {
+        $stmt = $conexion->prepare(
+            "SELECT MAX(fecha) FROM SALARIO
+             WHERE tipo_salario = 'cargo' AND id_cargo = ? AND estado = 'Vigente'"
+        );
+        if (!$stmt) {
+            return null;
+        }
+        $stmt->bind_param('i', $idCargo);
+    } else {
+        $stmt = $conexion->prepare(
+            "SELECT MAX(fecha) FROM SALARIO
+             WHERE COALESCE(tipo_salario, 'base') = 'base' AND estado = 'Vigente'"
+        );
+        if (!$stmt) {
+            return null;
+        }
+    }
+
+    $stmt->execute();
+    $stmt->bind_result($ultima);
+    $stmt->fetch();
+    $stmt->close();
+
+    return $ultima ?: null;
+}
+
+/** Devuelve el mensaje de error si la fecha no respeta el plazo, o '' si es válida. */
+function mensajePlazo($conexion, $fecha, $tipo, $idCargo = null) {
+    $ultima = ultimaFechaVigente($conexion, $tipo, $idCargo);
+    if (!$ultima) {
+        return '';
+    }
+
+    $nueva = DateTime::createFromFormat('!Y-m-d', $fecha);
+    if (!$nueva) {
+        return '';
+    }
+
+    $minima = (new DateTime($ultima))->modify('+' . PLAZO_DIAS . ' days');
+    if ($nueva >= $minima) {
+        return '';
+    }
+
+    $de = ($tipo === 'cargo') ? 'este cargo' : 'el salario mínimo';
+    return "Debe esperar " . PLAZO_DIAS . " días desde el último registro de $de ("
+        . date('d/m/Y', strtotime($ultima))
+        . "). Podrá registrar uno nuevo a partir del "
+        . $minima->format('d/m/Y') . ". Si lo necesita antes, deshabilite el salario vigente.";
+}
+
 /** Acepta coma o punto como separador y devuelve el monto con punto. */
 function normalizarMonto($monto) {
     return str_replace(',', '.', trim($monto));
@@ -94,6 +158,14 @@ if (isset($_POST['accion']) && $_POST['accion'] == "guardar") {
     }
 
     $id_cargo_final = ($tipo_salario === 'cargo' && ctype_digit($id_cargo)) ? intval($id_cargo) : null;
+
+    // Plazo de 20 días entre salarios vigentes del mismo tipo (o del mismo cargo)
+    if (empty($errores)) {
+        $msgPlazo = mensajePlazo($conexion, $fecha, $tipo_salario, $id_cargo_final);
+        if ($msgPlazo !== '') {
+            $errores[] = $msgPlazo;
+        }
+    }
 
     // No permitir dos sueldos base el mismo día, ni dos del mismo cargo el mismo día
     if (empty($errores) && existeSalarioDuplicado($conexion, $fecha, $tipo_salario, $id_cargo_final)) {
