@@ -1,6 +1,8 @@
 <?php
 session_start();
 include_once "includes/guardian.php";
+include_once "includes/roles.php";
+requerirRol(['Administrador']);
 require_once("../controladores/ctrl_parroquia.php");
 $controller = new ParroquiaController();
 

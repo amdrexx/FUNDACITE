@@ -1,6 +1,8 @@
 <?php
 session_start();
 include_once "includes/guardian.php";
+include_once "includes/roles.php";
+requerirRol(['Administrador', 'Director', 'Analista']);
 require_once '../conexion.php';
 require_once '../controladores/ctrl_salario.php';
 require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';

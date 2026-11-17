@@ -1,10 +1,5 @@
 <?php
-// ============================================================================
-// ARCHIVO: vistas/includes/roles.php
-// DESCRIPCIÓN: Control de acceso basado en roles.
-//              Roles válidos del sistema: Analista, Director, Administrador,
-//              Usuario Estándar
-// ============================================================================
+
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();

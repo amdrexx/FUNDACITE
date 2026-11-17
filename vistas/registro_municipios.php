@@ -4,6 +4,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 include_once "includes/roles.php";
+requerirRol(['Administrador']);
 include_once "includes/guardian.php";
 require_once("../controladores/ctrl_municipio.php");
 require_once("includes/validar_ubicacion.php");

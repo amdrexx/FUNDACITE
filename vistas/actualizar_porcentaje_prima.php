@@ -1,19 +1,13 @@
 <?php
 session_start();
 include_once "includes/guardian.php";
-
+include_once "includes/roles.php";
+requerirRol(['Administrador', 'Director']);
 require_once '../conexion.php';
 require_once '../modelos/clase_nueva_prima.php';
 require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
-/* =====================================================
-   SOLO ADMINISTRADOR O DIRECTOR
-   ===================================================== */
-if (function_exists('esAdministradorODirector') && !esAdministradorODirector()) {
-    $_SESSION['errores'] = ['No tiene permisos para actualizar los porcentajes de las primas.'];
-    header('Location: lista_nuevas_primas.php');
-    exit();
-}
+
 
 $modelo = new NuevaPrima($conexion);
 

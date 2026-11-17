@@ -2,6 +2,10 @@
 // Formulario integrado desde Prima.zip, adaptado al modelo/controlador de FUNDACITE.
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 include_once "includes/guardian.php";
+include_once "includes/roles.php";
+requerirRol(['Administrador', 'Director', 'Analista']);
+
+
 require_once '../conexion.php';
 require_once '../modelos/clase_primas.php';
 $objprima = new Prima($conexion);

@@ -1,6 +1,8 @@
 <?php
 session_start();
 include_once "includes/guardian.php";
+include_once "includes/roles.php";
+requerirRol(['Administrador']);
 require_once("../controladores/ctrl_estado.php");
 require_once("includes/validar_ubicacion.php");
 

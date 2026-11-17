@@ -1,7 +1,8 @@
 <?php
 session_start();
 include_once "includes/guardian.php";
-
+include_once "includes/roles.php";
+requerirRol(['Administrador', 'Director', 'Analista']);
 require_once '../conexion.php';
 require_once '../modelos/clase_dias_disfrute.php';
 

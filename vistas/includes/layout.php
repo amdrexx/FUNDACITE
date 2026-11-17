@@ -1,6 +1,7 @@
 <?php
 include "topbar.php";
 include "sidebar.php";
+
 ?>
 <button type="button" class="sidebar-backdrop" id="sidebarBackdrop" aria-label="Cerrar menú de navegación"></button>
 <?php include __DIR__ . '/alerta.php'; ?>

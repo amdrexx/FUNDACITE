@@ -1,6 +1,7 @@
 <?php
 include_once "includes/guardian.php";
-requireAdministradorODirector();
+include_once "includes/roles.php";
+requerirRol(['Administrador', 'Director']);
 
 session_start();
 ini_set('display_errors', 1);

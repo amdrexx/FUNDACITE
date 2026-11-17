@@ -1,7 +1,8 @@
 <?php
 session_start();
 include_once 'includes/guardian.php';
-requireAdministradorODirector();
+include_once "includes/roles.php";
+requerirRol(['Administrador']);
 
 require_once '../conexion.php';
 require_once '../modelos/clase_gremio.php';

@@ -1,6 +1,7 @@
 <?php
 session_start();
 include_once "includes/guardian.php";
+include_once "includes/roles.php";
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);

@@ -1,14 +1,13 @@
 <?php
 include_once "includes/guardian.php";
-
+include_once "includes/roles.php";
+requerirRol(['Administrador', 'Director', 'Analista']);
 session_start();
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Al entrar desde el menú a un registro nuevo, descartar el borrador que quedó
-// esperando por el contrato. El enlace "Volver" del contrato lleva flujo=contrato
-// y conserva esos datos intencionalmente.
+
 $idTrabajadorEdicion = intval($_GET['id'] ?? 0);
 $flujoContrato = $_GET['flujo'] ?? '';
 $vieneDeFlujoContrato = $flujoContrato === 'contrato';

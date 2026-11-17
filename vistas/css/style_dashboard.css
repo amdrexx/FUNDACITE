@@ -2797,6 +2797,7 @@ body {
     .main .buscador-container .input-busqueda,
     .main .toolbar-tabla .filtro-select,
     .main .buscador-container .filtro-estado {
+        
         min-width: 0;
         min-height: 44px;
         box-sizing: border-box;

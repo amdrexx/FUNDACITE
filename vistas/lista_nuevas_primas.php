@@ -1,6 +1,7 @@
 <?php
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 include_once "includes/guardian.php";
+include_once "includes/roles.php";
 require_once '../conexion.php';
 require_once '../modelos/clase_nueva_prima.php';
 require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';

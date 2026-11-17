@@ -1,15 +1,5 @@
 <?php
-// ============================================================================
-// ARCHIVO: vistas/includes/sesion.php
-// DESCRIPCIÓN: Control de inactividad de la sesión.
-//
-//   · El navegador (vistas/js/inactividad.js) avisa durante los últimos 15 s y
-//     cierra la sesión a los 5 min sin actividad.
-//   · El servidor es la autoridad: aunque el JS se desactive o se manipule,
-//     una sesión sin peticiones durante LÍMITE + GRACIA segundos se rechaza.
-//     La gracia (10 s) absorbe el desfase del "latido" que envía el navegador
-//     cada 10 s, para que SIEMPRE dispare primero el aviso del navegador.
-// ============================================================================
+
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();

@@ -1,10 +1,8 @@
 <?php
 session_start();
 include_once "includes/guardian.php";
-
-if (function_exists('requireAdministradorODirector')) {
-    requireAdministradorODirector();
-}
+include_once "includes/roles.php";
+requerirRol(['Administrador', 'Director']);
 
 require_once '../conexion.php';
 require_once '../modelos/clase_constancia.php';

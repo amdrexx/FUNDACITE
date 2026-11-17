@@ -1,7 +1,8 @@
 <?php
 session_start();
 include_once "includes/guardian.php";
-
+include_once "includes/roles.php";
+requerirRol(['Administrador', 'Director']);
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -10,14 +11,7 @@ require_once '../conexion.php';
 require_once '../controladores/ctrl_salario.php';
 require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
 
-/* =====================================================
-   SOLO ADMINISTRADOR O DIRECTOR
-   ===================================================== */
-if (function_exists('esAdministradorODirector') && !esAdministradorODirector()) {
-    $_SESSION['errores'] = ['No tiene permisos para actualizar salarios.'];
-    header('Location: lista_salario.php');
-    exit();
-}
+
 
 /* =====================================================
    ACTUALIZAR SUELDOS POR CARGO POR PORCENTAJE
