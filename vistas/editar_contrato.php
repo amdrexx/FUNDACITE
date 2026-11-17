@@ -139,7 +139,7 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato'], $_SESSION['old_c
 
                     <!-- Nombre del Presidente -->
                     <div class="field">
-                        <label>Nombre del Presidente</label>
+                        <label>Nombre del Presidente Actual</label>
                         <input type="text" 
                                name="nombre_presidente" 
                                value="<?php echo htmlspecialchars($contrato['nombre_presidente'] ?? ''); ?>" 
@@ -149,7 +149,7 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato'], $_SESSION['old_c
 
                     <!-- Cédula del Presidente -->
                     <div class="field">
-                        <label>Cédula del Presidente</label>
+                        <label>Cédula del Presidente Actual</label>
                         <input type="text" 
                                name="cedula_presidente" 
                                value="<?php echo htmlspecialchars($contrato['cedula_presidente'] ?? ''); ?>" 

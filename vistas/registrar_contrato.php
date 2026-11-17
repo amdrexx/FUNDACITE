@@ -185,13 +185,13 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
 
                     <!-- Nombre del Presidente -->
                     <div class="field">
-                        <label>Nombre del Presidente (Actual en BD)</label>
+                        <label>Nombre del Presidente Actual</label>
                         <input type="text" name="nombre_presidente" value="<?php echo htmlspecialchars($nombrePresidenteAuto); ?>" readonly required style="background-color: rgba(255, 255, 255, 0.05); cursor: not-allowed;" title="Este campo se carga automáticamente del registro del Presidente activo">
                     </div>
 
                     <!-- Cédula del Presidente -->
                     <div class="field">
-                        <label>Cédula del Presidente (Actual en BD)</label>
+                        <label>Cédula del Presidente Actual</label>
                         <input type="text" name="cedula_presidente" value="<?php echo htmlspecialchars($cedulaPresidenteAuto); ?>" readonly required style="background-color: rgba(255, 255, 255, 0.05); cursor: not-allowed;" title="Este campo se carga automáticamente del registro del Presidente activo">
                     </div>
 <!-- Botones de Acción / Navegación -->
