@@ -18,13 +18,14 @@ style="display:flex;flex-direction:column;">
             </a>
         </li>
         
-       
+       <?php if (esAdministrador()): ?>
         <li>
             <a href="/FUNDACITE/vistas/registrar_cargo.php" class="submenu-link">
                 <i class="bi bi-briefcase-fill"></i>
                 <b>CARGO</b>
             </a>
         </li>
+        <?php endif; ?>
 
         <?php if (esAdministradorODirector()): ?>
         <li>
@@ -93,7 +94,7 @@ style="display:flex;flex-direction:column;">
         </li>
         <?php endif; ?>
 
-        <?php if (esAdministradorODirectorOAnalista()): ?>
+        <?php if (esAdministradorODirector()): ?>
         <li>
             <a href="/FUNDACITE/vistas/lista_convenio.php" class="submenu-link">
                 <i class="bi bi-file-earmark-text-fill"></i>

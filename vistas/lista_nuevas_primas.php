@@ -2,6 +2,7 @@
 if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
 include_once "includes/guardian.php";
 include_once "includes/roles.php";
+requerirRol(['Administrador', 'Director', 'Analista']);
 require_once '../conexion.php';
 require_once '../modelos/clase_nueva_prima.php';
 require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
@@ -53,7 +54,7 @@ function fmtValores(array $p): string {
 <div class="main">
     <div class="glass tabla-container">
         <h2 style="text-align:center; color:white;">Lista de nuevas primas</h2>
-
+     <?php if (esAdministradorODirector()): ?>
         <form method="GET" action="lista_nuevas_primas.php" class="buscador-container" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
             <input
                 type="text"
@@ -67,6 +68,7 @@ function fmtValores(array $p): string {
                 + Nueva prima
             </a>
         </form>
+        <?php endif; ?> 
         <div class="modulo-card" style="margin: 20px auto 0; padding: 10px;">
         <table class="tabla">
             <thead>
@@ -76,7 +78,9 @@ function fmtValores(array $p): string {
                     <th>Fecha</th>
                     <th>Valor(es)</th>
                     <th>Estatus</th>
+                    <?php if (esAdministradorODirector()): ?>
                     <th>Acciones</th>
+                    <?php endif; ?>
                 </tr>
             </thead>
             <tbody>
@@ -88,13 +92,14 @@ function fmtValores(array $p): string {
                         <td><?= htmlspecialchars(fmtFecha($p['fecha'])) ?></td>
                         <td><?= htmlspecialchars(fmtValores($p)) ?></td>
                         <td><?= htmlspecialchars($p['estatus']) ?></td>
+                        <?php if (esAdministradorODirector()): ?>
                         <td class="acciones">
                             <a class="btn-editar" href="registrar_primas_nuevo.php?editar=<?= (int) $p['id_nueva_prima'] ?>">
                                 <i class="bi bi-pencil-square"></i>
                                 Editar
                             </a>
 
-                            <?php if (esAdministradorODirector()): ?>
+                            
                             <form action="../controladores/ctrl_nueva_prima.php" method="POST" style="display:inline;"
                                   onsubmit="return confirm('<?= $p['estatus'] === 'Activo'
                                       ? '¿Seguro que deseas inactivar esta prima?'

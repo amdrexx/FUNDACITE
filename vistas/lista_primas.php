@@ -2,6 +2,7 @@
 session_start();
 include_once "includes/guardian.php";
 include_once "includes/roles.php";
+requerirRol(['Administrador', 'Director', 'Analista']);
 require_once '../conexion.php';
 require_once '../modelos/clase_primas.php';
 require_once __DIR__ . '/../controladores/helpers/bitacora_helper.php';
@@ -99,6 +100,7 @@ foreach ($primas as $p) {
                     value="<?= htmlspecialchars($buscar) ?>"
                 >
                 <button type="submit" class="btn-buscar">Buscar</button>
+            <?php if (esAdministradorODirector()): ?>
                 <a href="/FUNDACITE/vistas/registrar_prima.php" class="btn-persona" style="text-decoration:none; margin-right:10px;">
                     + Agregar prima
                 </a>
@@ -108,8 +110,9 @@ foreach ($primas as $p) {
                     <a href="actualizar_porcentaje_prima.php" class="btn-persona" style="text-decoration:none;margin-right:10px;">
                     Actualizar
                 </a>
+            <?php endif; ?>    
                 </a>
-                    <a href="lista_nuevas_primas.php" class="btn-persona" style="text-decoration:none;margin-right:2px; position:relative; top:10px;">
+                    <a href="lista_nuevas_primas.php" class="btn-persona" style="text-decoration:none;margin-right:2px; position:relative; top: 4px;">
                     Lista Primas
                 </a>
                 <?php if (esAdministradorODirector()): ?>
@@ -117,15 +120,15 @@ foreach ($primas as $p) {
                     href="/FUNDACITE/pdf/reporte_primas.php<?= $buscar !== '' ? '?buscar=' . urlencode($buscar) : ''; ?>"
                     class="btn-pdf"
                     target="_blank"
-                    style="text-decoration:none; margin-left:10px; position:relative; top:10px;">
+                    style="text-decoration:none; margin-left:10px; position:relative; top: 4px;">
                 
                     <i class="bi bi-file-earmark-pdf"></i>
                     Exportar PDF
                 </a>
                 <?php endif; ?>
             </form>
-    
-            <div class="modulo-card" style="margin: 20px auto 0; padding: 10px;">      
+            <br>
+            <div class="modulo-card" style="margin: 20px auto 0; padding: 10px;margin-top: 45px;">      
                 <table class="tabla">
                 <thead>
                     <tr>
@@ -167,12 +170,15 @@ foreach ($primas as $p) {
                     <i class="bi bi-eye"></i>
                     Ver
                 </a>
+            <?php if (esAdministradorODirector()): ?>
                 <a class="btn-editar" href="registrar_prima.php?accion=editar&id=<?= (int) $g['id'] ?>">
                     <i class="bi bi-pencil"></i>
                     Editar
                 </a>
+             
 
-                <?php if (esAdministradorODirector()): ?>
+
+               
                 <form action="../controladores/ctrl_primas.php" method="POST" style="display:inline;"
                       onsubmit="return confirm('<?= $hayActivas
                           ? '¿Seguro que deseas inactivar las primas de este trabajador?'
@@ -189,9 +195,9 @@ foreach ($primas as $p) {
                         <i class="bi bi-check-circle"></i>
                         Activar
                     </button>
-                    <?php endif; ?>
-                </form>
                 <?php endif; ?>
+                </form>
+              <?php endif; ?>
             </td>
         </tr>
     <?php endforeach; ?>

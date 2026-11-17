@@ -157,6 +157,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
 
             <h2 style="text-align:center;color:white;">Lista de Salarios</h2>
 
+        <?php if (esAdministradorODirector()): ?>
             <form method="GET" style="display:flex;gap:10px;margin-bottom:20px;">
 
                 <input
@@ -176,7 +177,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                 <a href="actualizar_salario.php" class="btn-persona" style="text-decoration:none;margin-right:10px;">
                     Actualizar por %
                 </a>
-                <?php if (esAdministradorODirector()): ?>
+                
                     <a
                         href="/FUNDACITE/pdf/reporte_salarios.php"
                         class="btn-pdf"
@@ -203,7 +204,9 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                         <th>Fecha</th>
                         <th>Monto</th>
                         <th>Estado</th>
+                        <?php if (esAdministradorODirector()): ?>
                         <th>Acciones</th>
+                        <?php endif; ?>
                     </tr>
                 </thead>
 
@@ -224,7 +227,8 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                                 <td>Bs <?php echo number_format($fila['monto'], 2, ',', '.'); ?></td>
 
                                 <td><?php echo htmlspecialchars($fila['estado']); ?></td>
-
+                                
+                            <?php if (esAdministradorODirector()): ?>
                                 <td class="acciones">
 
                                     <a class="btn-editar" href="editar_salario.php?editar=<?php echo $fila['id_salario']; ?>">
@@ -242,6 +246,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                                     </a>
 
                                 </td>
+                            <?php endif; ?>  
 
                             </tr>
 
