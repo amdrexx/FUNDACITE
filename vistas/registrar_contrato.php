@@ -158,7 +158,7 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato']);
                                 <span>No</span>
                             </label>
                         </div>
-                        <small>Si selecciona Sí, se aplicarán los días establecidos en el convenio vigente asociado al gremio del trabajador. Si selecciona No, este contrato no genera días de disfrute por convenio.</small>
+                        
                     </div>
 
                     <!-- Lugar de Trabajo -->

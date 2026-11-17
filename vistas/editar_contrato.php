@@ -112,7 +112,7 @@ unset($_SESSION['exito_contrato'], $_SESSION['error_contrato'], $_SESSION['old_c
                                 <span>No</span>
                             </label>
                         </div>
-                        <small>Si selecciona Sí, se aplicarán los días establecidos en el convenio vigente asociado al gremio del trabajador.</small>
+                    
                     </div>
 
                     <!-- Lugar de Trabajo -->
