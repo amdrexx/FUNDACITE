@@ -5,5 +5,6 @@ include __DIR__ . '/alerta.php';
 ?>
 <script src="/FUNDACITE/vistas/js/sub-menu.js"></script>
 <link rel="stylesheet" href="/FUNDACITE/vistas/css/inactividad.css">
+<script src="/FUNDACITE/vistas/js/responsive-ui.js"></script>
 <script src="/FUNDACITE/vistas/js/inactividad.js"
         data-limite="<?= defined('SESION_INACTIVIDAD_SEG') ? (int) SESION_INACTIVIDAD_SEG : 60 ?>"></script>
