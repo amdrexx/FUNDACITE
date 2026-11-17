@@ -35,12 +35,13 @@ registrarBitacora($conexion, 'Constancias', 'Consultar', $buscar !== '' ? "Consu
 <div class="main">
     <div class="glass tabla-container">
         <h2 style="text-align:center; color:white;">Lista de Constancias de Trabajo</h2>
-
+    <?php if (esAdministradorODirectorOAnalista()): ?>
         <form method="GET" action="lista_constancias.php" class="buscador-container" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
             <input type="text" name="buscar" class="input-busqueda"
                    placeholder="Buscar por trabajador o cedula..."
                    value="<?= htmlspecialchars($buscar) ?>">
             <button type="submit" class="btn-buscar">Buscar</button>
+    <?php endif; ?>
             <a href="registrar_constancia.php" class="btn-persona" style="text-decoration:none;">
                 + Nueva Constancia
             </a>
