@@ -243,6 +243,7 @@ if (!$contratoActual) {
 <?php include "includes/layout.php"; ?>
 
 <div class="main">
+
     
     <div class="contract-page">
         <article class="contract-card">
@@ -294,7 +295,7 @@ if (!$contratoActual) {
             <footer class="contract-actions no-print">
                 <a href="lista_contrato.php" class="contract-action contract-action--back"><i class="bi bi-arrow-left"></i> Volver</a>
                 <a href="../pdf/contrato.php?id_contrato=<?php echo urlencode($contratoActual['id_contrato']); ?>" target="_blank" class="contract-action contract-action--pdf"><i class="bi bi-printer"></i> Imprimir / Guardar PDF</a>
-                <a href="editar_contrato.php?id=<?php echo urlencode($contratoActual['id_contrato']); ?>" class="contract-action contract-action--edit"><i class="bi bi-pencil-square"></i> Editar</a>
+               
             </footer>
         </article>
     </div>

@@ -198,6 +198,13 @@ $valVarios = isset($old['varios']) ? (bool) $old['varios'] : count($valValores) 
 
     const esPct = () => tipo.value === 'porcentaje';
 
+    // Caracteres repetidos: 3 o más iguales seguidos (AAA, eee, 111),
+    // o la misma letra repetida con espacios en medio (A A A).
+    const REPETIDOS = /(.)\1{2,}/iu;
+    const REPETIDOS_ESPACIADOS = /(\p{L})(\s*\1){2,}/iu;
+    const MSG_REPETIDOS = 'El nombre no puede tener el mismo carácter repetido 3 o más veces seguidas (ej. AAA, EEEE).';
+    const tieneRepetidos = (txt) => REPETIDOS.test(txt) || REPETIDOS_ESPACIADOS.test(txt);
+
     function sufijo() { return esPct() ? '%' : 'Bs.'; }
 
     // Ajusta etiquetas, sufijo y límites según sea porcentaje o monto fijo
@@ -306,6 +313,28 @@ $valVarios = isset($old['varios']) ? (bool) $old['varios'] : count($valValores) 
         setTimeout(function () { lista.innerHTML = ''; actualizarVarios(); }, 0);
     });
 
+    // Aviso visible debajo del campo nombre
+    const avisoNombre = document.createElement('small');
+    avisoNombre.style.cssText = 'display:none; color:#ff6b6b; margin-top:4px;';
+    form.nombre.insertAdjacentElement('afterend', avisoNombre);
+
+    // Mientras escribe: un carácter no puede quedar 3 o más veces seguido (se recorta a 2)
+    form.nombre.addEventListener('input', function () {
+        const antes  = this.value;
+        const pos    = this.selectionStart;
+        const limpio = antes.replace(/(.)\1{2,}/giu, '$1$1');
+
+        if (limpio !== antes) {
+            this.value = limpio;
+            const p = Math.max(0, pos - (antes.length - limpio.length));
+            this.setSelectionRange(p, p);
+            avisoNombre.textContent = 'No se permite repetir el mismo carácter 3 o más veces seguidas.';
+            avisoNombre.style.display = 'block';
+        } else {
+            avisoNombre.style.display = 'none';
+        }
+    });
+
     form.addEventListener('submit', function (e) {
         if (enviando) { e.preventDefault(); return; }
 
@@ -314,6 +343,7 @@ $valVarios = isset($old['varios']) ? (bool) $old['varios'] : count($valValores) 
         const errores = [];
 
         if (nombre.length < 3 || nombre.length > 100) errores.push('El nombre debe tener entre 3 y 100 caracteres.');
+        if (tieneRepetidos(nombre)) errores.push(MSG_REPETIDOS);
         if (!fecha) errores.push('Debe seleccionar una fecha.');
 
         const inputs = [valor1].concat(Array.from(lista.querySelectorAll('input')));

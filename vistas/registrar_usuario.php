@@ -42,6 +42,11 @@ $trabajadores = $trabajadorObj->listarTrabajadoresSinUsuario();
 
 <!-- FORMULARIO -->
 <div class="main">
+    <div class="worker-page">
+        <a class="worker-back" href="lista_usuarios.php" onclick="if (window.history.length > 1) { event.preventDefault(); window.history.back(); }">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            Volver 
+        </a>
     <form class="form-card" id="formUsuarios" method="POST" action="../controladores/ctrl_usuario.php">
         <div class="form-grid">
             <h2 style="text-align: center; margin-bottom: 10px;">Registro de Usuario</h2>

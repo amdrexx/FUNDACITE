@@ -94,6 +94,11 @@ unset($_SESSION['errores'], $_SESSION['exito'], $_SESSION['old']);
 <?php include "includes/layout.php"; ?>
 
 <div class="main">
+    <div class="worker-page">
+        <a class="worker-back" href="lista_trabajadores.php" onclick="if (window.history.length > 1) { event.preventDefault(); window.history.back(); }">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            Volver 
+        </a>
 
 <div style="display:flex; flex-direction:column; gap:30px;">
 
@@ -316,11 +321,11 @@ unset($_SESSION['errores'], $_SESSION['exito'], $_SESSION['old']);
 
         <!-- BOTONES -->
         <div class="form-actions full-width">
-            <?php if ($accion === 'editar' || $accion === 'consultar'): ?>
-                <a href="lista_primas.php" class="btn-secundario" style="text-decoration:none;text-align:center;">Volver</a>
-            <?php else: ?>
+            <?php if ($accion === 'registrar'): ?>
                 <button type="reset" class="btn-secundario" id="btnLimpiar">Limpiar</button>
             <?php endif; ?>
+                
+            
             <?php if ($accion !== 'consultar'): ?>
                 <button type="submit" name="accion" value="<?= $accion === 'editar' ? 'actualizar' : 'guardar' ?>" class="btn-guardar"><?= h($btnTexto) ?></button>
             <?php endif; ?>

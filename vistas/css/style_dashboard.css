@@ -1613,12 +1613,32 @@ min-height: 40px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s ease, border-color 0.2s ease;
+    transition: background 0.2s ease-out, border-color 0.2s ease-out, transform 0.15s ease-out;
 }
 
 .pag-btn:hover:not(:disabled) {
     background: rgba(50,130,184,0.38);
     border-color: #3282B8;
+}
+
+/* Feedback inmediato al presionar y foco visible para teclado */
+.pag-btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.pag-btn:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+#infoRegistros,
+.paginacion-info {
+    font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pag-btn { transition: none; }
+    .pag-btn:active:not(:disabled) { transform: none; }
 }
 
 .pag-btn.actual {

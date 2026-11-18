@@ -69,6 +69,10 @@ function fmtValores(array $p): string {
             </a>
         </form>
         <?php endif; ?> 
+        <a class="worker-back" href="lista_nuevas_primas.php" onclick="if (window.history.length > 1) { event.preventDefault(); window.history.back(); }">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            Volver 
+        </a>
         <div class="modulo-card" style="margin: 20px auto 0; padding: 10px;">
         <table class="tabla">
             <thead>

@@ -154,7 +154,7 @@ function fmtFecha(string $f): string {
                     class="btn-secundario"
                     style="display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box; text-decoration:none; text-align:center;"
                 >
-                    Cancelar
+                    Volver
                 </a>
                 <button type="submit" class="btn-guardar" <?= empty($vigentes) ? 'disabled' : '' ?>>
                     Actualizar

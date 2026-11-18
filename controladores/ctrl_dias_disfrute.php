@@ -271,8 +271,10 @@ if (isset($_POST['accion'])) {
 
             if ($resultado) {
                 registrarBitacora($conexion, 'Días de Disfrute', 'Crear', "Registró días de disfrute para el trabajador \"" . bitacoraNombreDe($conexion, 'trabajador', $id_trabajador) . "\" (código $codigo_disfrute).");
-                $_SESSION['exito'] = 'Dias de disfrute registrados correctamente.';
+                $_SESSION['exito_edicion'] = 'Dias de disfrute registrados correctamente.';
                 unset($_SESSION['old']);
+                header("Location: /FUNDACITE/vistas/lista_dias_disfrute.php");
+                exit;
             } else {
                 $_SESSION['errores'] = [
                     $diasDisfruteModelo->ultimoError !== ''

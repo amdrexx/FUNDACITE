@@ -95,10 +95,11 @@ if (isset($_POST['registrar_usuario'])) {
         unset($_SESSION['old_input']);
         registrarBitacora($conexion, 'Usuarios', 'Crear', "Registró el usuario \"$nombre\" (rol: $tipo_usuario) para el trabajador \"" . bitacoraNombreDe($conexion, 'trabajador', $id_trabajador) . "\".");
         $_SESSION['exito_registro'] = "Usuario registrado correctamente.";
-    } else {
-        $_SESSION['error_registro'][] = "No fue posible registrar el usuario.";
+        header("Location: ../vistas/lista_usuarios.php");
+        exit;
     }
 
+    $_SESSION['error_registro'][] = "No fue posible registrar el usuario.";
     header("Location: ../vistas/registrar_usuario.php");
     exit;
 }

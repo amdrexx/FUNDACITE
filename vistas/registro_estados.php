@@ -129,11 +129,12 @@ $estados = $controlador->listar();
 </div>
         <br>
             <!-- TABLA -->
-            <div class="form-card">
+           <div class="modulo-card" style="margin: 20px auto 0; padding: 10px;">
                 <center>
                  <h2>Estados Registrados</h2>
                 </center>
 
+                
                 <table class="tabla">
                     <thead>
                         <tr>

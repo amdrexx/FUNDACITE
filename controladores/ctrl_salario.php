@@ -189,6 +189,8 @@ if (isset($_POST['accion']) && $_POST['accion'] == "guardar") {
         registrarBitacora($conexion, 'Salarios', 'Crear', "Registró un salario de tipo \"$tipo_salario\"$detalleCargo por $monto (fecha $fecha).");
         $_SESSION['exito'] = "Salario registrado correctamente y marcado como Vigente.";
         unset($_SESSION['old']);
+        header("Location: ../vistas/lista_salario.php");
+        exit();
     } else {
         $_SESSION['errores'] = ["Ocurrió un error al registrar el salario."];
         $_SESSION['old'] = [

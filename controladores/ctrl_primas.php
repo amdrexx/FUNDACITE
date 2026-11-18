@@ -550,7 +550,7 @@ if (!$editando) {
     $_SESSION['exito'] = count($items) === 1
         ? 'La prima se registró correctamente.'
         : 'Se registraron ' . count($items) . ' primas correctamente: ' . implode(', ', array_column($items, 'tipo')) . '.';
-    irRegistro();
+    irLista();
 }
 
 /* ---------------------------------------------------------------------------

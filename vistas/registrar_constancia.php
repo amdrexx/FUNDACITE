@@ -50,6 +50,11 @@ unset($_SESSION['errores_constancia'], $_SESSION['exito_constancia']);
 <?php include "includes/layout.php"; ?>
 
 <div class="main">
+    <div class="worker-page">
+        <a class="worker-back" href="lista_constancias.php" onclick="if (window.history.length > 1) { event.preventDefault(); window.history.back(); }">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            Volver 
+        </a>
     <div class="form-card">
 
         <form id="formconstancia" method="POST" action="../controladores/ctrl_constancia.php">
