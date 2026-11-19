@@ -196,6 +196,13 @@ if (isset($_GET['eliminar'])) {
 
     $id_usuario = intval($_GET['eliminar']);
 
+    // Debe quedar al menos un Administrador con estatus Activo.
+    if ($usuario->esUltimoAdministradorActivo($id_usuario)) {
+        $_SESSION['error_registro'][] = "No se puede desactivar este usuario: debe existir al menos un Administrador con estatus Activo.";
+        header("Location: ../vistas/lista_usuarios.php");
+        exit;
+    }
+
     $antes = bitacoraSnapshot($conexion, 'usuario', $id_usuario);
 
     if ($usuario->eliminar($id_usuario)) {

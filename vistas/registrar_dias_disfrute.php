@@ -2,7 +2,7 @@
 session_start();
 include_once "includes/guardian.php";
 include_once "includes/roles.php";
-requerirRol(['Administrador', 'Director', 'Analista']);
+requerirRol(['Administrador', 'Director', 'Analista','Usuario Estándar']);
 require_once '../conexion.php';
 require_once '../modelos/clase_dias_disfrute.php';
 
@@ -12,6 +12,7 @@ $hoyLocal = $fechaActualCaracas->format('Y-m-d');
 $hoyVisible = $fechaActualCaracas->format('d/m/Y');
 // Usuario Estándar: el select solo contiene a su propio trabajador.
 $trabajadores = $diasDisfruteModelo->listarTrabajadoresDiasDisfrute(filtroTrabajadorSesion());
+$ocultarIdentidad = esUsuarioEstandar(); // Usuario Estándar: sin campos de nombre/apellido ni cédula
 $soloPropio = esUsuarioEstandar() && count($trabajadores) === 1 && !empty($trabajadores[0]['elegible_disfrute']);
 
 // Los días que le corresponden a cualquier trabajador son los que indique
@@ -42,10 +43,6 @@ unset($_SESSION['errores'], $_SESSION['exito']);
         #formdisfrute .btn-accion {
             flex: 0 0 auto;
             width: 180px;
-        }
-        .campo-auto {
-            background-color: rgba(255, 255, 255, 0.1);
-            cursor: not-allowed;
         }
         .campo-ok {
             color: #ccffcc;
@@ -102,7 +99,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                 </div>
 
                 <!-- 3. Nombre completo (auto-rellenado) -->
-                <div class="field full-width">
+                <div class="field full-width"<?= $ocultarIdentidad ? ' hidden style="display:none"' : '' ?>>
                     <label>Apellido y Nombres del Trabajador(a)</label>
                     <input type="text" id="nombre_completo" name="nombre_completo" class="campo-auto"
                            value="<?= $old ? htmlspecialchars($old['nombre_completo'] ?? '') : '' ?>"
@@ -110,7 +107,7 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                 </div>
 
                 <!-- 4. Cedula (auto-rellenado) -->
-                <div class="field">
+                <div class="field"<?= $ocultarIdentidad ? ' hidden style="display:none"' : '' ?>>
                     <label>N° Cedula de Identidad</label>
                     <input type="text" id="cedula_display" class="campo-auto"
                            value="<?= $old ? htmlspecialchars($old['cedula'] ?? '') : '' ?>"
@@ -236,10 +233,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    actualizarDiasTrabajador();
-    selectTrabajador.addEventListener('change', function() {
-        actualizarDiasTrabajador();
-        var id = this.value;
+    function cargarDatosTrabajador(id) {
         if (!id) {
             nombreCompleto.value = '';
             cedulaDisplay.value = '';
@@ -264,7 +258,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error AJAX:', err);
                 FundaciteAlerta.mostrar('Error al consultar datos del trabajador.', 'error');
             });
+    }
+
+    actualizarDiasTrabajador();
+    selectTrabajador.addEventListener('change', function() {
+        actualizarDiasTrabajador();
+        cargarDatosTrabajador(this.value);
     });
+
+    // Si el trabajador ya viene seleccionado (Usuario Estándar), se llenan
+    // todos los campos al abrir el formulario.
+    if (selectTrabajador.value) {
+        var opcionInicial = selectTrabajador.options[selectTrabajador.selectedIndex];
+        if (opcionInicial && !opcionInicial.disabled) {
+            cargarDatosTrabajador(selectTrabajador.value);
+        }
+    }
 });
 </script>
 

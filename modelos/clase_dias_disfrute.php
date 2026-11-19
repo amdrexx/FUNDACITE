@@ -203,7 +203,10 @@ class DiasDisfrute {
                     CONCAT(t.apellidos, ' ', t.nombres) AS nombre_completo,
                     c.nombre_cargo AS cargo,
                     ingreso.fecha_primer_contrato,
-                    co.tipo_contrato
+                    co.tipo_contrato,
+                    (SELECT MAX(COALESCE(dv.fecha_aprobacion, dv.fecha_inicio))
+                     FROM DISFRUTE_DE_VACACIONES dv
+                     WHERE dv.id_trabajador = t.id_trabajador AND dv.estado = 'Aprobado') AS ultima_aprobacion
                 FROM TRABAJADOR t
                 LEFT JOIN CONVENIO cv ON cv.id_convenio = (
                     SELECT c3.id_convenio
@@ -261,6 +264,13 @@ class DiasDisfrute {
             } else {
                 $trabajador['motivo_inelegibilidad'] = '';
             }
+
+            // Ya se le aprobaron sus vacaciones: debe esperar un año.
+            $habilita = $this->calcularFechaHabilitacion($trabajador['ultima_aprobacion'] ?? null);
+            if ($habilita !== null && $trabajador['elegible_disfrute']) {
+                $trabajador['elegible_disfrute'] = false;
+                $trabajador['motivo_inelegibilidad'] = 'Ya se le aprobaron sus vacaciones; podrá solicitar de nuevo a partir del ' . $habilita->format('d/m/Y');
+            }
         }
         unset($trabajador);
 
@@ -315,6 +325,12 @@ class DiasDisfrute {
             }
             $dias_correspondientes = (int)$reglaDias['dias_disfrute'];
             $id_convenio = (int)$reglaDias['id_convenio'];
+
+            // Si ya tiene una solicitud aprobada, debe esperar un año.
+            $habilita = $this->fechaHabilitacionNuevaSolicitud((int)$id_trabajador);
+            if ($habilita !== null) {
+                throw new DomainException('Ya se le aprobaron sus vacaciones; podrá solicitar de nuevo a partir del ' . $habilita->format('d/m/Y') . '.');
+            }
 
             $zonaHoraria = new DateTimeZone('America/Caracas');
             $fecha_inicio = (new DateTimeImmutable('today', $zonaHoraria))->format('Y-m-d');
@@ -391,6 +407,45 @@ class DiasDisfrute {
         } catch (\Throwable $e) {
             error_log("Error al vencer solicitudes de dias de disfrute: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Calcula, a partir de la fecha de la última aprobación, la fecha en que
+     * el trabajador vuelve a poder solicitar. Devuelve null si ya puede.
+     */
+    private function calcularFechaHabilitacion($ultimaAprobacion): ?DateTimeImmutable {
+        if (empty($ultimaAprobacion)) return null;
+        try {
+            $zona = new DateTimeZone('America/Caracas');
+            $habilita = (new DateTimeImmutable((string) $ultimaAprobacion, $zona))
+                ->setTime(0, 0, 0)->modify('+1 year');
+            $hoy = new DateTimeImmutable('today', $zona);
+            return $habilita > $hoy ? $habilita : null;
+        } catch (Throwable $e) {
+            error_log('Error al calcular habilitación de días de disfrute: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Regla anual: cuando una solicitud del trabajador fue APROBADA, no puede
+     * registrar otra hasta que se cumpla un año desde esa aprobación (ya
+     * disfrutó sus vacaciones). Una solicitud desaprobada o vencida no cuenta.
+     *
+     * @return DateTimeImmutable|null Fecha desde la cual puede volver a
+     *                                solicitar, o null si no tiene bloqueo.
+     */
+    public function fechaHabilitacionNuevaSolicitud($id_trabajador): ?DateTimeImmutable {
+        $sql = "SELECT MAX(COALESCE(fecha_aprobacion, fecha_inicio)) AS ultima
+                FROM DISFRUTE_DE_VACACIONES
+                WHERE id_trabajador = ? AND estado = 'Aprobado'";
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) return null;
+        $stmt->bind_param('i', $id_trabajador);
+        $stmt->execute();
+        $fila = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        return $this->calcularFechaHabilitacion($fila['ultima'] ?? null);
     }
 
     /**

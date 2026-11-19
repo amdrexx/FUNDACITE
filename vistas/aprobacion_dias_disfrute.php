@@ -142,6 +142,7 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', !empty($detalleCo
                                         <i class="bi bi-clock-history"></i> Vencida
                                     </span>
                                 <?php else: ?>
+                                <?php if ($estadoFila !== 'Desaprobado'): ?>
                                 <form action="../controladores/ctrl_dias_disfrute.php" method="POST" style="display:inline;">
                                     <input type="hidden" name="id_dis" value="<?= htmlspecialchars($fila['id_dis'] ?? '') ?>">
                                     <input type="hidden" name="origen" value="aprobacion_dias_disfrute.php">
@@ -151,6 +152,7 @@ registrarBitacora($conexion, 'Días de Disfrute', 'Consultar', !empty($detalleCo
                                         <i class="bi bi-check-circle"></i> Aprobar
                                     </button>
                                 </form>
+                                <?php endif; ?>
 
                                 <form action="../controladores/ctrl_dias_disfrute.php" method="POST" class="form-desaprobar" style="display:inline;">
                                     <input type="hidden" name="id_dis" value="<?= htmlspecialchars($fila['id_dis'] ?? '') ?>">

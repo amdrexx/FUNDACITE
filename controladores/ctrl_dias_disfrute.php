@@ -105,6 +105,13 @@ if (isset($_POST['cambiar_estado_disfrute'])) {
         exit;
     }
 
+    // Una solicitud desaprobada queda cerrada: ya no puede aprobarse.
+    if ($estadoActual === 'Desaprobado' && $nuevoEstado === 'Aprobado') {
+        $_SESSION['error_edicion'] = ['La solicitud fue desaprobada y ya no puede aprobarse.'];
+        header('Location: ' . $redirigirA);
+        exit;
+    }
+
     if ($estadoActual === $nuevoEstado) {
         // Ya está en ese estado (doble clic, botón debió estar deshabilitado, etc.).
         $_SESSION['exito_edicion'] = $nuevoEstado === 'Aprobado'
@@ -228,6 +235,20 @@ if (isset($_POST['accion'])) {
                 $_SESSION['errores'] = [
                     $reglaDiasTrabajador['motivo']
                         ?: 'No existe un convenio vigente asociado al gremio del trabajador. No se pueden asignar días de disfrute sin una cantidad establecida en un convenio.'
+                ];
+                $datosFormulario['cedula'] = $trab['cedula'] ?? '';
+                $_SESSION['old'] = $datosFormulario;
+                header("Location: /FUNDACITE/vistas/registrar_dias_disfrute.php");
+                exit;
+            }
+
+            // Si ya se le aprobaron sus vacaciones, no puede solicitar otra
+            // hasta que se cumpla un año desde la aprobación.
+            $habilitaNuevaSolicitud = $diasDisfruteModelo->fechaHabilitacionNuevaSolicitud($id_trabajador);
+            if ($habilitaNuevaSolicitud !== null) {
+                $_SESSION['errores'] = [
+                    'A este trabajador ya se le aprobaron sus vacaciones. Podrá registrar una nueva solicitud a partir del '
+                    . $habilitaNuevaSolicitud->format('d/m/Y') . ' (cuando se cumpla un año desde la aprobación).'
                 ];
                 $datosFormulario['cedula'] = $trab['cedula'] ?? '';
                 $_SESSION['old'] = $datosFormulario;

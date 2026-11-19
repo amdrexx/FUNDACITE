@@ -703,6 +703,36 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     outline:3px solid rgba(50,130,184,0.55);
     outline-offset:2px;
 }
+/* =====================================================================
+   CAMPOS DE SOLO LECTURA (se rellenan solos / solo reflejan datos)
+   Más transparentes que los campos editables (fondo gris) para que se
+   distingan a simple vista. Mayor especificidad que ".field input" para
+   que no los pise el fondo gris de los campos editables.
+   ===================================================================== */
+.field input.campo-auto,
+.field input[readonly]:not([type="radio"]):not([type="checkbox"]),
+.field input.campo-auto:focus,
+.field input[readonly]:not([type="radio"]):not([type="checkbox"]):focus {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.28);
+    color: rgb(255, 255, 255);
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.field input.campo-auto::placeholder,
+.field input[readonly]::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* Select con opción bloqueada, para mantener la misma lógica visual */
+.field select:disabled {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed rgba(255, 255, 255, 0.28);
+    color: rgba(255, 255, 255, 0.78);
+    cursor: not-allowed;
+}
+
  /* ================= BOTENES ================= */
 .btn-editar,
         .btn-eliminar,

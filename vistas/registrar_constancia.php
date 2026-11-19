@@ -36,10 +36,6 @@ unset($_SESSION['errores_constancia'], $_SESSION['exito_constancia']);
             flex: 0 0 auto;
             width: 180px;
         }
-        .campo-auto {
-            background-color: rgba(255, 255, 255, 0.1);
-            cursor: not-allowed;
-        }
         .campo-ok {
             color: #ccffcc;
         }

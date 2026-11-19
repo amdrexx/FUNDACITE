@@ -102,17 +102,13 @@ foreach ($primas as $p) {
                 <button type="submit" class="btn-buscar">Buscar</button>
             <?php if (esAdministradorODirector()): ?>
                 <a href="/FUNDACITE/vistas/registrar_prima.php" class="btn-persona" style="text-decoration:none; margin-right:10px;">
-                    + Agregar prima
+                    + Asignar a trabajador
                 </a>
-                <a href="/FUNDACITE/vistas/registrar_primas_nuevo.php" class="btn-persona" style="text-decoration:none; margin-right:10px;">
-                    + Registrar nueva prima
-                </a>
-                    <a href="actualizar_porcentaje_prima.php" class="btn-persona" style="text-decoration:none;margin-right:10px;">
-                    Actualizar
-                </a>
+                
+                   
             <?php endif; ?>    
                 </a>
-                    <a href="lista_nuevas_primas.php" class="btn-persona" style="text-decoration:none;margin-right:2px; position:relative; top: 4px;">
+                    <a href="lista_nuevas_primas.php" class="btn-persona" style="text-decoration:none;margin-right:2px; position:relative; top: 1px;">
                     Lista Primas
                 </a>
                 <?php if (esAdministradorODirector()): ?>
@@ -120,7 +116,7 @@ foreach ($primas as $p) {
                     href="/FUNDACITE/pdf/reporte_primas.php<?= $buscar !== '' ? '?buscar=' . urlencode($buscar) : ''; ?>"
                     class="btn-pdf"
                     target="_blank"
-                    style="text-decoration:none; margin-left:10px; position:relative; top: 4px;">
+                    style="text-decoration:none; margin-left:10px; position:relative; top: 10px;">
                 
                     <i class="bi bi-file-earmark-pdf"></i>
                     Exportar PDF

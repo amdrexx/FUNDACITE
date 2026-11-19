@@ -62,10 +62,6 @@ $fechaEmision   = !empty($constancia['fecha'])
             flex: 0 0 auto;
             width: 180px;
         }
-        .campo-auto {
-            background-color: rgba(255, 255, 255, 0.1);
-            cursor: not-allowed;
-        }
 
         /* --- Encabezado de edición: coherente con la ficha de ver_constancia --- */
         .edit-kicker {

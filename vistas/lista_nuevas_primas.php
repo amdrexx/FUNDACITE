@@ -67,6 +67,10 @@ function fmtValores(array $p): string {
             <a href="registrar_primas_nuevo.php" class="btn-persona" style="text-decoration:none;">
                 + Nueva prima
             </a>
+             <a href="actualizar_porcentaje_prima.php" class="btn-persona" style="text-decoration:none;margin-right:10px;">
+                    Actualizar
+                </a>
+            
         </form>
         <?php endif; ?> 
         <a class="worker-back" href="lista_nuevas_primas.php" onclick="if (window.history.length > 1) { event.preventDefault(); window.history.back(); }">

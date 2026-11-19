@@ -97,6 +97,32 @@ class Usuario
     }
 
     // =========================================================================
+    // ¿ES EL ÚLTIMO ADMINISTRADOR ACTIVO?
+    // Devuelve true si el usuario es un Administrador activo y no existe
+    // ningún otro Administrador con estatus Activo.
+    // =========================================================================
+    public function esUltimoAdministradorActivo($id_usuario)
+    {
+        $sql = "SELECT
+                    SUM(id_usuario = ?) AS es_el_usuario,
+                    SUM(id_usuario <> ?) AS otros
+                FROM USUARIO
+                WHERE tipo_usuario = 'Administrador' AND status = 'Activo'";
+
+        $stmt = $this->conexion->prepare($sql);
+        if (!$stmt) {
+            return true; // ante la duda, no permitir desactivar
+        }
+
+        $stmt->bind_param("ii", $id_usuario, $id_usuario);
+        $stmt->execute();
+        $fila = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        return (int)($fila['es_el_usuario'] ?? 0) === 1 && (int)($fila['otros'] ?? 0) === 0;
+    }
+
+    // =========================================================================
     // ELIMINACIÓN LÓGICA
     // =========================================================================
     public function eliminar($id_usuario)
