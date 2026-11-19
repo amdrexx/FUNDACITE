@@ -89,22 +89,6 @@ unset($_SESSION['errores_constancia'], $_SESSION['exito_constancia']);
                     <input type="date" name="fecha" value="<?= date('Y-m-d') ?>" required>
                 </div>
 
-                <!-- 3. Nombre completo (auto-rellenado) -->
-                <div class="field full-width">
-                    <label>Apellido y Nombres del Trabajador(a)</label>
-                    <input type="text" id="nombre_completo" class="campo-auto"
-                           value="<?= $old ? htmlspecialchars($old['nombre_completo'] ?? '') : '' ?>"
-                           readonly placeholder="Se auto-rellena al seleccionar trabajador...">
-                </div>
-
-                <!-- 4. Cédula (auto-rellenado) -->
-                <div class="field">
-                    <label>N° Cédula de Identidad</label>
-                    <input type="text" id="cedula_display" class="campo-auto"
-                           value="<?= $old ? htmlspecialchars($old['cedula'] ?? '') : '' ?>"
-                           readonly placeholder="---">
-                </div>
-
                 <!-- 5. Cargo (auto-rellenado) -->
                 <div class="field">
                     <label>Cargo Actual</label>
@@ -179,8 +163,6 @@ unset($_SESSION['errores_constancia'], $_SESSION['exito_constancia']);
 document.addEventListener('DOMContentLoaded', function() {
     var selectTrabajador = document.getElementById('id_trabajador');
     var selectTipoConstancia = document.getElementById('tipo_constancia');
-    var nombreCompleto   = document.getElementById('nombre_completo');
-    var cedulaDisplay    = document.getElementById('cedula_display');
     var cargoDisplay     = document.getElementById('cargo_display');
     var fechaIngresoDisp = document.getElementById('fecha_primer_contrato_display');
     var salarioDisplay   = document.getElementById('salario_display');
@@ -232,8 +214,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!id) {
             botonGuardar.disabled = true;
-            nombreCompleto.value = '';
-            cedulaDisplay.value  = '';
             cargoDisplay.value   = '';
             fechaIngresoDisp.value = '';
             salarioDisplay.value = '';
@@ -251,8 +231,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(function(data) {
                 if (data.success) {
                     datosTrabajadorActual = data;
-                    nombreCompleto.value   = data.nombre_completo;
-                    cedulaDisplay.value    = data.cedula;
                     cargoDisplay.value     = data.cargo;
                     fechaIngresoDisp.value = data.fecha_primer_contrato || 'Sin contrato registrado';
                     var formatoBs = function(valor) {
@@ -265,8 +243,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     tipoPersonal.value = data.tipo_personal || '';
                     evaluarRequisitos();
 
-                    nombreCompleto.classList.add('campo-ok');
-                    setTimeout(function() { nombreCompleto.classList.remove('campo-ok'); }, 1500);
+                    cargoDisplay.classList.add('campo-ok');
+                    setTimeout(function() { cargoDisplay.classList.remove('campo-ok'); }, 1500);
                 } else {
                     botonGuardar.disabled = true;
                     mostrarAlertaUnica(data.message || 'No se encontraron datos del trabajador.');

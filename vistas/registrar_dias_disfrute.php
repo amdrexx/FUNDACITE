@@ -98,22 +98,6 @@ unset($_SESSION['errores'], $_SESSION['exito']);
                     <input type="text" value="<?= htmlspecialchars($hoyVisible, ENT_QUOTES, 'UTF-8') ?>" readonly>
                 </div>
 
-                <!-- 3. Nombre completo (auto-rellenado) -->
-                <div class="field full-width"<?= $ocultarIdentidad ? ' hidden style="display:none"' : '' ?>>
-                    <label>Apellido y Nombres del Trabajador(a)</label>
-                    <input type="text" id="nombre_completo" name="nombre_completo" class="campo-auto"
-                           value="<?= $old ? htmlspecialchars($old['nombre_completo'] ?? '') : '' ?>"
-                           readonly placeholder="Se auto-rellena al seleccionar trabajador...">
-                </div>
-
-                <!-- 4. Cedula (auto-rellenado) -->
-                <div class="field"<?= $ocultarIdentidad ? ' hidden style="display:none"' : '' ?>>
-                    <label>N° Cedula de Identidad</label>
-                    <input type="text" id="cedula_display" class="campo-auto"
-                           value="<?= $old ? htmlspecialchars($old['cedula'] ?? '') : '' ?>"
-                           readonly placeholder="---">
-                </div>
-
                 <!-- 5. Cargo (auto-rellenado) -->
                 <div class="field">
                     <label>Cargo del Solicitante</label>
@@ -213,8 +197,6 @@ unset($_SESSION['errores'], $_SESSION['exito']);
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var selectTrabajador = document.getElementById('id_trabajador');
-    var nombreCompleto = document.getElementById('nombre_completo');
-    var cedulaDisplay = document.getElementById('cedula_display');
     var cargoDisplay = document.getElementById('cargo_display');
     var diasDisplay = document.getElementById('dias_correspondientes_display');
 
@@ -235,8 +217,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function cargarDatosTrabajador(id) {
         if (!id) {
-            nombreCompleto.value = '';
-            cedulaDisplay.value = '';
             cargoDisplay.value = '';
             return;
         }
@@ -245,11 +225,9 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(function(resp) { return resp.json(); })
             .then(function(data) {
                 if (data.success) {
-                    nombreCompleto.value = data.nombre_completo || '';
-                    cedulaDisplay.value = data.cedula || '';
                     cargoDisplay.value = data.cargo || '';
-                    nombreCompleto.classList.add('campo-ok');
-                    setTimeout(function() { nombreCompleto.classList.remove('campo-ok'); }, 1500);
+                    cargoDisplay.classList.add('campo-ok');
+                    setTimeout(function() { cargoDisplay.classList.remove('campo-ok'); }, 1500);
                 } else {
                     FundaciteAlerta.mostrar('No se encontraron datos del trabajador.', 'warning');
                 }
