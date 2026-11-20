@@ -143,10 +143,15 @@ try {
         .alto-84 { height: 96px; }
         .centro { text-align: center; }
         .seccion { padding: 4px; background: #e5e5e5; font-size: 9px; font-weight: bold; text-align: center; }
-        .fecha-celda { padding: 0; text-align: center; }
+        .fecha-celda { padding: 0; text-align: center; margin-top: 4px; }
+        .fecha-periodo {
+            vertical-align: top !important;
+            padding: 0 !important;
+            height: 88px;
+        }
         .fecha-titulo { display: block; padding: 4px 2px; border-bottom: 1px solid #555; font-weight: bold; }
-        .fecha-partes { width: 100%; height: 30px; border-collapse: collapse; }
-        .fecha-partes td { width: 33.33%; border: 0; border-right: 1px solid #555; padding: 3px 2px; }
+        .fecha-partes { width: 100%; height: 68px; border-collapse: collapse; }
+        .fecha-partes td { width: 33.33%; height: 68px; border: 0; border-right: 1px solid #555; padding: 3px 2px; vertical-align: top; }
         .fecha-partes td:last-child { border-right: 0; }
         .fecha-partes strong { display: block; font-size: 7px; font-weight: normal; }
         .cuadro { display: inline-block; width: 10px; height: 10px; margin: 0 3px 2px 0; border: 1px solid #555; vertical-align: middle; }
@@ -157,7 +162,7 @@ try {
 <body>
     <div class="encabezado">
         <?php if ($logo !== ''): ?><img class="logo" src="<?= $logo ?>" alt="Fundacite Yaracuy"><?php endif; ?>
-        <h1>REGISTRO DE DÍAS DE DISFRUTE</h1>
+        <h1>DÍAS DE DISFRUTE</h1>
     </div>
 
     <table>
@@ -178,26 +183,25 @@ try {
         </tr>
         <tr>
             <td class="alto-76" colspan="2"><span class="etiqueta">7. Duración del disfrute</span><div class="valor">N° de días: <?= escaparPdf($datosDisfrute['dias_correspondientes'] !== null ? (string)$datosDisfrute['dias_correspondientes'] : 'Sin convenio') ?></div></td>
-            <td class="fecha-celda" colspan="3"><span class="fecha-titulo">Iniciación</span><table class="fecha-partes"><tr><td><strong>Día</strong><?= escaparPdf($diaInicio) ?></td><td><strong>Mes</strong><?= escaparPdf($mesInicio) ?></td><td><strong>Año</strong><?= escaparPdf($anoInicio) ?></td></tr></table></td>
-            <td class="fecha-celda" colspan="3"><span class="fecha-titulo">Regreso</span><table class="fecha-partes"><tr><td><strong>Día</strong><?= escaparPdf($diaRegreso) ?></td><td><strong>Mes</strong><?= escaparPdf($mesRegreso) ?></td><td><strong>Año</strong><?= escaparPdf($anoRegreso) ?></td></tr></table></td>
-            <td><span class="etiqueta">8. Tipo de disfrute</span><div class="valor"><span class="cuadro"></span>Vacaciones</div></td>
-            <td><span class="etiqueta">9. Firma del trabajador(a)</span><div class="firma"></div></td>
+            <td class="fecha-celda fecha-periodo" colspan="3"><span class="fecha-titulo">Iniciación</span><table class="fecha-partes"><tr><td><strong>Día</strong><?= escaparPdf($diaInicio) ?></td><td><strong>Mes</strong><?= escaparPdf($mesInicio) ?></td><td><strong>Año</strong><?= escaparPdf($anoInicio) ?></td></tr></table></td>
+            <td class="fecha-celda fecha-periodo" colspan="3"><span class="fecha-titulo">Regreso</span><table class="fecha-partes"><tr><td><strong>Día</strong><?= escaparPdf($diaRegreso) ?></td><td><strong>Mes</strong><?= escaparPdf($mesRegreso) ?></td><td><strong>Año</strong><?= escaparPdf($anoRegreso) ?></td></tr></table></td>
+            <td colspan="2"><span class="etiqueta">8. Firma del trabajador(a)</span><div class="firma"></div></td>
         </tr>
         <tr><td class="seccion" colspan="10">APROBACIÓN Y AUTORIZACIÓN (PARA SER LLENADO POR EL SUPERVISOR INMEDIATO)</td></tr>
         <tr>
-            <td class="alto-76" colspan="2"><span class="etiqueta">10. Disfrute</span><div class="valor">
+            <td class="alto-76" colspan="2"><span class="etiqueta">9. Disfrute</span><div class="valor">
                 <span class="cuadro"><?= $tipoRemuneracionPdf === 'remunerado' ? 'X' : '' ?></span>Remunerado<br>
                 <span class="cuadro"><?= $tipoRemuneracionPdf === 'no_remunerado' ? 'X' : '' ?></span>No remunerado
                 <?php if (!in_array($tipoRemuneracionPdf, ['remunerado', 'no_remunerado'], true)): ?><br>No registrado<?php endif; ?>
             </div></td>
-            <td colspan="3"><span class="etiqueta">11. Se requiere suplente</span><div class="valor">
+            <td colspan="3"><span class="etiqueta">10. Se requiere suplente</span><div class="valor">
                 <span class="cuadro"><?= $requiereSuplentePdf === 'si' ? 'X' : '' ?></span>Sí&nbsp;&nbsp;&nbsp; <span class="cuadro"><?= $requiereSuplentePdf === 'no' ? 'X' : '' ?></span>No
                 <?php if (!in_array($requiereSuplentePdf, ['si', 'no'], true)): ?><br>No registrado<?php endif; ?>
                 <br><br>De ser afirmativo, favor anexar perfil requerido
             </div></td>
-            <td colspan="5"><span class="etiqueta">12. Firma del supervisor inmediato</span><div class="firma"></div></td>
+            <td colspan="5"><span class="etiqueta">11. Firma del supervisor inmediato</span><div class="firma"></div></td>
         </tr>
-        <tr><td class="alto-84" colspan="10"><span class="etiqueta">13. Observaciones</span><div class="valor"><?= nl2br(escaparPdf($datosDisfrute['observaciones'] ?? '')) ?></div></td></tr>
+        <tr><td class="alto-84" colspan="10"><span class="etiqueta">12. Observaciones</span><div class="valor"><?= nl2br(escaparPdf($datosDisfrute['observaciones'] ?? '')) ?></div></td></tr>
     </table>
     <div class="pie">Registro N° <?= escaparPdf($datosDisfrute['id_dis']) ?></div>
 </body>
