@@ -5,6 +5,7 @@ include "sidebar.php";
 ?>
 <button type="button" class="sidebar-backdrop" id="sidebarBackdrop" aria-label="Cerrar menú de navegación"></button>
 <?php include __DIR__ . '/alerta.php'; ?>
+<?php include __DIR__ . '/manual_flotante.php'; // El enlace se reubica dentro de main y queda a la izquierda de las acciones flotantes ?>
 <script src="/FUNDACITE/vistas/js/sub-menu.js"></script>
 <link rel="stylesheet" href="/FUNDACITE/vistas/css/inactividad.css">
 <script src="/FUNDACITE/vistas/js/responsive-ui.js"></script>

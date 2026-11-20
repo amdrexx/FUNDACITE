@@ -1,0 +1,83 @@
+.mn-fab {
+    position: fixed;
+    left: 28px; /* respaldo; manual_flotante.php calcula la posición exacta */
+    bottom: 28px;
+    z-index: 1003;
+    width: 58px;
+    height: 58px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: linear-gradient(145deg, #3a90c9 0%, #3282b8 38%, #0f4c75 100%);
+    color: #fff;
+    font-size: 23px;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow:
+        0 12px 30px rgba(9, 62, 97, 0.6),
+        0 3px 8px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.32);
+    transition:
+        transform 160ms cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mn-fab i {
+    display: block;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .mn-fab:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            0 16px 36px rgba(9, 62, 97, 0.7),
+            0 4px 10px rgba(0, 0, 0, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
+}
+
+.mn-fab:active {
+    transform: scale(0.95);
+    transition-duration: 90ms;
+}
+
+.mn-fab:focus-visible {
+    outline: 2px solid #4da3ff;
+    outline-offset: 4px;
+}
+
+/* ============================================================================
+   RESPONSIVO
+   ============================================================================ */
+
+/* En dispositivos responsive, el menú lateral debe quedar por encima
+   del botón cuando se despliega. En escritorio se conserva el z-index 1003. */
+@media (max-width: 991.98px) {
+    .mn-fab {
+        z-index: 999;
+    }
+}
+
+@media (max-width: 576px) {
+    .mn-fab {
+        left: 16px; /* respaldo para móviles */
+        bottom: 82px;
+        width: 54px;
+        height: 54px;
+        font-size: 21px;
+    }
+}
+
+/* ============================================================================
+   MOVIMIENTO REDUCIDO
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .mn-fab {
+        transition-property: opacity;
+        transition-duration: 120ms;
+    }
+}
