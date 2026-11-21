@@ -76,7 +76,7 @@ $gremios = $trabajador->listarGremios($idTrabajadorEdicion > 0 ? (int)($old['id_
             <i class="bi bi-arrow-left" aria-hidden="true"></i>
             Volver 
         </a>
-    <form class="form-card" id="formPersonas" method="POST" action="http://localhost/FUNDACITE/controladores/ctrl_trabajador.php">
+    <form class="form-card" id="formPersonas" method="POST" action="../controladores/ctrl_trabajador.php">
         
         <!-- CAMPOS OCULTOS INTELIGENTES -->
         <input type="hidden" name="accion" value="<?php echo ($idTrabajadorEdicion > 0) ? 'actualizar' : 'guardar'; ?>">
